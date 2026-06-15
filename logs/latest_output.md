@@ -15,7 +15,7 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   Format: H2H Categories
   Matchup: Week 12 vs Natural Born Closers: 0-0-12
   Priority categories (losing, easiest first): H, HR, OPS, R, RBI, SB, ERA, INNdGS, K, S, W, WHIP
-  Streaming SP recommendations (Submit adds before Monday scoring period lock.):
+  Streaming SP (Submit adds before Monday scoring period lock.):
     + Andrew Alvarez (WAS)  score=6.51  ERA 3.7, K/9 9.62, WHIP 1.44 | helps: ERA, K, S, W, WHIP
   Waiver adds (5 suggestions):
     + Andrew Abbott (CIN) [SP]  helps: ERA, K, W, WHIP
