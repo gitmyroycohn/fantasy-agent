@@ -1,0 +1,21 @@
+baseball:
+  - id: "pins_and_pills"
+    name: "Pins and Pills"
+    cbs_league_id: "hemp"
+    cbs_team_id: "7"
+    format: "h2h_categories"
+    scoring:
+      hitting: [R, HR, RBI, SB, AVG, OPS, TB, XBH]
+      pitching: [W, SV, K, ERA, WHIP, QS, HLD, INNdGS, K_BB]
+    constraints:
+      sp_must_be_claimed_before_week: true
+      max_moves_per_week: null
+  - id: "casey_stengel"
+    name: "The Casey Stengel Amazin Experience"
+    cbs_league_id: "baberuthdivingclubformen"
+    cbs_team_id: "2"
+    format: "rotisserie"
+    roster_type: "nl_only"
+    scoring:
+      hitting: [R, HR, RBI, SB, AVG]
+      pitching: [W, SV, K, ERA, WHIP]

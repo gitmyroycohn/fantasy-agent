@@ -1,0 +1,22 @@
+# Secrets — never commit
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Logs and run output
+logs/
+*.log
+
+# Probe/sample data
+samples/
+PROBE_RESULT.md
+
+# OS
+.DS_Store
+Thumbs.db
