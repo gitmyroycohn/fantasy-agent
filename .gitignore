@@ -9,8 +9,7 @@ __pycache__/
 venv/
 env/
 
-# Logs and run output
-logs/
+# Logs — keep folder and latest output, ignore verbose logs
 *.log
 
 # Probe/sample data
