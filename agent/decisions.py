@@ -111,7 +111,7 @@ def _h2h_decisions(auth: CBSAuth, league_id: str,
     else:
         _add_drop_candidates(actions, team, [], nl_only=False)
 
-    _add_lineup_advice(actions, team)
+    _add_lineup_advice(actions, team, no_bench=cfg.get("no_bench", False))
 
     league_name = cfg.get("name") or cfg.get("display_name") or league_id
     return {
@@ -174,7 +174,7 @@ def _roto_decisions(auth: CBSAuth, league_id: str,
     except Exception as e:
         logger.warning("Roto scoring fetch failed: %s", e)
 
-    _add_lineup_advice(actions, team)
+    _add_lineup_advice(actions, team, no_bench=cfg.get("no_bench", False))
 
     league_name = cfg.get("name") or cfg.get("display_name") or league_id
     return {
@@ -199,7 +199,7 @@ def _add_drop_candidates(actions: list, team: Team,
         logger.warning("Drop candidate analysis failed: %s", e)
 
 
-def _add_lineup_advice(actions: list, team: Team) -> None:
+def _add_lineup_advice(actions: list, team: Team, no_bench: bool = False) -> None:
     try:
         teams_today    = teams_playing_today()
         starters_today = probable_starters_today()
@@ -223,6 +223,7 @@ def _add_lineup_advice(actions: list, team: Team) -> None:
                 "today":             today_str,
                 "teams_playing":     sorted(teams_today),
                 "probable_starters": sorted(starters_today),
+                "no_bench":          no_bench,
                 "advice": [
                     {
                         "player":      a.player_name,

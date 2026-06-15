@@ -16,6 +16,7 @@ baseball:
     cbs_team_id: "2"
     format: "rotisserie"
     roster_type: "nl_only"
+    no_bench: true
     scoring:
       hitting: [R, HR, RBI, SB, AVG]
       pitching: [W, SV, K, ERA, WHIP]

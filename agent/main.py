@@ -152,42 +152,78 @@ def _print_decisions(result: dict, dry_run: bool):
             today_str = action.get("today", "")
             advice    = action.get("advice", [])
             teams_ct  = len(action.get("teams_playing", []))
+            no_bench  = action.get("no_bench", False)
 
             print(f"\n  --- Daily Lineup ({today_str}, {teams_ct} MLB teams playing) ---")
 
-            sp_starting = [a for a in advice
-                           if "SP" in a["positions"] and a["advice"] in ("start", "ok")]
-            sp_bench    = [a for a in advice
-                           if "SP" in a["positions"] and a["advice"] == "bench_pitcher"]
-            bat_off     = [a for a in advice
-                           if "SP" not in a["positions"] and "RP" not in a["positions"]
-                           and a["advice"] == "bench"]
-            bat_active  = [a for a in advice
-                           if "SP" not in a["positions"] and "RP" not in a["positions"]
-                           and a["advice"] in ("start", "ok")]
+            if no_bench:
+                # No bench slots -- just show who is/isn't playing for awareness
+                sp_starting = [a for a in advice
+                               if "SP" in a["positions"] and a["advice"] in ("start", "ok")]
+                sp_no_game  = [a for a in advice
+                               if "SP" in a["positions"] and a["advice"] == "bench_pitcher"]
+                bat_no_game = [a for a in advice
+                               if "SP" not in a["positions"] and "RP" not in a["positions"]
+                               and a["advice"] == "bench"]
+                bat_active  = [a for a in advice
+                               if "SP" not in a["positions"] and "RP" not in a["positions"]
+                               and a["advice"] in ("start", "ok")]
 
-            if sp_starting:
-                print(f"  SPs starting today ({len(sp_starting)}):")
-                for a in sp_starting:
-                    mark = "active" if a["is_starting"] else "BENCH - move to active!"
-                    print(f"    [{mark:>24}] {a['player']} ({a['team']})")
+                if sp_starting:
+                    print(f"  SPs pitching today ({len(sp_starting)}):")
+                    for a in sp_starting:
+                        print(f"    {a['player']} ({a['team']})")
+                else:
+                    print("  SPs pitching today: none confirmed yet")
+
+                if sp_no_game:
+                    print(f"  SPs NOT pitching today ({len(sp_no_game)}) [no bench -- FYI only]:")
+                    for a in sp_no_game:
+                        print(f"    {a['player']} ({a['team']})  {a['reason']}")
+
+                if bat_no_game:
+                    print(f"  Batters with no game today ({len(bat_no_game)}) [no bench -- FYI only]:")
+                    for a in bat_no_game:
+                        pos = "/".join(a["positions"])
+                        print(f"    {a['player']} ({a['team']}) [{pos}]  -- 0 stats today")
+
+                print(f"  Batters with games today: {len(bat_active)}")
+
             else:
-                print("  SPs starting today: none confirmed yet")
+                # Has bench -- full actionable advice
+                sp_starting = [a for a in advice
+                               if "SP" in a["positions"] and a["advice"] in ("start", "ok")]
+                sp_bench    = [a for a in advice
+                               if "SP" in a["positions"] and a["advice"] == "bench_pitcher"]
+                bat_off     = [a for a in advice
+                               if "SP" not in a["positions"] and "RP" not in a["positions"]
+                               and a["advice"] == "bench"]
+                bat_active  = [a for a in advice
+                               if "SP" not in a["positions"] and "RP" not in a["positions"]
+                               and a["advice"] in ("start", "ok")]
 
-            if sp_bench:
-                print(f"  SPs NOT starting today ({len(sp_bench)}):")
-                for a in sp_bench:
-                    mark = "ACTIVE - bench!" if a["is_starting"] else "already benched"
-                    print(f"    [{mark:>20}] {a['player']} ({a['team']})  {a['reason']}")
+                if sp_starting:
+                    print(f"  SPs starting today ({len(sp_starting)}):")
+                    for a in sp_starting:
+                        mark = "active" if a["is_starting"] else "BENCH - move to active!"
+                        print(f"    [{mark:>24}] {a['player']} ({a['team']})")
+                else:
+                    print("  SPs starting today: none confirmed yet")
 
-            if bat_off:
-                print(f"  Batters with off days - bench these ({len(bat_off)}):")
-                for a in bat_off:
-                    mark = "ACTIVE - bench!" if a["is_starting"] else "already benched"
-                    pos  = "/".join(a["positions"])
-                    print(f"    [{mark:>20}] {a['player']} ({a['team']}) [{pos}]")
+                if sp_bench:
+                    print(f"  SPs NOT starting today ({len(sp_bench)}):")
+                    for a in sp_bench:
+                        mark = "ACTIVE - bench!" if a["is_starting"] else "already benched"
+                        print(f"    [{mark:>20}] {a['player']} ({a['team']})  {a['reason']}")
 
-            print(f"  Batters with games today: {len(bat_active)}")
+                if bat_off:
+                    print(f"  Batters with off days - bench these ({len(bat_off)}):")
+                    for a in bat_off:
+                        mark = "ACTIVE - bench!" if a["is_starting"] else "already benched"
+                        pos  = "/".join(a["positions"])
+                        print(f"    [{mark:>20}] {a['player']} ({a['team']}) [{pos}]")
+
+                print(f"  Batters with games today: {len(bat_active)}")
 
     if dry_run:
         print(f"\n  DRY_RUN=True -- no submissions made.")
