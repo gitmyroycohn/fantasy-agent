@@ -12,6 +12,7 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   Lineup: 18/34 starting
   Free agents visible: 8120
 
+  2-start pitchers detected this week: 0
   Format: H2H Categories
   Matchup: Week 12 vs Natural Born Closers: 0-0-12
   Priority categories (losing, easiest first): H, HR, OPS, R, RBI, SB, ERA, INNdGS, K, S, W, WHIP
@@ -22,7 +23,7 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
     + Willy Adames (SF) [SS]  helps: R, SB
     + Bryan Abreu (HOU) [RP]  helps: K
     + Zach Agnos (COL) [RP]  helps: K
-    + Tyler Alexander (TEX) [RP]  helps: K
+    + Tyler Alexander (PHI) [RP]  helps: K
 
   DRY_RUN=True -- no submissions made.
 
