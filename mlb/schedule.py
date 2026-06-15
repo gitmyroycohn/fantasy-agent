@@ -83,6 +83,76 @@ def is_two_starter(player_name: str, two_starters: dict[str, int]) -> bool:
 
 
 # ---------------------------------------------------------------------------
+# Daily schedule
+# ---------------------------------------------------------------------------
+
+# MLB API abbrev → CBS abbrev (same mapping as mlb/stats.py)
+_MLB_TO_CBS: dict[str, str] = {
+    "TB":  "TBR", "CHW": "CWS", "KC": "KCR",
+    "SD":  "SDP", "SF":  "SFG",
+}
+
+
+def teams_playing_today(d: date = None) -> set[str]:
+    """Return CBS-style team abbreviations for teams with a game today."""
+    if d is None:
+        d = _today_et()
+    games = _fetch_today_games(d.isoformat())
+    teams: set[str] = set()
+    for game in games:
+        for side in ("home", "away"):
+            abbr = (game.get("teams", {})
+                        .get(side, {})
+                        .get("team", {})
+                        .get("abbreviation", ""))
+            if abbr:
+                teams.add(_MLB_TO_CBS.get(abbr, abbr))
+    return teams
+
+
+def probable_starters_today(d: date = None) -> set[str]:
+    """Return norm names of pitchers confirmed as probable starters today."""
+    if d is None:
+        d = _today_et()
+    games = _fetch_today_games(d.isoformat())
+    starters: set[str] = set()
+    for game in games:
+        for side in ("home", "away"):
+            pitcher = (game.get("teams", {})
+                           .get(side, {})
+                           .get("probablePitcher"))
+            if pitcher:
+                name = pitcher.get("fullName", "")
+                if name:
+                    starters.add(_norm(name))
+    return starters
+
+
+@lru_cache(maxsize=7)
+def _fetch_today_games(date_str: str) -> list:
+    """Fetch all games for a single date. Returns list of game dicts."""
+    url = f"{MLB_API}/schedule"
+    params = {
+        "sportId":  1,
+        "date":     date_str,
+        "hydrate":  "probablePitcher,team",
+        "gameType": "R",
+    }
+    try:
+        r = requests.get(url, params=params, timeout=TIMEOUT)
+        r.raise_for_status()
+        data = r.json()
+    except Exception as e:
+        logger.error("MLB schedule (daily) API error %s: %s", date_str, e)
+        return []
+    games = []
+    for date_entry in data.get("dates", []):
+        games.extend(date_entry.get("games", []))
+    logger.info("Daily schedule %s: %d games", date_str, len(games))
+    return games
+
+
+# ---------------------------------------------------------------------------
 # Internal: fetch and cache
 # ---------------------------------------------------------------------------
 
