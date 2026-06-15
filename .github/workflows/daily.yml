@@ -1,0 +1,26 @@
+name: Fantasy Agent
+
+on:
+  workflow_dispatch:        # manual trigger from GitHub UI / mobile
+  schedule:
+    - cron: '0 12 * * *'   # daily at 8am ET (noon UTC)
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run agent
+        env:
+          CBS_COOKIE: ${{ secrets.CBS_COOKIE }}
+        run: python -m agent.main --run daily --dry-run
