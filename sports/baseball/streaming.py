@@ -3,23 +3,35 @@ Streaming SP logic for Pins & Pills (H2H categories).
 
 Identifies the best available SPs to add before the weekly Monday lock,
 targeting pitchers who contribute W, K, QS, and keep ERA/WHIP manageable.
+
+2-start pitchers get a large scoring bonus — starting twice in a week is
+the single biggest edge in H2H categories (double the IP, K, W opportunities).
 """
+import re
 import logging
 from data.models import WaiverPlayer, Player  # noqa: F401 (Player used by type hints)
 from config.settings import MIN_SP_OWNERSHIP_DROP, MAX_ERA_STREAMER, MIN_K9_STREAMER
 
 logger = logging.getLogger(__name__)
 
+TWO_START_BONUS = 8.0   # dominant factor — 2-starters float to the top
+
 
 def rank_streaming_sps(
     waiver_players: list[WaiverPlayer],
     current_cat_standings: dict,
+    two_starters: dict[str, int] = None,   # {norm_name: num_starts} from mlb.schedule
     max_results: int = 5,
 ) -> list[dict]:
     """
     Score and rank available SPs for streaming.
     Returns a list of recommendation dicts, best first.
+
+    two_starters: pass the result of mlb.schedule.two_start_pitchers() to
+    give 2-start pitchers a large scoring bonus.
     """
+    two_starters = two_starters or {}
+
     sp_candidates = [
         wp for wp in waiver_players
         if "SP" in wp.player.positions
@@ -28,26 +40,31 @@ def rank_streaming_sps(
 
     scored = []
     for wp in sp_candidates:
-        score = _score_sp(wp.player, current_cat_standings)
+        norm  = _norm(wp.player.name)
+        starts = two_starters.get(norm, 1)   # default to 1 if not in schedule yet
+        score = _score_sp(wp.player, current_cat_standings, starts)
         if score > 0:
             scored.append({
-                "player": wp.player.name,
-                "team": wp.player.team,
-                "ownership": wp.ownership_pct,
-                "score": round(score, 2),
-                "reason": _reason(wp.player, current_cat_standings),
+                "player":      wp.player.name,
+                "team":        wp.player.team,
+                "ownership":   wp.ownership_pct,
+                "starts":      starts,
+                "score":       round(score, 2),
+                "reason":      _reason(wp.player, current_cat_standings, starts),
             })
 
     scored.sort(key=lambda x: x["score"], reverse=True)
-    logger.info("Ranked %d SP streaming candidates", len(scored))
+    logger.info("Ranked %d SP streaming candidates (%d two-starters in pool)",
+                len(scored), sum(1 for s in scored if s["starts"] >= 2))
     return scored[:max_results]
 
 
-def _score_sp(player: Player, standings: dict) -> float:
+def _score_sp(player: Player, standings: dict, starts: int = 1) -> float:
     """
     Heuristic score based on:
-    - Projected K/9 contribution
+    - Number of starts this week (2-starters get a large bonus)
     - ERA relative to threshold
+    - K/9 contribution
     - Whether we're losing W, K, QS categories
     """
     stats = player.stats
@@ -58,9 +75,16 @@ def _score_sp(player: Player, standings: dict) -> float:
 
     # Require at least 10 IP to avoid fluky ERA 0.0 from tiny samples
     if ip < 10 or era > MAX_ERA_STREAMER or k9 < MIN_K9_STREAMER:
+        # 2-starters with no stats yet still worth surfacing (just lower score)
+        if starts >= 2 and ip == 0:
+            return TWO_START_BONUS * 0.5   # half bonus — unverified arm
         return 0.0
 
     score = 0.0
+
+    # 2-start bonus — biggest single factor
+    if starts >= 2:
+        score += TWO_START_BONUS
 
     # Reward pitchers who help losing categories
     if standings.get("K", {}).get("winning") is False:
@@ -74,21 +98,25 @@ def _score_sp(player: Player, standings: dict) -> float:
     if standings.get("WHIP", {}).get("winning") is False and whip < 1.15:
         score += 1.0
 
-    # Small baseline for solid arms even in winning cats
+    # Baseline quality floor
     score += max(0, (4.50 - era) * 0.3)
     score += max(0, (k9 - MIN_K9_STREAMER) * 0.2)
 
     return score
 
 
-def _reason(player: Player, standings: dict) -> str:
+def _reason(player: Player, standings: dict, starts: int = 1) -> str:
     parts = []
-    stats = player.stats
-    era   = stats.get("ERA", "?")
-    k9    = stats.get("K9", "?")
-    whip  = stats.get("WHIP", "?")
 
-    parts.append(f"ERA {era}, K/9 {k9}, WHIP {whip}")
+    if starts >= 2:
+        parts.append(f"*** 2-START WEEK ***")
+
+    stats = player.stats
+    if stats:
+        era  = stats.get("ERA", "?")
+        k9   = stats.get("K9", "?")
+        whip = stats.get("WHIP", "?")
+        parts.append(f"ERA {era}, K/9 {k9}, WHIP {whip}")
 
     _PITCHER_CATS = {"K", "W", "QS", "SV", "HLD", "ERA", "WHIP", "K9", "S"}
     losing_pitcher = [cat for cat, s in standings.items()
@@ -97,3 +125,7 @@ def _reason(player: Player, standings: dict) -> str:
         parts.append(f"helps: {', '.join(losing_pitcher)}")
 
     return " | ".join(parts)
+
+
+def _norm(name: str) -> str:
+    return re.sub(r"[^a-z0-9]", "", name.lower())

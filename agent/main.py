@@ -109,16 +109,18 @@ def _print_decisions(result: dict, dry_run: bool):
             for w in action.get("warnings", []):
                 print(f"  !! {w['warning']}")
 
-        elif atype == "streaming_sp":
+        elif atype in ("streaming_sp", "streaming_sp_next_week"):
             recs = action.get("recommendations", [])
+            label = ("  Next week 2-starters" if atype == "streaming_sp_next_week"
+                     else "  Streaming SP")
             if recs:
-                print(f"  Streaming SP recommendations ({action.get('note', '')}):")
+                print(f"{label} ({action.get('note', '')}):")
                 for r in recs:
-                    stats = r.get('player_stats', '')
-                    print(f"    + {r['player']} ({r['team']})  "
+                    starts_tag = " [2-START]" if r.get("starts", 1) >= 2 else ""
+                    print(f"    + {r['player']} ({r['team']}){starts_tag}  "
                           f"score={r['score']}  {r.get('reason', '')}")
             else:
-                print("  Streaming SP: no candidates above threshold")
+                print(f"{label}: no candidates above threshold")
 
         elif atype == "waiver_adds":
             recs = action.get("recommendations", [])

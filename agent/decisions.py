@@ -12,6 +12,7 @@ from cbs.waivers import fetch_waiver_wire
 from cbs.stats import fetch_matchup_stats
 from cbs.auth import CBSAuth
 from mlb.stats import enrich_players
+from mlb.schedule import two_start_pitchers, week_bounds
 
 logger = logging.getLogger(__name__)
 
@@ -59,10 +60,20 @@ def _h2h_decisions(auth: CBSAuth, league_id: str,
         enrich_players(waivers[:100])
     except Exception as e:
         logger.warning("SP enrichment failed: %s", e)
+    # Fetch 2-start pitchers for current week (and next if Thu–Sun)
+    from datetime import date as _date
+    two_start_now  = {}
+    two_start_next = {}
+    try:
+        two_start_now  = two_start_pitchers()
+        if _date.today().weekday() >= 3:   # Thursday or later — also show next week
+            two_start_next = two_start_pitchers(next_week=True)
+    except Exception as e:
+        logger.warning("2-start fetch failed: %s", e)
     # rank_streaming_sps expects {cat: {"winning": bool}} — build from matchup
     cat_status = {c.category: {"winning": c.winning}
                   for c in matchup.category_standings}
-    sp_recs = rank_streaming_sps(waivers, cat_status)
+    sp_recs = rank_streaming_sps(waivers, cat_status, two_starters=two_start_now)
 
     if sp_recs:
         actions.append({
@@ -70,6 +81,18 @@ def _h2h_decisions(auth: CBSAuth, league_id: str,
             "recommendations": sp_recs,
             "note": "Submit adds before Monday scoring period lock.",
         })
+
+    # Surface next week's 2-starters on waivers (Thu–Sun planning)
+    if two_start_next:
+        next_two_recs = rank_streaming_sps(waivers, cat_status,
+                                           two_starters=two_start_next,
+                                           max_results=5)
+        if next_two_recs:
+            actions.append({
+                "type": "streaming_sp_next_week",
+                "recommendations": next_two_recs,
+                "note": "2-starters available for NEXT week — add now before lock.",
+            })
 
     # 3. General waiver adds for losing categories
     if losing:
