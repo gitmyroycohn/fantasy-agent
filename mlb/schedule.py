@@ -52,16 +52,27 @@ def week_bounds(d: date = None, next_week: bool = False):
     return monday, sunday
 
 
-def two_start_pitchers(d: date = None, next_week: bool = False) -> dict[str, int]:
+def two_start_pitchers(d: date = None, next_week: bool = False,
+                       lookahead_days: int = 10) -> dict[str, int]:
     """Return {norm_name: num_starts} for pitchers with 2+ scheduled starts.
 
-    Defaults to the current CBS scoring week. Pass next_week=True to look
-    at next week instead (useful Thu–Sun when planning future adds).
+    Uses a rolling lookahead window (default 10 days from today) rather than
+    a strict Mon-Sun CBS week, because probable pitchers for Thu-Sun aren't
+    announced until mid-week. A 10-day window reliably catches 2-starters
+    as soon as both starts are confirmed.
 
-    norm_name matches the same normalization used in mlb/stats.py so you can
-    cross-reference with player stats.
+    Pass next_week=True to anchor the window at next Monday instead of today
+    (useful Thu-Sun when planning adds for the following week).
+
+    norm_name matches the same normalization used in mlb/stats.py.
     """
-    start, end = week_bounds(d, next_week)
+    if next_week:
+        _, next_monday = week_bounds(d, next_week=True)
+        start = next_monday - timedelta(days=6)   # next Monday
+        end   = start + timedelta(days=lookahead_days - 1)
+    else:
+        start = _today_et() if d is None else d
+        end   = start + timedelta(days=lookahead_days - 1)
     counts = _fetch_start_counts(start.isoformat(), end.isoformat())
     return {name: n for name, n in counts.items() if n >= 2}
 
