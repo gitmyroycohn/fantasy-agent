@@ -4,7 +4,7 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   Roster: 34 players
        C  William Contreras (MIL)
       1B  Bryce Harper (PHI)
-      2B  Sal Stewart (CIN)
+      2B  JJ Wetherholt (STL)
       3B  Bo Bichette (NYM)
       SS  Kevin McGonigle (DET)
     ... and 29 more
