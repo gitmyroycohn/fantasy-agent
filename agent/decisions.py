@@ -8,6 +8,7 @@ from sports.baseball.categories import (
     analyze_matchup, priority_categories, summary_line,
     check_nl_eligibility, filter_nl_waiver_pool,
 )
+from sports.baseball.drops import find_drop_candidates
 from cbs.waivers import fetch_waiver_wire
 from cbs.stats import fetch_matchup_stats
 from cbs.auth import CBSAuth
@@ -106,6 +107,9 @@ def _h2h_decisions(auth: CBSAuth, league_id: str,
         waiver_recs = _waiver_adds_for_cats(all_waivers, losing)
         if waiver_recs:
             actions.append({"type": "waiver_adds", "recommendations": waiver_recs})
+        _add_drop_candidates(actions, team, all_waivers, nl_only=False)
+    else:
+        _add_drop_candidates(actions, team, [], nl_only=False)
 
     _add_lineup_advice(actions, team)
 
@@ -156,6 +160,8 @@ def _roto_decisions(auth: CBSAuth, league_id: str,
             ]
         actions.append({"type": "waiver_adds", "recommendations": waiver_recs})
 
+    _add_drop_candidates(actions, team, nl_waivers, nl_only=True)
+
     try:
         raw_stats = fetch_matchup_stats(auth, league_id, sport)
         matchup   = analyze_matchup(raw_stats, week=_current_week())
@@ -179,6 +185,19 @@ def _roto_decisions(auth: CBSAuth, league_id: str,
 
 
 # -- Helpers ------------------------------------------------------------------
+
+def _add_drop_candidates(actions: list, team: Team,
+                         waiver_wire: list, nl_only: bool = False) -> None:
+    try:
+        drops = find_drop_candidates(team.roster, waiver_wire, nl_only=nl_only)
+        if drops:
+            actions.append({
+                "type":  "drop_candidates",
+                "drops": drops,
+            })
+    except Exception as e:
+        logger.warning("Drop candidate analysis failed: %s", e)
+
 
 def _add_lineup_advice(actions: list, team: Team) -> None:
     try:

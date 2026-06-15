@@ -124,6 +124,30 @@ def _print_decisions(result: dict, dry_run: bool):
                     print(f"    + {r['player']} ({r.get('team','?')}) "
                           f"[{pos}]  helps: {', '.join(cats)}")
 
+        elif atype == "drop_candidates":
+            drops = action.get("drops", [])
+            if drops:
+                cut     = [d for d in drops if d["severity"] == "cut"]
+                monitor = [d for d in drops if d["severity"] == "monitor"]
+                print(f"\n  --- Drop Candidates ---")
+                if cut:
+                    print(f"  CUT ({len(cut)}) -- below replacement level:")
+                    for d in cut:
+                        pos = "/".join(d.get("positions", []))
+                        rep = d.get("replace_with")
+                        rep_str = f"  => add {rep}" if rep else ""
+                        mark = "active" if d.get("is_starting") else "bench"
+                        print(f"    DROP {d['player']} ({d['team']}) [{pos}] [{mark}]")
+                        print(f"         {d['reason']}{rep_str}")
+                if monitor:
+                    print(f"  MONITOR ({len(monitor)}) -- borderline:")
+                    for d in monitor:
+                        pos = "/".join(d.get("positions", []))
+                        rep = d.get("replace_with")
+                        rep_str = f"  => consider {rep}" if rep else ""
+                        print(f"    WATCH {d['player']} ({d['team']}) [{pos}]")
+                        print(f"          {d['reason']}{rep_str}")
+
         elif atype == "daily_lineup":
             today_str = action.get("today", "")
             advice    = action.get("advice", [])
