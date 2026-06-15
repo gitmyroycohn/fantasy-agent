@@ -23,7 +23,12 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
     + Willy Adames (SF) [SS]  helps: R, SB
     + Bryan Abreu (HOU) [RP]  helps: K
     + Zach Agnos (COL) [RP]  helps: K
-    + Tyler Alexander (PHI) [RP]  helps: K
+    + Tyler Alexander (TEX) [RP]  helps: K
+
+  --- Drop Candidates ---
+  CUT (1) -- below replacement level:
+    DROP Justin Crawford (PHI) [CF] [bench]
+         Below replacement: HR 2, R 18, RBI 13, OPS 0.617
 
   --- Daily Lineup (Mon Jun 15, 20 MLB teams playing) ---
   SPs starting today (3):
@@ -67,6 +72,13 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
     + Andrew Alvarez (WAS) [SP]  helps: K, ERA
     + Logan Allen (ARI) [RP]  helps: K, SV
     + Philip Abner (ARI) [RP]  helps: K, SV
+
+  --- Drop Candidates ---
+  CUT (2) -- below replacement level:
+    DROP Miguel Amaya (CHC) [C] [active]
+         Below replacement: AVG 0.219, HR 3, R 15, RBI 10
+    DROP Andrew Vaughn (MIL) [1B] [active]
+         Below replacement: HR 2, R 14, RBI 18, SB 0
   Standings: Period 12: 48 roto pts - winning 6 cats, losing 4
   Weakest categories: WHIP, ERA, SB, S
 
