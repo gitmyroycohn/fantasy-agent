@@ -12,11 +12,19 @@ Usage:
 
 import re
 import logging
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from collections import defaultdict
 from functools import lru_cache
+from zoneinfo import ZoneInfo
 
 import requests
+
+_ET = ZoneInfo("America/New_York")
+
+
+def _today_et() -> date:
+    """Today's date in US Eastern time (handles UTC offset on GitHub Actions)."""
+    return datetime.now(_ET).date()
 
 logger = logging.getLogger(__name__)
 
@@ -33,9 +41,10 @@ def week_bounds(d: date = None, next_week: bool = False):
 
     CBS H2H weeks run Monday–Sunday.
     If next_week=True, return the following week's bounds.
+    Defaults to today in US Eastern time.
     """
     if d is None:
-        d = date.today()
+        d = _today_et()
     monday = d - timedelta(days=d.weekday())   # most recent Monday
     if next_week:
         monday += timedelta(weeks=1)

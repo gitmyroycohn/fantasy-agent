@@ -12,7 +12,7 @@ from cbs.waivers import fetch_waiver_wire
 from cbs.stats import fetch_matchup_stats
 from cbs.auth import CBSAuth
 from mlb.stats import enrich_players
-from mlb.schedule import two_start_pitchers, week_bounds
+from mlb.schedule import two_start_pitchers, week_bounds, _today_et
 
 logger = logging.getLogger(__name__)
 
@@ -61,12 +61,11 @@ def _h2h_decisions(auth: CBSAuth, league_id: str,
     except Exception as e:
         logger.warning("SP enrichment failed: %s", e)
     # Fetch 2-start pitchers for current week (and next if Thu–Sun)
-    from datetime import date as _date
     two_start_now  = {}
     two_start_next = {}
     try:
         two_start_now  = two_start_pitchers()
-        if _date.today().weekday() >= 3:   # Thursday or later — also show next week
+        if _today_et().weekday() >= 3:   # Thursday or later ET — also show next week
             two_start_next = two_start_pitchers(next_week=True)
     except Exception as e:
         logger.warning("2-start fetch failed: %s", e)
