@@ -69,6 +69,15 @@ def _h2h_decisions(auth: CBSAuth, league_id: str,
             two_start_next = two_start_pitchers(next_week=True)
     except Exception as e:
         logger.warning("2-start fetch failed: %s", e)
+    print(f"  2-start pitchers detected this week: {len(two_start_now)}")
+    if two_start_now:
+        # Show which available SPs are 2-starters (regardless of stat threshold)
+        import re as _re
+        _norm = lambda n: _re.sub(r"[^a-z0-9]", "", n.lower())
+        two_on_wire = [wp.player.name for wp in waivers
+                       if _norm(wp.player.name) in two_start_now]
+        if two_on_wire:
+            print(f"  2-starters on waiver wire: {', '.join(two_on_wire[:10])}")
     # rank_streaming_sps expects {cat: {"winning": bool}} — build from matchup
     cat_status = {c.category: {"winning": c.winning}
                   for c in matchup.category_standings}
