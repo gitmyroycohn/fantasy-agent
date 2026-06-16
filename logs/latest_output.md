@@ -4,52 +4,50 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   Roster: 34 players
        C  William Contreras (MIL)
       1B  Bryce Harper (PHI)
-      2B  JJ Wetherholt (STL)
+      2B  Sal Stewart (CIN)
       3B  Bo Bichette (NYM)
       SS  Kevin McGonigle (DET)
     ... and 29 more
   Stats enriched: 29/34 roster players
   Lineup: 18/34 starting
-  Free agents visible: 8120
+  Free agents visible: 8119
 
   2-start pitchers detected this week: 0
   Format: H2H Categories
-  Matchup: Week 12 vs Natural Born Closers: 0-0-12
-  Priority categories (losing, easiest first): H, HR, OPS, R, RBI, SB, ERA, INNdGS, K, S, W, WHIP
+  Matchup: Week 12 vs Natural Born Closers: 8-2-2
+  Priority categories (losing, easiest first): SB, S, WHIP, ERA
   Streaming SP (Submit adds before Monday scoring period lock.):
-    + Andrew Alvarez (WAS)  score=6.51  ERA 3.7, K/9 9.62, WHIP 1.44 | helps: ERA, K, S, W, WHIP
+    + Mason Barnett (ATH)  score=3.78  ERA 0.77, K/9 10.8, WHIP 0.77 | helps: ERA, S, WHIP
+    + Andrew Alvarez (WAS)  score=1.77  ERA 3.49, K/9 9.85, WHIP 1.45 | helps: ERA, S, WHIP
   Waiver adds (5 suggestions):
-    + Andrew Abbott (CIN) [SP]  helps: ERA, K, W, WHIP
-    + Willy Adames (SF) [SS]  helps: R, SB
-    + Bryan Abreu (HOU) [RP]  helps: K
-    + Zach Agnos (COL) [RP]  helps: K
-    + Tyler Alexander (TEX) [RP]  helps: K
+    + Willy Adames (SF) [SS]  helps: SB
+    + Nick Allen (HOU) [SS]  helps: SB
+    + Angel Abreu (CLE) [SS]  helps: SB
+    + Osvaldo Abreu (WAS) [SS]  helps: SB
+    + Cohen Achen (BAL) [SP]  helps: WHIP, ERA
 
   --- Drop Candidates ---
   CUT (1) -- below replacement level:
     DROP Justin Crawford (PHI) [CF] [bench]
-         Below replacement: HR 2, R 18, RBI 13, OPS 0.617
+         Below replacement: HR 2, R 19, RBI 14, OPS 0.635
 
-  --- Daily Lineup (Mon Jun 15, 20 MLB teams playing) ---
-  SPs starting today (3):
-    [                  active] Nick Martinez (TB)
-    [                  active] Dustin May (STL)
-    [                  active] J.T. Ginn (ATH)
-  SPs NOT starting today (7):
-    [     ACTIVE - bench!] Kyle Harrison (MIL)  MIL has no game today
+  --- Daily Lineup (Tue Jun 16, 30 MLB teams playing) ---
+  SPs starting today: none confirmed yet
+  SPs NOT starting today (10):
+    [     ACTIVE - bench!] Nick Martinez (TB)  TB has no game today
+    [     ACTIVE - bench!] Dustin May (STL)  STL playing but not listed as probable starter
+    [     ACTIVE - bench!] J.T. Ginn (ATH)  ATH playing but not listed as probable starter
+    [     ACTIVE - bench!] Kyle Harrison (MIL)  MIL playing but not listed as probable starter
     [     ACTIVE - bench!] Landen Roupp (SF)  SF has no game today
     [     already benched] Sandy Alcantara (MIA)  MIA playing but not listed as probable starter
     [     already benched] Jose Soriano (LAA)  LAA playing but not listed as probable starter
     [     already benched] Logan Webb (SF)  SF has no game today
     [     already benched] Yoshinobu Yamamoto (LAD)  LAD playing but not listed as probable starter
     [     already benched] Joe Musgrove (SD)  SD has no game today
-  Batters with off days - bench these (5):
-    [     ACTIVE - bench!] William Contreras (MIL) [C]
+  Batters with off days - bench these (2):
     [     already benched] Daylen Lile (WAS) [RF]
-    [     already benched] Wilyer Abreu (BOS) [RF]
-    [     already benched] Drake Baldwin (ATL) [C]
     [     already benched] Maikel Garcia (KC) [3B]
-  Batters with games today: 15
+  Batters with games today: 18
 
   DRY_RUN=True -- no submissions made.
 
@@ -63,13 +61,13 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
     ... and 24 more
   Stats enriched: 26/29 roster players
   Lineup: 24/29 starting
-  Free agents visible: 8181
+  Free agents visible: 8182
 
   Format: NL-Only Rotisserie
   Waiver adds (5 suggestions):
     + Zach Agnos (COL) [RP]  helps: K, SV
-    + Tyler Alexander (PHI) [RP]  helps: K, SV
     + Andrew Alvarez (WAS) [SP]  helps: K, ERA
+    + Tyler Alexander (PHI) [RP]  helps: K, SV
     + Logan Allen (ARI) [RP]  helps: K, SV
     + Philip Abner (ARI) [RP]  helps: K, SV
 
@@ -82,27 +80,24 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   Standings: Period 12: 48 roto pts - winning 6 cats, losing 4
   Weakest categories: WHIP, ERA, SB, S
 
-  --- Daily Lineup (Mon Jun 15, 20 MLB teams playing) ---
-  SPs starting today (1):
-    [                  active] Shota Imanaga (CHC)
-  SPs NOT starting today (7):
-    [     ACTIVE - bench!] Antonio Senzatela (COL)  COL playing but not listed as probable starter
-    [     ACTIVE - bench!] Logan Webb (SF)  SF has no game today
-    [     ACTIVE - bench!] Kyle Harrison (MIL)  MIL has no game today
-    [     ACTIVE - bench!] Andre Pallante (STL)  STL playing but not listed as probable starter
-    [     already benched] Quinn Priester (MIL)  MIL has no game today
-    [     already benched] Logan Henderson (MIL)  MIL has no game today
-    [     already benched] Hurston Waldrep (ATL)  ATL has no game today
-  Batters with off days - bench these (8):
-    [     ACTIVE - bench!] Ketel Marte (ARI) [2B]
-    [     ACTIVE - bench!] Casey Schmitt (SF) [2B]
-    [     ACTIVE - bench!] Garrett Mitchell (MIL) [CF]
-    [     ACTIVE - bench!] Corbin Carroll (ARI) [RF]
-    [     ACTIVE - bench!] Daylen Lile (WAS) [RF]
-    [     ACTIVE - bench!] Jacob Young (WAS) [CF]
-    [     ACTIVE - bench!] Andrew Vaughn (MIL) [1B]
-    [     already benched] Jett Williams (MIL) [SS]
-  Batters with games today: 8
+  --- Daily Lineup (Tue Jun 16, 30 MLB teams playing) ---
+  SPs pitching today (1):
+    Andre Pallante (STL)
+  SPs NOT pitching today (7) [no bench -- FYI only]:
+    Antonio Senzatela (COL)  COL playing but not listed as probable starter
+    Logan Webb (SF)  SF has no game today
+    Kyle Harrison (MIL)  MIL playing but not listed as probable starter
+    Shota Imanaga (CHC)  CHC playing but not listed as probable starter
+    Quinn Priester (MIL)  MIL playing but not listed as probable starter
+    Logan Henderson (MIL)  MIL playing but not listed as probable starter
+    Hurston Waldrep (ATL)  ATL playing but not listed as probable starter
+  Batters with no game today (5) [no bench -- FYI only]:
+    Ketel Marte (ARI) [2B]  -- 0 stats today
+    Casey Schmitt (SF) [2B]  -- 0 stats today
+    Corbin Carroll (ARI) [RF]  -- 0 stats today
+    Daylen Lile (WAS) [RF]  -- 0 stats today
+    Jacob Young (WAS) [CF]  -- 0 stats today
+  Batters with games today: 11
 
   DRY_RUN=True -- no submissions made.
 
