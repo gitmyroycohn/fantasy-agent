@@ -21,18 +21,17 @@ from sports.baseball.lineup_optimizer import optimize_daily_lineup
 from config.settings import FANTASYPROS_API_KEY
 from fantasypros.client import FantasyProsClient, enrich_with_fp_projections
 from closermonkey.client import CloserMonkeyClient
+from savant.client import SavantClient, enrich_with_savant
+from agent.tradevalue import analyze_roster_value
 
 logger = logging.getLogger(__name__)
 
-# Module-level clients
-_fp_client: FantasyProsClient | None = (
-    FantasyProsClient(FANTASYPROS_API_KEY) if FANTASYPROS_API_KEY else None
-)
-_cm_client = CloserMonkeyClient()
+_fp_client  = FantasyProsClient(FANTASYPROS_API_KEY) if FANTASYPROS_API_KEY else None
+_cm_client  = CloserMonkeyClient()
+_sav_client = SavantClient()
 
 
-def _fp_enrich(players: list, label: str = "") -> None:
-    """Enrich players with FP ROS projections if client is available."""
+def _fp_enrich(players, label=""):
     if not _fp_client or not players:
         return
     try:
@@ -42,12 +41,22 @@ def _fp_enrich(players: list, label: str = "") -> None:
     except Exception as e:
         tag = f" ({label})" if label else ""
         print(f"  FP projections{tag} failed: {e}")
-        logger.warning("FP enrichment failed%s: %s",
-                       f" ({label})" if label else "", e)
+        logger.warning("FP enrichment failed%s: %s", tag, e)
 
 
-def run_decisions(auth: CBSAuth, league_id: str,
-                  league_config: dict, team: Team, sport: str = "baseball") -> dict:
+def _sav_enrich(players, label=""):
+    if not players:
+        return
+    try:
+        n = enrich_with_savant(players, _sav_client)
+        tag = f" ({label})" if label else ""
+        print(f"  Savant xStats{tag}: {n}/{len(players)} matched")
+    except Exception as e:
+        tag = f" ({label})" if label else ""
+        print(f"  Savant xStats{tag} failed: {e}")
+
+
+def run_decisions(auth, league_id, league_config, team, sport="baseball"):
     fmt = league_config.get("format")
     if fmt == "h2h_categories":
         return _h2h_decisions(auth, league_id, league_config, team, sport)
@@ -57,10 +66,9 @@ def run_decisions(auth: CBSAuth, league_id: str,
         raise ValueError(f"Unknown league format: {fmt}")
 
 
-# -- H2H (Pins & Pills) -------------------------------------------------------
+# -- H2H ------------------------------------------------------------------
 
-def _h2h_decisions(auth: CBSAuth, league_id: str,
-                   cfg: dict, team: Team, sport: str) -> dict:
+def _h2h_decisions(auth, league_id, cfg, team, sport):
     actions = []
 
     raw_stats = fetch_matchup_stats(auth, league_id, sport)
@@ -130,6 +138,7 @@ def _h2h_decisions(auth: CBSAuth, league_id: str,
         except Exception as e:
             logger.warning("Waiver enrichment failed: %s", e)
         _fp_enrich(all_waivers, "all wire")
+        _sav_enrich(all_waivers, "all wire")
         waiver_recs = _waiver_adds_for_cats(all_waivers, losing)
         if waiver_recs:
             actions.append({"type": "waiver_adds", "recommendations": waiver_recs})
@@ -138,9 +147,10 @@ def _h2h_decisions(auth: CBSAuth, league_id: str,
         _add_drop_candidates(actions, team, [], nl_only=False)
 
     _add_closer_news(actions)
+    _add_trade_signals(actions, team)
     _add_lineup_advice(actions, team, no_bench=cfg.get("no_bench", False))
 
-    league_name = cfg.get("name") or cfg.get("display_name") or league_id
+    league_name = cfg.get("name") or league_id
     return {
         "league": league_name,
         "format": "H2H Categories",
@@ -153,10 +163,9 @@ def _h2h_decisions(auth: CBSAuth, league_id: str,
     }
 
 
-# -- Rotisserie (Casey Stengel) -----------------------------------------------
+# -- Rotisserie -----------------------------------------------------------
 
-def _roto_decisions(auth: CBSAuth, league_id: str,
-                    cfg: dict, team: Team, sport: str) -> dict:
+def _roto_decisions(auth, league_id, cfg, team, sport):
     actions = []
 
     warnings = check_nl_eligibility(team.players())
@@ -170,6 +179,7 @@ def _roto_decisions(auth: CBSAuth, league_id: str,
     except Exception as e:
         logger.warning("Waiver enrichment failed: %s", e)
     _fp_enrich(all_waivers, "roto wire")
+    _sav_enrich(all_waivers, "roto wire")
 
     nl_waivers = filter_nl_waiver_pool(all_waivers, cfg)
     _FAKE = {"PS", "TS"}
@@ -183,7 +193,8 @@ def _roto_decisions(auth: CBSAuth, league_id: str,
         if not waiver_recs:
             waiver_recs = [
                 {"player": wp.player.name, "team": wp.player.team,
-                 "positions": wp.player.positions, "helps_cats": []}
+                 "positions": wp.player.positions, "helps_cats": [],
+                 "_stats": {}}
                 for wp in nl_waivers[:5]
             ]
         actions.append({"type": "waiver_adds", "recommendations": waiver_recs})
@@ -203,9 +214,10 @@ def _roto_decisions(auth: CBSAuth, league_id: str,
         logger.warning("Roto scoring fetch failed: %s", e)
 
     _add_closer_news(actions)
+    _add_trade_signals(actions, team)
     _add_lineup_advice(actions, team, no_bench=cfg.get("no_bench", False))
 
-    league_name = cfg.get("name") or cfg.get("display_name") or league_id
+    league_name = cfg.get("name") or league_id
     return {
         "league":  league_name,
         "format":  "NL-Only Rotisserie",
@@ -213,10 +225,9 @@ def _roto_decisions(auth: CBSAuth, league_id: str,
     }
 
 
-# -- Helpers ------------------------------------------------------------------
+# -- Helpers --------------------------------------------------------------
 
-def _add_drop_candidates(actions: list, team: Team,
-                         waiver_wire: list, nl_only: bool = False) -> None:
+def _add_drop_candidates(actions, team, waiver_wire, nl_only=False):
     try:
         drops = find_drop_candidates(team.roster, waiver_wire, nl_only=nl_only)
         if drops:
@@ -225,21 +236,22 @@ def _add_drop_candidates(actions: list, team: Team,
         logger.warning("Drop candidate analysis failed: %s", e)
 
 
-def _add_lineup_advice(actions: list, team: Team, no_bench: bool = False) -> None:
+def _add_lineup_advice(actions, team, no_bench=False):
     try:
         teams_today    = teams_playing_today()
         starters_today = probable_starters_today()
         today_str      = _today_et().strftime("%a %b %-d")
 
-        lineup_slots = []
-        for rs in team.roster:
-            lineup_slots.append({
+        lineup_slots = [
+            {
                 "player_name": rs.player.name,
                 "team":        rs.player.team,
                 "positions":   rs.player.positions,
                 "slot":        rs.slot,
                 "is_starting": rs.is_starting,
-            })
+            }
+            for rs in team.roster
+        ]
 
         advice = optimize_daily_lineup(lineup_slots, teams_today, starters_today)
         if advice:
@@ -266,8 +278,7 @@ def _add_lineup_advice(actions: list, team: Team, no_bench: bool = False) -> Non
         logger.warning("Daily lineup advice failed: %s", e)
 
 
-def _add_closer_news(actions: list) -> None:
-    """Fetch CM rapid reactions and leverage ledger; append as closer_news action."""
+def _add_closer_news(actions):
     try:
         reactions = _cm_client.rapid_reactions(limit=5)
         ledger    = _cm_client.leverage_ledger(limit=1)
@@ -278,7 +289,7 @@ def _add_closer_news(actions: list) -> None:
         logger.warning("CM news fetch failed: %s", e)
 
 
-def _waiver_adds_for_cats(waivers, losing_cats: list) -> list:
+def _waiver_adds_for_cats(waivers, losing_cats):
     CAT_POSITIONS = {
         "SB":  ["OF", "SS", "2B"],
         "HR":  ["1B", "OF", "3B"],
@@ -292,7 +303,6 @@ def _waiver_adds_for_cats(waivers, losing_cats: list) -> list:
         "ERA": ["SP"],
         "WHIP":["SP"],
     }
-    # (stat_key, lower_is_better)
     CAT_SORT_STAT = {
         "SB":  ("sb",   False),
         "HR":  ("hr",   False),
@@ -307,12 +317,11 @@ def _waiver_adds_for_cats(waivers, losing_cats: list) -> list:
         "WHIP":("whip", True),
     }
 
-    def _stat_val(player_stats: dict, base_key: str, lower: bool) -> float:
-        """Check fp_ prefixed key first, then uppercase, then lowercase."""
-        if not player_stats:
+    def _stat_val(stats, base_key, lower):
+        if not stats:
             return 0.0
         for key in (f"fp_{base_key}", base_key.upper(), base_key.lower(), base_key):
-            v = player_stats.get(key)
+            v = stats.get(key)
             if v is not None:
                 return float(v)
         return 0.0
@@ -322,38 +331,68 @@ def _waiver_adds_for_cats(waivers, losing_cats: list) -> list:
         helps = [c for c in losing_cats if any(
             pos in CAT_POSITIONS.get(c, []) for pos in wp.player.positions
         )]
-        if helps and wp.player.positions:
-            sort_score = 0.0
-            for cat in helps:
-                base_key, lower = CAT_SORT_STAT.get(cat, (None, False))
-                if base_key:
-                    val = _stat_val(wp.player.stats, base_key, lower)
-                    sort_score += (-val if lower else val)
-            rec = {
-                "player":     wp.player.name,
-                "team":       wp.player.team,
-                "positions":  wp.player.positions,
-                "ownership":  wp.ownership_pct,
-                "helps_cats": helps,
-                "_score":     sort_score,
-            }
-            # Annotate RP/SV picks with Closer Monkey role
-            if "SV" in helps:
-                try:
-                    cm = _cm_client.find_player(wp.player.name)
-                    if cm:
-                        rec["cm_role"]      = cm["role"]
-                        rec["cm_tendency"]  = cm["tendency"]
-                        rec["cm_committee"] = cm["committee"]
-                except Exception:
-                    pass
-            recs.append(rec)
+        if not helps or not wp.player.positions:
+            continue
+
+        stats = wp.player.stats or {}
+        sort_score = 0.0
+        for cat in helps:
+            base_key, lower = CAT_SORT_STAT.get(cat, (None, False))
+            if base_key:
+                val = _stat_val(stats, base_key, lower)
+                sort_score += (-val if lower else val)
+
+        # Savant boosts: barrel% for power hitters, xwOBA for contact, xERA for pitchers
+        barrel = stats.get("sv_barrel_pct")
+        if barrel is not None and any(c in helps for c in ("HR", "RBI", "SB")):
+            sort_score += max(0.0, barrel - 8.0) * 2.0
+
+        xwoba = stats.get("sv_xwoba")
+        if xwoba is not None and any(c in helps for c in ("AVG", "R", "RBI", "HR")):
+            sort_score += xwoba * 50.0
+
+        xera = stats.get("sv_xera")
+        if xera is not None and any(c in helps for c in ("K", "ERA", "WHIP", "W")):
+            sort_score -= xera * 3.0
+
+        rec = {
+            "player":     wp.player.name,
+            "team":       wp.player.team,
+            "positions":  wp.player.positions,
+            "ownership":  wp.ownership_pct,
+            "helps_cats": helps,
+            "_score":     sort_score,
+            "_stats":     stats,
+        }
+
+        # Closer Monkey annotation for SV picks
+        if "SV" in helps:
+            try:
+                cm = _cm_client.find_player(wp.player.name)
+                if cm:
+                    rec["cm_role"]      = cm["role"]
+                    rec["cm_tendency"]  = cm["tendency"]
+                    rec["cm_committee"] = cm["committee"]
+            except Exception:
+                pass
+
+        recs.append(rec)
 
     recs.sort(key=lambda r: r.pop("_score"), reverse=True)
     return recs[:5]
 
 
-def _current_week() -> int:
+def _add_trade_signals(actions: list, team) -> None:
+    """Analyze roster for buy-low / sell-high opportunities."""
+    try:
+        signals = analyze_roster_value(team.roster)
+        if signals:
+            actions.append({"type": "trade_signals", "signals": signals})
+    except Exception as e:
+        logger.warning("Trade signal analysis failed: %s", e)
+
+
+def _current_week():
     from datetime import date
     opening_day = date(2026, 3, 26)
     delta = (date.today() - opening_day).days

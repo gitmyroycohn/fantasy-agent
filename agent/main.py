@@ -19,8 +19,7 @@ from data.models import Team
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-logging.basicConfig(level=logging.WARNING,
-                    format="%(levelname)s %(name)s: %(message)s")
+logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
 
 OUTPUT_PATH  = "logs/latest_output.md"
@@ -28,7 +27,6 @@ HISTORY_PATH = "logs/history.json"
 
 
 class _Tee:
-    """Write to two streams simultaneously."""
     def __init__(self, a, b):
         self.a, self.b = a, b
     def write(self, s):
@@ -39,14 +37,12 @@ class _Tee:
         self.b.flush()
 
 
-def load_leagues(path="config/leagues.yaml") -> dict:
+def load_leagues(path="config/leagues.yaml"):
     with open(path) as f:
         return yaml.safe_load(f) or {}
 
 
-def run_league(auth: CBSAuth, league: dict, sport: str,
-               run_type: str, dry_run: bool,
-               history: dict = None) -> dict | None:
+def run_league(auth, league, sport, run_type, dry_run, history=None):
     lid  = league["cbs_league_id"]
     tid  = str(league["cbs_team_id"])
     name = league.get("name", lid)
@@ -70,7 +66,7 @@ def run_league(auth: CBSAuth, league: dict, sport: str,
     except Exception as e:
         print(f"  Stats enrichment: unavailable ({e})")
 
-    lineup = get_current_lineup(auth, lid, tid, sport)
+    lineup  = get_current_lineup(auth, lid, tid, sport)
     starting = sum(1 for s in lineup if s["is_starting"])
     print(f"  Lineup: {starting}/{len(lineup)} starting")
 
@@ -100,7 +96,7 @@ def run_league(auth: CBSAuth, league: dict, sport: str,
             return None
 
 
-def _print_decisions(result: dict, dry_run: bool):
+def _print_decisions(result, dry_run):
     fmt = result.get("format", "")
     print(f"  Format: {fmt}")
 
@@ -124,14 +120,14 @@ def _print_decisions(result: dict, dry_run: bool):
                 print(f"  !! {w['warning']}")
 
         elif atype in ("streaming_sp", "streaming_sp_next_week"):
-            recs = action.get("recommendations", [])
+            recs  = action.get("recommendations", [])
             label = ("  Next week 2-starters" if atype == "streaming_sp_next_week"
                      else "  Streaming SP")
             if recs:
                 print(f"{label} ({action.get('note', '')}):")
                 for r in recs:
-                    tag   = " [2-START]" if r.get("starts", 1) >= 2 else ""
-                    dtag  = f"  [{r['_days']}]" if "_days" in r else ""
+                    tag  = " [2-START]" if r.get("starts", 1) >= 2 else ""
+                    dtag = f"  [{r['_days']}]" if "_days" in r else ""
                     print(f"    + {r['player']} ({r['team']}){tag}{dtag}  "
                           f"score={r['score']}  {r.get('reason', '')}")
             else:
@@ -145,45 +141,79 @@ def _print_decisions(result: dict, dry_run: bool):
                     cats  = r.get("helps_cats") or []
                     pos   = "/".join(r.get("positions", []))
                     dtag  = f"  [{r['_days']}]" if "_days" in r else ""
+                    stats = r.get("_stats") or {}
+
+                    # Closer Monkey tag for SV picks
                     cm_tag = ""
                     if r.get("cm_role"):
                         role_map = {
-                            "closer":         "CLOSER",
-                            "first_in_line":  "1st-in-line",
-                            "second_in_line": "2nd-in-line",
+                            "closer":        "CLOSER",
+                            "first_in_line": "1st-in-line",
+                            "second_in_line":"2nd-in-line",
                         }
-                        role_lbl = role_map.get(r["cm_role"], r["cm_role"])
-                        tend = r.get("cm_tendency", "")
+                        lbl  = role_map.get(r["cm_role"], r["cm_role"])
                         comm = " [committee]" if r.get("cm_committee") else ""
-                        cm_tag = f"  [CM: {role_lbl}{comm} | {tend}]"
+                        cm_tag = f"  [CM: {lbl}{comm} | {r.get('cm_tendency','')}]"
+
+                    # Savant snippet
+                    sav_parts = []
+                    if stats.get("sv_barrel_pct") is not None:
+                        sav_parts.append(f"Brl%={stats['sv_barrel_pct']:.1f}")
+                    if stats.get("sv_xwoba") is not None:
+                        sav_parts.append(f"xwOBA={stats['sv_xwoba']:.3f}")
+                    if stats.get("sv_xera") is not None:
+                        sav_parts.append(f"xERA={stats['sv_xera']:.2f}")
+                    sav_tag = ("  [" + " | ".join(sav_parts) + "]") if sav_parts else ""
+
                     print(f"    + {r['player']} ({r.get('team','?')}) "
-                          f"[{pos}]{dtag}  helps: {', '.join(cats)}{cm_tag}")
+                          f"[{pos}]{dtag}  helps: {', '.join(cats)}{cm_tag}{sav_tag}")
 
         elif atype == "drop_candidates":
-            drops = action.get("drops", [])
+            drops   = action.get("drops", [])
+            cut     = [d for d in drops if d["severity"] == "cut"]
+            monitor = [d for d in drops if d["severity"] == "monitor"]
             if drops:
-                cut     = [d for d in drops if d["severity"] == "cut"]
-                monitor = [d for d in drops if d["severity"] == "monitor"]
                 print(f"\n  --- Drop Candidates ---")
-                if cut:
-                    print(f"  CUT ({len(cut)}) -- below replacement level:")
-                    for d in cut:
-                        pos   = "/".join(d.get("positions", []))
-                        rep   = d.get("replace_with")
-                        dtag  = f"  [{d['_days']}]" if "_days" in d else ""
-                        rep_s = f"  => add {rep}" if rep else ""
-                        mark  = "active" if d.get("is_starting") else "bench"
-                        print(f"    DROP {d['player']} ({d['team']}) [{pos}] [{mark}]{dtag}")
-                        print(f"         {d['reason']}{rep_s}")
-                if monitor:
-                    print(f"  MONITOR ({len(monitor)}) -- borderline:")
-                    for d in monitor:
-                        pos   = "/".join(d.get("positions", []))
-                        rep   = d.get("replace_with")
-                        dtag  = f"  [{d['_days']}]" if "_days" in d else ""
-                        rep_s = f"  => consider {rep}" if rep else ""
-                        print(f"    WATCH {d['player']} ({d['team']}) [{pos}]{dtag}")
-                        print(f"          {d['reason']}{rep_s}")
+            if cut:
+                print(f"  CUT ({len(cut)}) -- below replacement level:")
+                for d in cut:
+                    pos  = "/".join(d.get("positions", []))
+                    rep  = d.get("replace_with")
+                    dtag = f"  [{d['_days']}]" if "_days" in d else ""
+                    mark = "active" if d.get("is_starting") else "bench"
+                    rstr = f"  => add {rep}" if rep else ""
+                    print(f"    DROP {d['player']} ({d['team']}) [{pos}] [{mark}]{dtag}")
+                    print(f"         {d['reason']}{rstr}")
+            if monitor:
+                print(f"  MONITOR ({len(monitor)}) -- borderline:")
+                for d in monitor:
+                    pos  = "/".join(d.get("positions", []))
+                    rep  = d.get("replace_with")
+                    dtag = f"  [{d['_days']}]" if "_days" in d else ""
+                    rstr = f"  => consider {rep}" if rep else ""
+                    print(f"    WATCH {d['player']} ({d['team']}) [{pos}]{dtag}")
+                    print(f"          {d['reason']}{rstr}")
+
+        elif atype == "trade_signals":
+            signals = action.get("signals", [])
+            if signals:
+                sells = [s for s in signals if s["signal"] == "sell_high"]
+                buys  = [s for s in signals if s["signal"] == "buy_low"]
+                print(f"\n  --- Trade Value Signals ---")
+                if sells:
+                    print(f"  SELL HIGH ({len(sells)}) -- outpacing projections:")
+                    for s in sells[:4]:
+                        pos  = "/".join(s.get("positions", []))
+                        conf = s.get("confidence", "")
+                        print(f"    ~ {s['name']} ({s['team']}) [{pos}] [{conf}]")
+                        print(f"      {s['reason']}")
+                if buys:
+                    print(f"  BUY LOW ({len(buys)}) -- underperforming projections:")
+                    for s in buys[:4]:
+                        pos  = "/".join(s.get("positions", []))
+                        conf = s.get("confidence", "")
+                        print(f"    ~ {s['name']} ({s['team']}) [{pos}] [{conf}]")
+                        print(f"      {s['reason']}")
 
         elif atype == "closer_news":
             posts = action.get("posts", [])
@@ -193,12 +223,12 @@ def _print_decisions(result: dict, dry_run: bool):
                     label = "RAPID REACTION" if "rapid" in p["title"].lower() else "LEDGER"
                     print(f"  [{label}] {p['title']}")
                     if p.get("summary"):
-                        lines = p["summary"].split("\n")
-                        for line in lines[:3]:
+                        for line in p["summary"].split("\n")[:3]:
                             line = line.strip()
                             if line:
                                 print(f"    {line}")
-                    print(f"    {p.get('link', '')}")
+                    if p.get("link"):
+                        print(f"    {p['link']}")
 
         elif atype == "daily_lineup":
             today_str = action.get("today", "")
@@ -209,77 +239,67 @@ def _print_decisions(result: dict, dry_run: bool):
             print(f"\n  --- Daily Lineup ({today_str}, {teams_ct} MLB teams playing) ---")
 
             if no_bench:
-                sp_starting = [a for a in advice
-                               if "SP" in a["positions"] and a["advice"] in ("start", "ok")]
-                sp_no_game  = [a for a in advice
-                               if "SP" in a["positions"] and a["advice"] == "bench_pitcher"]
-                bat_no_game = [a for a in advice
-                               if "SP" not in a["positions"] and "RP" not in a["positions"]
-                               and a["advice"] == "bench"]
-                bat_active  = [a for a in advice
-                               if "SP" not in a["positions"] and "RP" not in a["positions"]
-                               and a["advice"] in ("start", "ok")]
+                sp_on   = [a for a in advice if "SP" in a["positions"]
+                           and a["advice"] in ("start", "ok")]
+                sp_off  = [a for a in advice if "SP" in a["positions"]
+                           and a["advice"] == "bench_pitcher"]
+                bat_off = [a for a in advice if "SP" not in a["positions"]
+                           and "RP" not in a["positions"] and a["advice"] == "bench"]
+                bat_on  = [a for a in advice if "SP" not in a["positions"]
+                           and "RP" not in a["positions"] and a["advice"] in ("start", "ok")]
 
-                if sp_starting:
-                    print(f"  SPs pitching today ({len(sp_starting)}):")
-                    for a in sp_starting:
+                if sp_on:
+                    print(f"  SPs pitching today ({len(sp_on)}):")
+                    for a in sp_on:
                         print(f"    {a['player']} ({a['team']})")
                 else:
                     print("  SPs pitching today: none confirmed yet")
-
-                if sp_no_game:
-                    print(f"  SPs NOT pitching today ({len(sp_no_game)}) [no bench -- FYI only]:")
-                    for a in sp_no_game:
+                if sp_off:
+                    print(f"  SPs NOT pitching today ({len(sp_off)}) [no bench -- FYI only]:")
+                    for a in sp_off:
                         print(f"    {a['player']} ({a['team']})  {a['reason']}")
-
-                if bat_no_game:
-                    print(f"  Batters with no game today ({len(bat_no_game)}) [no bench -- FYI only]:")
-                    for a in bat_no_game:
+                if bat_off:
+                    print(f"  Batters with no game today ({len(bat_off)}) [no bench -- FYI only]:")
+                    for a in bat_off:
                         pos = "/".join(a["positions"])
                         print(f"    {a['player']} ({a['team']}) [{pos}]  -- 0 stats today")
-
-                print(f"  Batters with games today: {len(bat_active)}")
+                print(f"  Batters with games today: {len(bat_on)}")
 
             else:
-                sp_starting = [a for a in advice
-                               if "SP" in a["positions"] and a["advice"] in ("start", "ok")]
-                sp_bench    = [a for a in advice
-                               if "SP" in a["positions"] and a["advice"] == "bench_pitcher"]
-                bat_off     = [a for a in advice
-                               if "SP" not in a["positions"] and "RP" not in a["positions"]
-                               and a["advice"] == "bench"]
-                bat_active  = [a for a in advice
-                               if "SP" not in a["positions"] and "RP" not in a["positions"]
-                               and a["advice"] in ("start", "ok")]
+                sp_on   = [a for a in advice if "SP" in a["positions"]
+                           and a["advice"] in ("start", "ok")]
+                sp_off  = [a for a in advice if "SP" in a["positions"]
+                           and a["advice"] == "bench_pitcher"]
+                bat_off = [a for a in advice if "SP" not in a["positions"]
+                           and "RP" not in a["positions"] and a["advice"] == "bench"]
+                bat_on  = [a for a in advice if "SP" not in a["positions"]
+                           and "RP" not in a["positions"] and a["advice"] in ("start", "ok")]
 
-                if sp_starting:
-                    print(f"  SPs starting today ({len(sp_starting)}):")
-                    for a in sp_starting:
+                if sp_on:
+                    print(f"  SPs starting today ({len(sp_on)}):")
+                    for a in sp_on:
                         mark = "active" if a["is_starting"] else "BENCH - move to active!"
                         print(f"    [{mark:>24}] {a['player']} ({a['team']})")
                 else:
                     print("  SPs starting today: none confirmed yet")
-
-                if sp_bench:
-                    print(f"  SPs NOT starting today ({len(sp_bench)}):")
-                    for a in sp_bench:
+                if sp_off:
+                    print(f"  SPs NOT starting today ({len(sp_off)}):")
+                    for a in sp_off:
                         mark = "ACTIVE - bench!" if a["is_starting"] else "already benched"
                         print(f"    [{mark:>20}] {a['player']} ({a['team']})  {a['reason']}")
-
                 if bat_off:
                     print(f"  Batters with off days - bench these ({len(bat_off)}):")
                     for a in bat_off:
                         mark = "ACTIVE - bench!" if a["is_starting"] else "already benched"
                         pos  = "/".join(a["positions"])
                         print(f"    [{mark:>20}] {a['player']} ({a['team']}) [{pos}]")
-
-                print(f"  Batters with games today: {len(bat_active)}")
+                print(f"  Batters with games today: {len(bat_on)}")
 
     if dry_run:
         print(f"\n  DRY_RUN=True -- no submissions made.")
 
 
-def _write_output(header: str, body: str):
+def _write_output(header, body):
     os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
     with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
         f.write(header)
@@ -290,10 +310,8 @@ def main():
     parser = argparse.ArgumentParser(description="CBS Fantasy Agent")
     parser.add_argument("--run", choices=["daily", "weekly", "waivers", "lineup"],
                         default="daily")
-    parser.add_argument("--league", default="all",
-                        help="league id from leagues.yaml, or 'all'")
-    parser.add_argument("--sport", default="all",
-                        help="baseball, football, or 'all'")
+    parser.add_argument("--league", default="all")
+    parser.add_argument("--sport",  default="all")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--verbose", action="store_true")
     args = parser.parse_args()
@@ -314,4 +332,58 @@ def main():
         return 1
 
     history = load_history(HISTORY_PATH)
-   
+    prune_history(history)
+
+    config  = load_leagues()
+    results = []
+    ran     = 0
+
+    body_buf        = io.StringIO()
+    original_stdout = sys.stdout
+    sys.stdout      = _Tee(original_stdout, body_buf)
+
+    try:
+        print(header_line)
+
+        for sport, leagues in config.items():
+            if args.sport not in ("all", sport):
+                continue
+            for league in leagues or []:
+                if args.league not in ("all", league.get("id")):
+                    continue
+                try:
+                    result = run_league(auth, league, sport, args.run, dry,
+                                        history=history)
+                    if result:
+                        results.append(result)
+                    ran += 1
+                except CBSCookieExpiredError as e:
+                    print(f"\nSession expired:\n{e}")
+                    sys.stdout = original_stdout
+                    return 1
+                except Exception as e:
+                    print(f"  ERROR in {league.get('name', '?')}: {e}")
+                    logger.exception("run_league failed")
+
+        if ran == 0:
+            print("No leagues matched the --league/--sport filters.")
+        print("\nDone.")
+
+    finally:
+        sys.stdout = original_stdout
+
+    save_history(history, HISTORY_PATH)
+
+    body = body_buf.getvalue()
+    if results:
+        tldr = format_tldr(results)
+        _write_output(tldr + "\n", body)
+        print(f"\n[Output written to {OUTPUT_PATH}]")
+    else:
+        _write_output("", body)
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
