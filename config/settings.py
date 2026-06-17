@@ -9,6 +9,8 @@ CBS_PASSWORD = os.getenv("CBS_PASSWORD")
 CBS_COOKIE   = os.getenv("CBS_COOKIE", "")
 CBS_API_URL  = "https://api.cbssports.com/fantasy"
 
+FANTASYPROS_API_KEY = os.getenv("FANTASYPROS_API_KEY", "")
+
 WAIVER_PRIORITY_THRESHOLD = 50
 
 # Streaming SP thresholds (used by sports/baseball/streaming.py)

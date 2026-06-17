@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CBS_COOKIE: ${{ secrets.CBS_COOKIE }}
+      FANTASYPROS_API_KEY: ${{ secrets.FANTASYPROS_API_KEY }}
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
