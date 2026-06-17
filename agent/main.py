@@ -1,4 +1,5 @@
 import argparse
+import io
 import logging
 import os
 import sys
@@ -12,6 +13,7 @@ from cbs.lineup import get_current_lineup
 from mlb.stats import enrich_roster, enrich_players
 from agent.decisions import run_decisions
 from agent.summary import format_tldr
+from agent.history import load_history, save_history, update_and_annotate, prune_history
 from data.models import Team
 
 if hasattr(sys.stdout, "reconfigure"):
@@ -21,7 +23,20 @@ logging.basicConfig(level=logging.WARNING,
                     format="%(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
 
-OUTPUT_PATH = "logs/latest_output.md"
+OUTPUT_PATH  = "logs/latest_output.md"
+HISTORY_PATH = "logs/history.json"
+
+
+class _Tee:
+    """Write to two streams simultaneously."""
+    def __init__(self, a, b):
+        self.a, self.b = a, b
+    def write(self, s):
+        self.a.write(s)
+        self.b.write(s)
+    def flush(self):
+        self.a.flush()
+        self.b.flush()
 
 
 def load_leagues(path="config/leagues.yaml") -> dict:
@@ -30,7 +45,8 @@ def load_leagues(path="config/leagues.yaml") -> dict:
 
 
 def run_league(auth: CBSAuth, league: dict, sport: str,
-               run_type: str, dry_run: bool):
+               run_type: str, dry_run: bool,
+               history: dict = None) -> dict | None:
     lid  = league["cbs_league_id"]
     tid  = str(league["cbs_team_id"])
     name = league.get("name", lid)
@@ -74,15 +90,14 @@ def run_league(auth: CBSAuth, league: dict, sport: str,
         try:
             team   = Team(id=tid, name=name, roster=roster)
             result = run_decisions(auth, lid, league, team, sport)
+            if history is not None:
+                update_and_annotate(result, history, lid)
             _print_decisions(result, dry_run)
             return result
         except Exception as e:
             print(f"  Decisions unavailable: {e}")
             logger.exception("run_decisions failed for %s", lid)
             return None
-    else:
-        print(f"  DRY_RUN={dry_run} -- no submissions will be made.")
-        return None
 
 
 def _print_decisions(result: dict, dry_run: bool):
@@ -115,8 +130,9 @@ def _print_decisions(result: dict, dry_run: bool):
             if recs:
                 print(f"{label} ({action.get('note', '')}):")
                 for r in recs:
-                    tag = " [2-START]" if r.get("starts", 1) >= 2 else ""
-                    print(f"    + {r['player']} ({r['team']}){tag}  "
+                    tag   = " [2-START]" if r.get("starts", 1) >= 2 else ""
+                    dtag  = f"  [{r['_days']}]" if "_days" in r else ""
+                    print(f"    + {r['player']} ({r['team']}){tag}{dtag}  "
                           f"score={r['score']}  {r.get('reason', '')}")
             else:
                 print(f"{label}: no candidates above threshold")
@@ -128,8 +144,9 @@ def _print_decisions(result: dict, dry_run: bool):
                 for r in recs:
                     cats = r.get("helps_cats") or []
                     pos  = "/".join(r.get("positions", []))
+                    dtag = f"  [{r['_days']}]" if "_days" in r else ""
                     print(f"    + {r['player']} ({r.get('team','?')}) "
-                          f"[{pos}]  helps: {', '.join(cats)}")
+                          f"[{pos}]{dtag}  helps: {', '.join(cats)}")
 
         elif atype == "drop_candidates":
             drops = action.get("drops", [])
@@ -140,20 +157,22 @@ def _print_decisions(result: dict, dry_run: bool):
                 if cut:
                     print(f"  CUT ({len(cut)}) -- below replacement level:")
                     for d in cut:
-                        pos = "/".join(d.get("positions", []))
-                        rep = d.get("replace_with")
-                        rep_str = f"  => add {rep}" if rep else ""
-                        mark = "active" if d.get("is_starting") else "bench"
-                        print(f"    DROP {d['player']} ({d['team']}) [{pos}] [{mark}]")
-                        print(f"         {d['reason']}{rep_str}")
+                        pos   = "/".join(d.get("positions", []))
+                        rep   = d.get("replace_with")
+                        dtag  = f"  [{d['_days']}]" if "_days" in d else ""
+                        rep_s = f"  => add {rep}" if rep else ""
+                        mark  = "active" if d.get("is_starting") else "bench"
+                        print(f"    DROP {d['player']} ({d['team']}) [{pos}] [{mark}]{dtag}")
+                        print(f"         {d['reason']}{rep_s}")
                 if monitor:
                     print(f"  MONITOR ({len(monitor)}) -- borderline:")
                     for d in monitor:
-                        pos = "/".join(d.get("positions", []))
-                        rep = d.get("replace_with")
-                        rep_str = f"  => consider {rep}" if rep else ""
-                        print(f"    WATCH {d['player']} ({d['team']}) [{pos}]")
-                        print(f"          {d['reason']}{rep_str}")
+                        pos   = "/".join(d.get("positions", []))
+                        rep   = d.get("replace_with")
+                        dtag  = f"  [{d['_days']}]" if "_days" in d else ""
+                        rep_s = f"  => consider {rep}" if rep else ""
+                        print(f"    WATCH {d['player']} ({d['team']}) [{pos}]{dtag}")
+                        print(f"          {d['reason']}{rep_s}")
 
         elif atype == "daily_lineup":
             today_str = action.get("today", "")
@@ -235,7 +254,6 @@ def _print_decisions(result: dict, dry_run: bool):
 
 
 def _write_output(header: str, body: str):
-    """Write TL;DR header + full body to logs/latest_output.md."""
     os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
     with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
         f.write(header)
@@ -269,18 +287,19 @@ def main():
         print(f"\nAuth setup failed:\n{e}")
         return 1
 
+    history = load_history(HISTORY_PATH)
+    prune_history(history)
+
     config  = load_leagues()
-    results = []   # collect decision results for TL;DR
+    results = []
     ran     = 0
 
-    # --- capture body output into a string so we can prepend TL;DR ---
-    import io
     body_buf = io.StringIO()
     original_stdout = sys.stdout
     sys.stdout = _Tee(original_stdout, body_buf)
 
     try:
-        print(header_line)  # repeat into body buffer
+        print(header_line)
 
         for sport, leagues in config.items():
             if args.sport not in ("all", sport):
@@ -289,7 +308,8 @@ def main():
                 if args.league not in ("all", league.get("id")):
                     continue
                 try:
-                    result = run_league(auth, league, sport, args.run, dry)
+                    result = run_league(auth, league, sport, args.run, dry,
+                                        history=history)
                     if result:
                         results.append(result)
                     ran += 1
@@ -308,9 +328,9 @@ def main():
     finally:
         sys.stdout = original_stdout
 
-    body = body_buf.getvalue()
+    save_history(history, HISTORY_PATH)
 
-    # build and write output file with TL;DR on top
+    body = body_buf.getvalue()
     if results:
         tldr = format_tldr(results)
         _write_output(tldr + "\n", body)
@@ -319,25 +339,6 @@ def main():
         _write_output("", body)
 
     return 0
-
-
-class _Tee:
-    """Write to two streams simultaneously."""
-    def __init__(self, *streams):
-        self._streams = streams
-
-    def write(self, data):
-        for s in self._streams:
-            s.write(data)
-
-    def flush(self):
-        for s in self._streams:
-            s.flush()
-
-    def reconfigure(self, **kwargs):
-        for s in self._streams:
-            if hasattr(s, "reconfigure"):
-                s.reconfigure(**kwargs)
 
 
 if __name__ == "__main__":
