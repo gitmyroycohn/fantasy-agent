@@ -18,8 +18,30 @@ from mlb.schedule import (
     teams_playing_today, probable_starters_today,
 )
 from sports.baseball.lineup_optimizer import optimize_daily_lineup
+from config.settings import FANTASYPROS_API_KEY
+from fantasypros.client import FantasyProsClient, enrich_with_fp_projections
 
 logger = logging.getLogger(__name__)
+
+# Module-level FP client -- None if no key configured
+_fp_client: FantasyProsClient | None = (
+    FantasyProsClient(FANTASYPROS_API_KEY) if FANTASYPROS_API_KEY else None
+)
+
+
+def _fp_enrich(players: list, label: str = "") -> None:
+    """Enrich players with FP ROS projections if client is available."""
+    if not _fp_client or not players:
+        return
+    try:
+        n = enrich_with_fp_projections(players, _fp_client)
+        tag = f" ({label})" if label else ""
+        print(f"  FP projections{tag}: {n}/{len(players)} matched")
+    except Exception as e:
+        tag = f" ({label})" if label else ""
+        print(f"  FP projections{tag} failed: {e}")
+        logger.warning("FP enrichment failed%s: %s",
+                       f" ({label})" if label else "", e)
 
 
 def run_decisions(auth: CBSAuth, league_id: str,
@@ -57,6 +79,7 @@ def _h2h_decisions(auth: CBSAuth, league_id: str,
         enrich_players(waivers[:100])
     except Exception as e:
         logger.warning("SP enrichment failed: %s", e)
+    _fp_enrich(waivers[:100], "SP wire")
 
     two_start_now  = {}
     two_start_next = {}
@@ -104,6 +127,7 @@ def _h2h_decisions(auth: CBSAuth, league_id: str,
             enrich_players(all_waivers)
         except Exception as e:
             logger.warning("Waiver enrichment failed: %s", e)
+        _fp_enrich(all_waivers, "all wire")
         waiver_recs = _waiver_adds_for_cats(all_waivers, losing)
         if waiver_recs:
             actions.append({"type": "waiver_adds", "recommendations": waiver_recs})
@@ -142,6 +166,7 @@ def _roto_decisions(auth: CBSAuth, league_id: str,
         enrich_players(all_waivers)
     except Exception as e:
         logger.warning("Waiver enrichment failed: %s", e)
+    _fp_enrich(all_waivers, "roto wire")
 
     nl_waivers = filter_nl_waiver_pool(all_waivers, cfg)
     _FAKE = {"PS", "TS"}
@@ -191,10 +216,7 @@ def _add_drop_candidates(actions: list, team: Team,
     try:
         drops = find_drop_candidates(team.roster, waiver_wire, nl_only=nl_only)
         if drops:
-            actions.append({
-                "type":  "drop_candidates",
-                "drops": drops,
-            })
+            actions.append({"type": "drop_candidates", "drops": drops})
     except Exception as e:
         logger.warning("Drop candidate analysis failed: %s", e)
 
@@ -216,7 +238,6 @@ def _add_lineup_advice(actions: list, team: Team, no_bench: bool = False) -> Non
             })
 
         advice = optimize_daily_lineup(lineup_slots, teams_today, starters_today)
-
         if advice:
             actions.append({
                 "type":              "daily_lineup",
@@ -255,19 +276,32 @@ def _waiver_adds_for_cats(waivers, losing_cats: list) -> list:
         "ERA": ["SP"],
         "WHIP":["SP"],
     }
+    # (stat_key, lower_is_better)
+    # fp_ prefixed keys are used when present (FP ROS projections)
+    # fallback to season stats
     CAT_SORT_STAT = {
-        "SB":  ("SB",   False),
-        "HR":  ("HR",   False),
-        "R":   ("R",    False),
-        "RBI": ("RBI",  False),
-        "AVG": ("AVG",  False),
-        "K":   ("K",    False),
-        "SV":  ("SV",   False),
+        "SB":  ("sb",   False),
+        "HR":  ("hr",   False),
+        "R":   ("r",    False),
+        "RBI": ("rbi",  False),
+        "AVG": ("avg",  False),
+        "K":   ("k",    False),
+        "SV":  ("sv",   False),
         "QS":  ("QS",   False),
-        "W":   ("W",    False),
-        "ERA": ("ERA",  True),
-        "WHIP":("WHIP", True),
+        "W":   ("w",    False),
+        "ERA": ("era",  True),
+        "WHIP":("whip", True),
     }
+
+    def _stat_val(player_stats: dict, base_key: str, lower: bool) -> float:
+        """Check fp_ prefixed key first, then uppercase, then lowercase."""
+        if not player_stats:
+            return 0.0
+        for key in (f"fp_{base_key}", base_key.upper(), base_key.lower(), base_key):
+            v = player_stats.get(key)
+            if v is not None:
+                return float(v)
+        return 0.0
 
     recs = []
     for wp in waivers:
@@ -277,17 +311,17 @@ def _waiver_adds_for_cats(waivers, losing_cats: list) -> list:
         if helps and wp.player.positions:
             sort_score = 0.0
             for cat in helps:
-                stat_key, lower = CAT_SORT_STAT.get(cat, (None, False))
-                if stat_key and wp.player.stats:
-                    val = wp.player.stats.get(stat_key, 0.0) or 0.0
+                base_key, lower = CAT_SORT_STAT.get(cat, (None, False))
+                if base_key:
+                    val = _stat_val(wp.player.stats, base_key, lower)
                     sort_score += (-val if lower else val)
             recs.append({
-                "player":    wp.player.name,
-                "team":      wp.player.team,
-                "positions": wp.player.positions,
-                "ownership": wp.ownership_pct,
-                "helps_cats":helps,
-                "_score":    sort_score,
+                "player":     wp.player.name,
+                "team":       wp.player.team,
+                "positions":  wp.player.positions,
+                "ownership":  wp.ownership_pct,
+                "helps_cats": helps,
+                "_score":     sort_score,
             })
 
     recs.sort(key=lambda r: r.pop("_score"), reverse=True)

@@ -2,10 +2,10 @@
 Drop candidate identification for CBS fantasy baseball.
 
 A player is a drop candidate when:
-  1. Their production this season is below the position replacement threshold, AND
-  2. They're not on the IL (injured list) / strategically stashed
+  1. Their production is below the position replacement threshold, AND
+  2. They are not at a scarce position (C, SS) unless a clear replacement exists
 
-Output: list of {player, reason, replace_with} recommendations.
+Output: list of {player, reason, severity, replace_with} dicts.
 """
 import logging
 from data.models import RosterSlot, WaiverPlayer
@@ -13,9 +13,7 @@ from data.models import RosterSlot, WaiverPlayer
 logger = logging.getLogger(__name__)
 
 # ---- Replacement-level thresholds (season totals, ~2026 pace) ----
-# Below these numbers = replaceable by a decent FA
 
-# Batting: minimum season stats to be worth a roster spot
 _BAT_FLOOR = {
     "AVG":  0.225,
     "HR":   5,
@@ -23,27 +21,28 @@ _BAT_FLOOR = {
     "RBI":  20,
     "SB":   4,
     "OPS":  0.650,
-    "H":    35,      # proxy for "has played"
+    "H":    35,
 }
 
-# Pitching: minimum season stats to be worth a roster spot
 _PITCH_FLOOR = {
-    "ERA":   5.50,   # upper bound (higher = worse)
+    "ERA":   5.50,   # upper bound
     "WHIP":  1.55,   # upper bound
     "K":     25,     # lower bound
-    "IP":    20.0,   # must have thrown meaningful innings
+    "IP":    20.0,
     "W":     1,
 }
 
-# Roto-specific: SP must have enough IP to matter
 _SP_MIN_IP = 15.0
 
-# How many "failing" thresholds before we flag as a drop
 _BAT_FAIL_THRESHOLD  = 3
 _PITCH_FAIL_THRESHOLD = 2
 
 _PITCHER_POS = {"SP", "RP", "P"}
-_IL_STATUS   = {"DL", "IL", "DTD", "SUSP", "NA"}   # CBS status codes = bench
+_IL_STATUS   = {"DL", "IL", "DTD", "SUSP", "NA"}
+
+# Positions where replacements are hard to find -- require confirmed replacement
+# before flagging as CUT (will still flag as MONITOR if struggling)
+_SCARCE_POS = {"C", "SS"}
 
 
 def find_drop_candidates(
@@ -54,28 +53,26 @@ def find_drop_candidates(
     """
     Evaluate each roster player and flag weak ones as drop candidates.
 
-    Returns a list of dicts:
+    Returns list of dicts:
       {player, team, positions, slot, reason, severity, replace_with}
 
-    severity: "cut" (obvious drop) or "monitor" (borderline)
-    replace_with: name of a waiver wire player who is better (or None)
+    severity: "cut" (clear drop) or "monitor" (borderline)
     """
     drops = []
 
     for rs in roster:
         p = rs.player
 
-        # Skip IL / strategically stashed players
+        # Skip IL / stashed players
         if p.status in _IL_STATUS:
             continue
-        # Skip BN slot players who are just depth
+        # Skip pure bench players
         if rs.slot == "BN" and not rs.is_starting:
             continue
 
         is_pitcher = bool(set(p.positions) & _PITCHER_POS)
 
         if not p.stats:
-            # No stats = too new / prospect — skip unless clearly problematic
             continue
 
         if is_pitcher:
@@ -86,6 +83,14 @@ def find_drop_candidates(
         if result:
             severity, reason = result
             replacement = _find_replacement(p, waiver_wire, is_pitcher)
+            pos_set = set(p.positions)
+
+            # Downgrade scarce positions from CUT to MONITOR
+            # unless we have a confirmed wire replacement
+            if severity == "cut" and pos_set & _SCARCE_POS and not replacement:
+                severity = "monitor"
+                reason = f"[scarce pos] {reason}"
+
             drops.append({
                 "player":       p.name,
                 "team":         p.team,
@@ -97,20 +102,16 @@ def find_drop_candidates(
                 "replace_with": replacement,
             })
 
-    # Sort: "cut" first, then "monitor"; within each, starting players first
     drops.sort(key=lambda d: (0 if d["severity"] == "cut" else 1,
                                0 if d["is_starting"] else 1))
     return drops
 
 
 def _evaluate_batter(player) -> tuple | None:
-    """Return (severity, reason) or None if the player is fine."""
     s = player.stats
-    fails = []
-
     h = s.get("H", 0)
     if h < 10:
-        return None   # too few AB to judge
+        return None
 
     avg  = s.get("AVG", 0.0)
     hr   = s.get("HR", 0)
@@ -119,6 +120,7 @@ def _evaluate_batter(player) -> tuple | None:
     sb   = s.get("SB", 0)
     ops  = s.get("OPS", 0.0)
 
+    fails = []
     if avg < _BAT_FLOOR["AVG"]:   fails.append(f"AVG {avg:.3f}")
     if hr  < _BAT_FLOOR["HR"]:    fails.append(f"HR {hr}")
     if r   < _BAT_FLOOR["R"]:     fails.append(f"R {r}")
@@ -135,7 +137,6 @@ def _evaluate_batter(player) -> tuple | None:
 
 
 def _evaluate_pitcher(player) -> tuple | None:
-    """Return (severity, reason) or None if the pitcher is fine."""
     s = player.stats
     ip   = s.get("IP", 0.0)
     era  = s.get("ERA", 0.0)
@@ -143,7 +144,7 @@ def _evaluate_pitcher(player) -> tuple | None:
     k    = s.get("K", 0)
 
     if ip < 5:
-        return None   # too few innings to judge
+        return None
 
     fails = []
     if era  > _PITCH_FLOOR["ERA"]:    fails.append(f"ERA {era}")
@@ -162,7 +163,6 @@ def _evaluate_pitcher(player) -> tuple | None:
 
 def _find_replacement(player, waiver_wire: list[WaiverPlayer],
                       is_pitcher: bool) -> str | None:
-    """Find the best waiver wire player who plays the same position(s)."""
     pos_set = set(player.positions)
     candidates = []
 
