@@ -1,0 +1,95 @@
+{
+  "hemp": {
+    "waiver_adds": {
+      "Willy Adames": {
+        "first": "2026-06-17",
+        "last": "2026-06-17",
+        "n": 1
+      },
+      "Luisangel Acuna": {
+        "first": "2026-06-17",
+        "last": "2026-06-17",
+        "n": 1
+      },
+      "Blaze Alexander": {
+        "first": "2026-06-17",
+        "last": "2026-06-17",
+        "n": 1
+      },
+      "Nick Allen": {
+        "first": "2026-06-17",
+        "last": "2026-06-17",
+        "n": 1
+      },
+      "Adael Amador": {
+        "first": "2026-06-17",
+        "last": "2026-06-17",
+        "n": 1
+      }
+    },
+    "streaming_sp": {
+      "Mason Barnett": {
+        "first": "2026-06-17",
+        "last": "2026-06-17",
+        "n": 1
+      },
+      "Andrew Alvarez": {
+        "first": "2026-06-17",
+        "last": "2026-06-17",
+        "n": 1
+      }
+    },
+    "drop_candidates": {
+      "Justin Crawford": {
+        "first": "2026-06-17",
+        "last": "2026-06-17",
+        "n": 1,
+        "sev": "cut"
+      }
+    }
+  },
+  "baberuthdivingclubformen": {
+    "waiver_adds": {
+      "Jose Alvarado": {
+        "first": "2026-06-17",
+        "last": "2026-06-17",
+        "n": 1
+      },
+      "Andrew Alvarez": {
+        "first": "2026-06-17",
+        "last": "2026-06-17",
+        "n": 1
+      },
+      "Tyler Alexander": {
+        "first": "2026-06-17",
+        "last": "2026-06-17",
+        "n": 1
+      },
+      "Adbert Alzolay": {
+        "first": "2026-06-17",
+        "last": "2026-06-17",
+        "n": 1
+      },
+      "Zach Agnos": {
+        "first": "2026-06-17",
+        "last": "2026-06-17",
+        "n": 1
+      }
+    },
+    "streaming_sp": {},
+    "drop_candidates": {
+      "Andrew Vaughn": {
+        "first": "2026-06-17",
+        "last": "2026-06-17",
+        "n": 1,
+        "sev": "cut"
+      },
+      "Miguel Amaya": {
+        "first": "2026-06-17",
+        "last": "2026-06-17",
+        "n": 1,
+        "sev": "monitor"
+      }
+    }
+  }
+}
