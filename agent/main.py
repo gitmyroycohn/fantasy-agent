@@ -142,11 +142,22 @@ def _print_decisions(result: dict, dry_run: bool):
             if recs:
                 print(f"  Waiver adds ({len(recs)} suggestions):")
                 for r in recs:
-                    cats = r.get("helps_cats") or []
-                    pos  = "/".join(r.get("positions", []))
-                    dtag = f"  [{r['_days']}]" if "_days" in r else ""
+                    cats  = r.get("helps_cats") or []
+                    pos   = "/".join(r.get("positions", []))
+                    dtag  = f"  [{r['_days']}]" if "_days" in r else ""
+                    cm_tag = ""
+                    if r.get("cm_role"):
+                        role_map = {
+                            "closer":         "CLOSER",
+                            "first_in_line":  "1st-in-line",
+                            "second_in_line": "2nd-in-line",
+                        }
+                        role_lbl = role_map.get(r["cm_role"], r["cm_role"])
+                        tend = r.get("cm_tendency", "")
+                        comm = " [committee]" if r.get("cm_committee") else ""
+                        cm_tag = f"  [CM: {role_lbl}{comm} | {tend}]"
                     print(f"    + {r['player']} ({r.get('team','?')}) "
-                          f"[{pos}]{dtag}  helps: {', '.join(cats)}")
+                          f"[{pos}]{dtag}  helps: {', '.join(cats)}{cm_tag}")
 
         elif atype == "drop_candidates":
             drops = action.get("drops", [])
@@ -173,6 +184,21 @@ def _print_decisions(result: dict, dry_run: bool):
                         rep_s = f"  => consider {rep}" if rep else ""
                         print(f"    WATCH {d['player']} ({d['team']}) [{pos}]{dtag}")
                         print(f"          {d['reason']}{rep_s}")
+
+        elif atype == "closer_news":
+            posts = action.get("posts", [])
+            if posts:
+                print(f"\n  --- Closer Monkey News ---")
+                for p in posts:
+                    label = "RAPID REACTION" if "rapid" in p["title"].lower() else "LEDGER"
+                    print(f"  [{label}] {p['title']}")
+                    if p.get("summary"):
+                        lines = p["summary"].split("\n")
+                        for line in lines[:3]:
+                            line = line.strip()
+                            if line:
+                                print(f"    {line}")
+                    print(f"    {p.get('link', '')}")
 
         elif atype == "daily_lineup":
             today_str = action.get("today", "")
@@ -288,58 +314,4 @@ def main():
         return 1
 
     history = load_history(HISTORY_PATH)
-    prune_history(history)
-
-    config  = load_leagues()
-    results = []
-    ran     = 0
-
-    body_buf = io.StringIO()
-    original_stdout = sys.stdout
-    sys.stdout = _Tee(original_stdout, body_buf)
-
-    try:
-        print(header_line)
-
-        for sport, leagues in config.items():
-            if args.sport not in ("all", sport):
-                continue
-            for league in leagues or []:
-                if args.league not in ("all", league.get("id")):
-                    continue
-                try:
-                    result = run_league(auth, league, sport, args.run, dry,
-                                        history=history)
-                    if result:
-                        results.append(result)
-                    ran += 1
-                except CBSCookieExpiredError as e:
-                    print(f"\nSession expired:\n{e}")
-                    sys.stdout = original_stdout
-                    return 1
-                except Exception as e:
-                    print(f"  ERROR in {league.get('name', '?')}: {e}")
-                    logger.exception("run_league failed")
-
-        if ran == 0:
-            print("No leagues matched the --league/--sport filters.")
-        print("\nDone.")
-
-    finally:
-        sys.stdout = original_stdout
-
-    save_history(history, HISTORY_PATH)
-
-    body = body_buf.getvalue()
-    if results:
-        tldr = format_tldr(results)
-        _write_output(tldr + "\n", body)
-        print(f"\n[Output written to {OUTPUT_PATH}]")
-    else:
-        _write_output("", body)
-
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())
+   

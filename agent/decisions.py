@@ -20,13 +20,15 @@ from mlb.schedule import (
 from sports.baseball.lineup_optimizer import optimize_daily_lineup
 from config.settings import FANTASYPROS_API_KEY
 from fantasypros.client import FantasyProsClient, enrich_with_fp_projections
+from closermonkey.client import CloserMonkeyClient
 
 logger = logging.getLogger(__name__)
 
-# Module-level FP client -- None if no key configured
+# Module-level clients
 _fp_client: FantasyProsClient | None = (
     FantasyProsClient(FANTASYPROS_API_KEY) if FANTASYPROS_API_KEY else None
 )
+_cm_client = CloserMonkeyClient()
 
 
 def _fp_enrich(players: list, label: str = "") -> None:
@@ -135,6 +137,7 @@ def _h2h_decisions(auth: CBSAuth, league_id: str,
     else:
         _add_drop_candidates(actions, team, [], nl_only=False)
 
+    _add_closer_news(actions)
     _add_lineup_advice(actions, team, no_bench=cfg.get("no_bench", False))
 
     league_name = cfg.get("name") or cfg.get("display_name") or league_id
@@ -199,6 +202,7 @@ def _roto_decisions(auth: CBSAuth, league_id: str,
     except Exception as e:
         logger.warning("Roto scoring fetch failed: %s", e)
 
+    _add_closer_news(actions)
     _add_lineup_advice(actions, team, no_bench=cfg.get("no_bench", False))
 
     league_name = cfg.get("name") or cfg.get("display_name") or league_id
@@ -262,6 +266,18 @@ def _add_lineup_advice(actions: list, team: Team, no_bench: bool = False) -> Non
         logger.warning("Daily lineup advice failed: %s", e)
 
 
+def _add_closer_news(actions: list) -> None:
+    """Fetch CM rapid reactions and leverage ledger; append as closer_news action."""
+    try:
+        reactions = _cm_client.rapid_reactions(limit=5)
+        ledger    = _cm_client.leverage_ledger(limit=1)
+        posts = reactions + [p for p in ledger if p not in reactions]
+        if posts:
+            actions.append({"type": "closer_news", "posts": posts})
+    except Exception as e:
+        logger.warning("CM news fetch failed: %s", e)
+
+
 def _waiver_adds_for_cats(waivers, losing_cats: list) -> list:
     CAT_POSITIONS = {
         "SB":  ["OF", "SS", "2B"],
@@ -277,8 +293,6 @@ def _waiver_adds_for_cats(waivers, losing_cats: list) -> list:
         "WHIP":["SP"],
     }
     # (stat_key, lower_is_better)
-    # fp_ prefixed keys are used when present (FP ROS projections)
-    # fallback to season stats
     CAT_SORT_STAT = {
         "SB":  ("sb",   False),
         "HR":  ("hr",   False),
@@ -315,14 +329,25 @@ def _waiver_adds_for_cats(waivers, losing_cats: list) -> list:
                 if base_key:
                     val = _stat_val(wp.player.stats, base_key, lower)
                     sort_score += (-val if lower else val)
-            recs.append({
+            rec = {
                 "player":     wp.player.name,
                 "team":       wp.player.team,
                 "positions":  wp.player.positions,
                 "ownership":  wp.ownership_pct,
                 "helps_cats": helps,
                 "_score":     sort_score,
-            })
+            }
+            # Annotate RP/SV picks with Closer Monkey role
+            if "SV" in helps:
+                try:
+                    cm = _cm_client.find_player(wp.player.name)
+                    if cm:
+                        rec["cm_role"]      = cm["role"]
+                        rec["cm_tendency"]  = cm["tendency"]
+                        rec["cm_committee"] = cm["committee"]
+                except Exception:
+                    pass
+            recs.append(rec)
 
     recs.sort(key=lambda r: r.pop("_score"), reverse=True)
     return recs[:5]
