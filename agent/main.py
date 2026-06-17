@@ -1,5 +1,6 @@
 import argparse
 import logging
+import os
 import sys
 import yaml
 
@@ -10,6 +11,7 @@ from cbs.waivers import get_available_players
 from cbs.lineup import get_current_lineup
 from mlb.stats import enrich_roster, enrich_players
 from agent.decisions import run_decisions
+from agent.summary import format_tldr
 from data.models import Team
 
 if hasattr(sys.stdout, "reconfigure"):
@@ -18,6 +20,8 @@ if hasattr(sys.stdout, "reconfigure"):
 logging.basicConfig(level=logging.WARNING,
                     format="%(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
+
+OUTPUT_PATH = "logs/latest_output.md"
 
 
 def load_leagues(path="config/leagues.yaml") -> dict:
@@ -34,7 +38,7 @@ def run_league(auth: CBSAuth, league: dict, sport: str,
 
     if lid == "FILL_IN" or tid == "FILL_IN":
         print("  League/team ID not configured -- skipping.")
-        return
+        return None
 
     roster = get_roster(auth, lid, tid, sport)
     print(f"  Roster: {len(roster)} players")
@@ -68,14 +72,17 @@ def run_league(auth: CBSAuth, league: dict, sport: str,
     print()
     if run_type in ("daily", "weekly", "waivers"):
         try:
-            team = Team(id=tid, name=name, roster=roster)
+            team   = Team(id=tid, name=name, roster=roster)
             result = run_decisions(auth, lid, league, team, sport)
             _print_decisions(result, dry_run)
+            return result
         except Exception as e:
             print(f"  Decisions unavailable: {e}")
             logger.exception("run_decisions failed for %s", lid)
+            return None
     else:
         print(f"  DRY_RUN={dry_run} -- no submissions will be made.")
+        return None
 
 
 def _print_decisions(result: dict, dry_run: bool):
@@ -157,7 +164,6 @@ def _print_decisions(result: dict, dry_run: bool):
             print(f"\n  --- Daily Lineup ({today_str}, {teams_ct} MLB teams playing) ---")
 
             if no_bench:
-                # No bench slots -- just show who is/isn't playing for awareness
                 sp_starting = [a for a in advice
                                if "SP" in a["positions"] and a["advice"] in ("start", "ok")]
                 sp_no_game  = [a for a in advice
@@ -190,7 +196,6 @@ def _print_decisions(result: dict, dry_run: bool):
                 print(f"  Batters with games today: {len(bat_active)}")
 
             else:
-                # Has bench -- full actionable advice
                 sp_starting = [a for a in advice
                                if "SP" in a["positions"] and a["advice"] in ("start", "ok")]
                 sp_bench    = [a for a in advice
@@ -229,6 +234,14 @@ def _print_decisions(result: dict, dry_run: bool):
         print(f"\n  DRY_RUN=True -- no submissions made.")
 
 
+def _write_output(header: str, body: str):
+    """Write TL;DR header + full body to logs/latest_output.md."""
+    os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
+    with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
+        f.write(header)
+        f.write(body)
+
+
 def main():
     parser = argparse.ArgumentParser(description="CBS Fantasy Agent")
     parser.add_argument("--run", choices=["daily", "weekly", "waivers", "lineup"],
@@ -245,8 +258,9 @@ def main():
         logging.getLogger().setLevel(logging.DEBUG)
 
     dry = args.dry_run or DRY_RUN
-    print(f"CBS Fantasy Agent -- run={args.run}, league={args.league}, "
-          f"sport={args.sport}, dry_run={dry}")
+    header_line = (f"CBS Fantasy Agent -- run={args.run}, league={args.league}, "
+                   f"sport={args.sport}, dry_run={dry}")
+    print(header_line)
 
     try:
         auth = CBSAuth(CBS_COOKIE)
@@ -255,28 +269,75 @@ def main():
         print(f"\nAuth setup failed:\n{e}")
         return 1
 
-    config = load_leagues()
-    ran = 0
-    for sport, leagues in config.items():
-        if args.sport not in ("all", sport):
-            continue
-        for league in leagues or []:
-            if args.league not in ("all", league.get("id")):
-                continue
-            try:
-                run_league(auth, league, sport, args.run, dry)
-                ran += 1
-            except CBSCookieExpiredError as e:
-                print(f"\nSession expired:\n{e}")
-                return 1
-            except Exception as e:
-                print(f"  ERROR in {league.get('name', '?')}: {e}")
-                logger.exception("run_league failed")
+    config  = load_leagues()
+    results = []   # collect decision results for TL;DR
+    ran     = 0
 
-    if ran == 0:
-        print("No leagues matched the --league/--sport filters.")
-    print("\nDone.")
+    # --- capture body output into a string so we can prepend TL;DR ---
+    import io
+    body_buf = io.StringIO()
+    original_stdout = sys.stdout
+    sys.stdout = _Tee(original_stdout, body_buf)
+
+    try:
+        print(header_line)  # repeat into body buffer
+
+        for sport, leagues in config.items():
+            if args.sport not in ("all", sport):
+                continue
+            for league in leagues or []:
+                if args.league not in ("all", league.get("id")):
+                    continue
+                try:
+                    result = run_league(auth, league, sport, args.run, dry)
+                    if result:
+                        results.append(result)
+                    ran += 1
+                except CBSCookieExpiredError as e:
+                    print(f"\nSession expired:\n{e}")
+                    sys.stdout = original_stdout
+                    return 1
+                except Exception as e:
+                    print(f"  ERROR in {league.get('name', '?')}: {e}")
+                    logger.exception("run_league failed")
+
+        if ran == 0:
+            print("No leagues matched the --league/--sport filters.")
+        print("\nDone.")
+
+    finally:
+        sys.stdout = original_stdout
+
+    body = body_buf.getvalue()
+
+    # build and write output file with TL;DR on top
+    if results:
+        tldr = format_tldr(results)
+        _write_output(tldr + "\n", body)
+        print(f"\n[Output written to {OUTPUT_PATH}]")
+    else:
+        _write_output("", body)
+
     return 0
+
+
+class _Tee:
+    """Write to two streams simultaneously."""
+    def __init__(self, *streams):
+        self._streams = streams
+
+    def write(self, data):
+        for s in self._streams:
+            s.write(data)
+
+    def flush(self):
+        for s in self._streams:
+            s.flush()
+
+    def reconfigure(self, **kwargs):
+        for s in self._streams:
+            if hasattr(s, "reconfigure"):
+                s.reconfigure(**kwargs)
 
 
 if __name__ == "__main__":

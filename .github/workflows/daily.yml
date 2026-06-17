@@ -1,40 +1,33 @@
 name: Fantasy Agent
 
 on:
-  workflow_dispatch:        # manual trigger from GitHub UI / mobile
   schedule:
-    - cron: '0 12 * * *'   # daily at 8am ET (noon UTC)
+    - cron: '0 12 * * *'   # 8am ET (UTC-4)
+  workflow_dispatch:
 
 jobs:
   run:
     runs-on: ubuntu-latest
+    env:
+      CBS_COOKIE: ${{ secrets.CBS_COOKIE }}
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
       - uses: actions/checkout@v4
-        env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
       - uses: actions/setup-python@v5
-        env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         with:
           python-version: '3.11'
           cache: 'pip'
 
-      - name: Install dependencies
-        run: pip install -r requirements.txt
+      - run: pip install -r requirements.txt
 
-      - name: Run agent
-        env:
-          CBS_COOKIE: ${{ secrets.CBS_COOKIE }}
-        run: |
-          mkdir -p logs
-          python -m agent.main --run daily --dry-run | tee logs/latest_output.md
+      - run: python -m agent.main --run daily --dry-run
 
-      - name: Commit output
+      - name: Commit latest_output.md
         run: |
-          git config user.email "github-actions@github.com"
-          git config user.name "GitHub Actions"
+          git config user.name  "Fantasy Agent"
+          git config user.email "actions@github.com"
           git add logs/latest_output.md
-          git diff --staged --quiet || git commit -m "agent run $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git diff --cached --quiet || git commit -m "agent run $(date -u +'%Y-%m-%d %H:%M UTC')"
           git push
