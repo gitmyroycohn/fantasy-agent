@@ -1,5 +1,5 @@
 ================================================
-  FANTASY AGENT  --  Wed Jun 17, 2026  2:02 PM ET
+  FANTASY AGENT  --  Wed Jun 17, 2026  2:08 PM ET
 ================================================
 
 [ PINS & PILLS  |  H2H Categories ]
@@ -9,13 +9,13 @@
   ** Submit adds before Monday scoring period lock. **
   Also    : Andrew Alvarez
   Top Add  : Willy Adames (SF) [SS]  helps R, SB
-  Also     : Nick Allen (SS), Blaze Alexander (3B)
+  Also     : Luisangel Acuna (2B), Nick Allen (SS)
   DROP     : Justin Crawford
 
 [ CASEY STENGEL  |  NL-Only Roto ]
-  Top Add  : Zach Agnos (COL) [RP]  helps K, SV
-  Also     : Andrew Alvarez (SP), Tyler Alexander (RP)
-  DROP     : Miguel Amaya, Andrew Vaughn
+  Top Add  : Andrew Alvarez (WAS) [SP]  helps K, ERA
+  Also     : Tyler Alexander (RP), Jose Alvarado (RP)
+  DROP     : Andrew Vaughn
   Standings: Period 12: 49 roto pts - winning 6 cats, losing 4
   Weakest  : ERA, WHIP, SB, S
 
@@ -37,7 +37,9 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   Lineup: 18/34 starting
   Free agents visible: 8120
 
+  FP projections (SP wire): 18/100 matched
   2-start pitchers detected this week: 0
+  FP projections (all wire): 32/200 matched
   Format: H2H Categories
   Matchup: Week 12 vs Natural Born Closers: 6-4-2
   Priority categories (losing, easiest first): R, SB, OPS, WHIP, HR, S
@@ -46,10 +48,10 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
     + Andrew Alvarez (WAS)  score=0.77  ERA 3.49, K/9 9.85, WHIP 1.45 | helps: S, WHIP
   Waiver adds (5 suggestions):
     + Willy Adames (SF) [SS]  helps: R, SB
+    + Luisangel Acuna (CHW) [2B]  helps: R, SB
     + Nick Allen (HOU) [SS]  helps: R, SB
     + Blaze Alexander (BAL) [3B]  helps: HR
-    + Angel Abreu (CLE) [SS]  helps: R, SB
-    + Jose Abreu (HOU) [1B]  helps: HR
+    + Adael Amador (COL) [2B]  helps: R, SB
 
   --- Drop Candidates ---
   CUT (1) -- below replacement level:
@@ -89,20 +91,22 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   Lineup: 24/29 starting
   Free agents visible: 8185
 
+  FP projections (roto wire): 34/200 matched
   Format: NL-Only Rotisserie
   Waiver adds (5 suggestions):
-    + Zach Agnos (COL) [RP]  helps: K, SV
     + Andrew Alvarez (WAS) [SP]  helps: K, ERA
     + Tyler Alexander (PHI) [RP]  helps: K, SV
-    + Logan Allen (ARI) [RP]  helps: K, SV
+    + Jose Alvarado (PHI) [RP]  helps: K, SV
+    + Zach Agnos (COL) [RP]  helps: K, SV
     + Philip Abner (ARI) [RP]  helps: K, SV
 
   --- Drop Candidates ---
-  CUT (2) -- below replacement level:
-    DROP Miguel Amaya (CHC) [C] [active]
-         Below replacement: HR 3, R 15, RBI 10, SB 0
+  CUT (1) -- below replacement level:
     DROP Andrew Vaughn (MIL) [1B] [active]
          Below replacement: HR 2, R 14, RBI 18, SB 0
+  MONITOR (1) -- borderline:
+    WATCH Miguel Amaya (CHC) [C]
+          [scarce pos] Below replacement: HR 3, R 15, RBI 10, SB 0
   Standings: Period 12: 49 roto pts - winning 6 cats, losing 4
   Weakest categories: ERA, WHIP, SB, S
 
