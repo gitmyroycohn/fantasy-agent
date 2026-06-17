@@ -1,5 +1,5 @@
 ================================================
-  FANTASY AGENT  --  Wed Jun 17, 2026  12:35 PM ET
+  FANTASY AGENT  --  Wed Jun 17, 2026  2:02 PM ET
 ================================================
 
 [ PINS & PILLS  |  H2H Categories ]
@@ -58,15 +58,15 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
 
   --- Daily Lineup (Wed Jun 17, 28 MLB teams playing) ---
   SPs starting today (1):
-    [ BENCH - move to active!] Sandy Alcantara (MIA)
+    [                  active] Sandy Alcantara (MIA)
   SPs NOT starting today (9):
     [     ACTIVE - bench!] Nick Martinez (TB)  TB has no game today
     [     ACTIVE - bench!] Dustin May (STL)  STL playing but not listed as probable starter
     [     ACTIVE - bench!] J.T. Ginn (ATH)  ATH playing but not listed as probable starter
     [     ACTIVE - bench!] Kyle Harrison (MIL)  MIL playing but not listed as probable starter
-    [     ACTIVE - bench!] Landen Roupp (SF)  SF has no game today
     [     already benched] Jose Soriano (LAA)  LAA playing but not listed as probable starter
     [     already benched] Logan Webb (SF)  SF has no game today
+    [     already benched] Landen Roupp (SF)  SF has no game today
     [     already benched] Yoshinobu Yamamoto (LAD)  LAD playing but not listed as probable starter
     [     already benched] Joe Musgrove (SD)  SD has no game today
   Batters with off days - bench these (3):
