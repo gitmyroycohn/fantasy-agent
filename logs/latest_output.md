@@ -1,3 +1,28 @@
+================================================
+  FANTASY AGENT  --  Wed Jun 17, 2026  12:35 PM ET
+================================================
+
+[ PINS & PILLS  |  H2H Categories ]
+  Matchup : Week 12 vs Natural Born Closers: 6-4-2
+  Target  : R, SB, OPS, WHIP +2 more
+  Stream SP: Mason Barnett (ATH)  ERA ?  K/9 ?
+  ** Submit adds before Monday scoring period lock. **
+  Also    : Andrew Alvarez
+  Top Add  : Willy Adames (SF) [SS]  helps R, SB
+  Also     : Nick Allen (SS), Blaze Alexander (3B)
+  DROP     : Justin Crawford
+
+[ CASEY STENGEL  |  NL-Only Roto ]
+  Top Add  : Zach Agnos (COL) [RP]  helps K, SV
+  Also     : Andrew Alvarez (SP), Tyler Alexander (RP)
+  DROP     : Miguel Amaya, Andrew Vaughn
+  Standings: Period 12: 49 roto pts - winning 6 cats, losing 4
+  Weakest  : ERA, WHIP, SB, S
+
+================================================
+  Full details below
+================================================
+
 CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
 
 === Pins and Pills (baseball) ===
@@ -10,44 +35,45 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
     ... and 29 more
   Stats enriched: 29/34 roster players
   Lineup: 18/34 starting
-  Free agents visible: 8119
+  Free agents visible: 8120
 
   2-start pitchers detected this week: 0
   Format: H2H Categories
-  Matchup: Week 12 vs Natural Born Closers: 8-2-2
-  Priority categories (losing, easiest first): SB, S, WHIP, ERA
+  Matchup: Week 12 vs Natural Born Closers: 6-4-2
+  Priority categories (losing, easiest first): R, SB, OPS, WHIP, HR, S
   Streaming SP (Submit adds before Monday scoring period lock.):
-    + Mason Barnett (ATH)  score=3.78  ERA 0.77, K/9 10.8, WHIP 0.77 | helps: ERA, S, WHIP
-    + Andrew Alvarez (WAS)  score=1.77  ERA 3.49, K/9 9.85, WHIP 1.45 | helps: ERA, S, WHIP
+    + Mason Barnett (ATH)  score=2.78  ERA 0.77, K/9 10.8, WHIP 0.77 | helps: S, WHIP
+    + Andrew Alvarez (WAS)  score=0.77  ERA 3.49, K/9 9.85, WHIP 1.45 | helps: S, WHIP
   Waiver adds (5 suggestions):
-    + Willy Adames (SF) [SS]  helps: SB
-    + Nick Allen (HOU) [SS]  helps: SB
-    + Angel Abreu (CLE) [SS]  helps: SB
-    + Osvaldo Abreu (WAS) [SS]  helps: SB
-    + Cohen Achen (BAL) [SP]  helps: WHIP, ERA
+    + Willy Adames (SF) [SS]  helps: R, SB
+    + Nick Allen (HOU) [SS]  helps: R, SB
+    + Blaze Alexander (BAL) [3B]  helps: HR
+    + Angel Abreu (CLE) [SS]  helps: R, SB
+    + Jose Abreu (HOU) [1B]  helps: HR
 
   --- Drop Candidates ---
   CUT (1) -- below replacement level:
     DROP Justin Crawford (PHI) [CF] [bench]
-         Below replacement: HR 2, R 19, RBI 14, OPS 0.635
+         Below replacement: HR 2, R 19, RBI 14, OPS 0.626
 
-  --- Daily Lineup (Tue Jun 16, 30 MLB teams playing) ---
-  SPs starting today: none confirmed yet
-  SPs NOT starting today (10):
+  --- Daily Lineup (Wed Jun 17, 28 MLB teams playing) ---
+  SPs starting today (1):
+    [ BENCH - move to active!] Sandy Alcantara (MIA)
+  SPs NOT starting today (9):
     [     ACTIVE - bench!] Nick Martinez (TB)  TB has no game today
     [     ACTIVE - bench!] Dustin May (STL)  STL playing but not listed as probable starter
     [     ACTIVE - bench!] J.T. Ginn (ATH)  ATH playing but not listed as probable starter
     [     ACTIVE - bench!] Kyle Harrison (MIL)  MIL playing but not listed as probable starter
     [     ACTIVE - bench!] Landen Roupp (SF)  SF has no game today
-    [     already benched] Sandy Alcantara (MIA)  MIA playing but not listed as probable starter
     [     already benched] Jose Soriano (LAA)  LAA playing but not listed as probable starter
     [     already benched] Logan Webb (SF)  SF has no game today
     [     already benched] Yoshinobu Yamamoto (LAD)  LAD playing but not listed as probable starter
     [     already benched] Joe Musgrove (SD)  SD has no game today
-  Batters with off days - bench these (2):
+  Batters with off days - bench these (3):
+    [     already benched] Luke Keaschall (MIN) [2B]
     [     already benched] Daylen Lile (WAS) [RF]
     [     already benched] Maikel Garcia (KC) [3B]
-  Batters with games today: 18
+  Batters with games today: 17
 
   DRY_RUN=True -- no submissions made.
 
@@ -61,7 +87,7 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
     ... and 24 more
   Stats enriched: 26/29 roster players
   Lineup: 24/29 starting
-  Free agents visible: 8182
+  Free agents visible: 8185
 
   Format: NL-Only Rotisserie
   Waiver adds (5 suggestions):
@@ -74,19 +100,19 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   --- Drop Candidates ---
   CUT (2) -- below replacement level:
     DROP Miguel Amaya (CHC) [C] [active]
-         Below replacement: AVG 0.219, HR 3, R 15, RBI 10
+         Below replacement: HR 3, R 15, RBI 10, SB 0
     DROP Andrew Vaughn (MIL) [1B] [active]
          Below replacement: HR 2, R 14, RBI 18, SB 0
-  Standings: Period 12: 48 roto pts - winning 6 cats, losing 4
-  Weakest categories: WHIP, ERA, SB, S
+  Standings: Period 12: 49 roto pts - winning 6 cats, losing 4
+  Weakest categories: ERA, WHIP, SB, S
 
-  --- Daily Lineup (Tue Jun 16, 30 MLB teams playing) ---
-  SPs pitching today (1):
-    Andre Pallante (STL)
-  SPs NOT pitching today (7) [no bench -- FYI only]:
+  --- Daily Lineup (Wed Jun 17, 28 MLB teams playing) ---
+  SPs pitching today: none confirmed yet
+  SPs NOT pitching today (8) [no bench -- FYI only]:
     Antonio Senzatela (COL)  COL playing but not listed as probable starter
     Logan Webb (SF)  SF has no game today
     Kyle Harrison (MIL)  MIL playing but not listed as probable starter
+    Andre Pallante (STL)  STL playing but not listed as probable starter
     Shota Imanaga (CHC)  CHC playing but not listed as probable starter
     Quinn Priester (MIL)  MIL playing but not listed as probable starter
     Logan Henderson (MIL)  MIL playing but not listed as probable starter
