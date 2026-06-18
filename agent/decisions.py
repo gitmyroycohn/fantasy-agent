@@ -383,8 +383,14 @@ def _waiver_adds_for_cats(waivers, losing_cats):
 
 
 def _add_trade_signals(actions: list, team) -> None:
-    """Analyze roster for buy-low / sell-high opportunities."""
+    """Analyze roster for buy-low / sell-high opportunities.
+
+    Enriches roster with FP ROS projections + Savant xStats on first call
+    so that analyze_roster_value has both current pace and projected stats.
+    """
     try:
+        _fp_enrich(team.roster, "roster")
+        _sav_enrich(team.roster, "roster")
         signals = analyze_roster_value(team.roster)
         if signals:
             actions.append({"type": "trade_signals", "signals": signals})
