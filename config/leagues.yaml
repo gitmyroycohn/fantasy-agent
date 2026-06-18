@@ -10,6 +10,9 @@ baseball:
     constraints:
       sp_must_be_claimed_before_week: true
       max_moves_per_week: null
+    # Players intentionally held as speculative stash -- never flag as drop candidates
+    prospect_stash: []
+
   - id: "casey_stengel"
     name: "The Casey Stengel Amazin Experience"
     cbs_league_id: "baberuthdivingclubformen"
@@ -20,3 +23,5 @@ baseball:
     scoring:
       hitting: [R, HR, RBI, SB, AVG]
       pitching: [W, SV, K, ERA, WHIP]
+    # Players intentionally held as speculative stash -- never flag as drop candidates
+    prospect_stash: []

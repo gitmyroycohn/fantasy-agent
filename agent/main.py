@@ -120,15 +120,19 @@ def _print_decisions(result, dry_run):
                 print(f"  !! {w['warning']}")
 
         elif atype in ("streaming_sp", "streaming_sp_next_week"):
-            recs  = action.get("recommendations", [])
-            label = ("  Next week 2-starters" if atype == "streaming_sp_next_week"
-                     else "  Streaming SP")
+            recs   = action.get("recommendations", [])
+            offset = action.get("week_offset", 0)
+            if atype == "streaming_sp_next_week":
+                label = f"  Week +{offset} 2-starters"
+            else:
+                label = "  Streaming SP"
             if recs:
                 print(f"{label} ({action.get('note', '')}):")
                 for r in recs:
                     tag  = " [2-START]" if r.get("starts", 1) >= 2 else ""
+                    bb   = " [BB-2START ⚡ elite hold]" if r.get("back_to_back") else ""
                     dtag = f"  [{r['_days']}]" if "_days" in r else ""
-                    print(f"    + {r['player']} ({r['team']}){tag}{dtag}  "
+                    print(f"    + {r['player']} ({r['team']}){tag}{bb}{dtag}  "
                           f"score={r['score']}  {r.get('reason', '')}")
             else:
                 print(f"{label}: no candidates above threshold")

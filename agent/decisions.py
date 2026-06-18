@@ -16,6 +16,7 @@ from mlb.stats import enrich_players
 from mlb.schedule import (
     two_start_pitchers, week_bounds, _today_et,
     teams_playing_today, probable_starters_today,
+    schedule_weeks, back_to_back_two_starters,
 )
 from sports.baseball.lineup_optimizer import optimize_daily_lineup
 from config.settings import FANTASYPROS_API_KEY
@@ -91,44 +92,64 @@ def _h2h_decisions(auth, league_id, cfg, team, sport):
         logger.warning("SP enrichment failed: %s", e)
     _fp_enrich(waivers[:100], "SP wire")
 
-    two_start_now  = {}
-    two_start_next = {}
+    # 3-week schedule lookahead
+    sched_weeks   = []
+    two_start_now = {}
+    bb_two_starters = set()   # back-to-back 2-starters (elite holds)
     try:
-        two_start_now = two_start_pitchers()
-        if _today_et().weekday() >= 3:
-            two_start_next = two_start_pitchers(next_week=True)
+        sched_weeks     = schedule_weeks(n=3)
+        two_start_now   = sched_weeks[0]["two_starters"] if sched_weeks else {}
+        bb_two_starters = back_to_back_two_starters(sched_weeks, min_weeks=2)
+        week_labels = [
+            f"Wk{w['week_offset']+1}:{len(w['two_starters'])}x2"
+            for w in sched_weeks
+        ]
+        print(f"  Schedule (3wk): {' | '.join(week_labels)}")
+        if bb_two_starters:
+            import re as _re
+            _norm = lambda n: _re.sub(r"[^a-z0-9]", "", n.lower())
+            bb_on_wire = [wp.player.name for wp in waivers
+                          if _norm(wp.player.name) in bb_two_starters]
+            if bb_on_wire:
+                print(f"  Back-to-back 2-starters on wire: {', '.join(bb_on_wire[:8])}")
     except Exception as e:
-        logger.warning("2-start fetch failed: %s", e)
-
-    print(f"  2-start pitchers detected this week: {len(two_start_now)}")
-    if two_start_now:
-        import re as _re
-        _norm = lambda n: _re.sub(r"[^a-z0-9]", "", n.lower())
-        two_on_wire = [wp.player.name for wp in waivers
-                       if _norm(wp.player.name) in two_start_now]
-        if two_on_wire:
-            print(f"  2-starters on waiver wire: {', '.join(two_on_wire[:10])}")
+        logger.warning("Schedule fetch failed: %s", e)
 
     cat_status = {c.category: {"winning": c.winning}
                   for c in matchup.category_standings}
     sp_recs = rank_streaming_sps(waivers, cat_status, two_starters=two_start_now)
     if sp_recs:
+        # Annotate back-to-back 2-starters
+        import re as _re2
+        _norm2 = lambda n: _re2.sub(r"[^a-z0-9]", "", n.lower())
+        for r in sp_recs:
+            if _norm2(r["player"]) in bb_two_starters:
+                r["back_to_back"] = True
         actions.append({
             "type":            "streaming_sp",
             "recommendations": sp_recs,
             "note":            "Submit adds before Monday scoring period lock.",
         })
 
-    if two_start_next:
-        next_two_recs = rank_streaming_sps(waivers, cat_status,
-                                           two_starters=two_start_next,
-                                           max_results=5)
-        if next_two_recs:
-            actions.append({
-                "type":            "streaming_sp_next_week",
-                "recommendations": next_two_recs,
-                "note":            "2-starters for NEXT week -- add now before lock.",
-            })
+    # Week 2 and 3 two-starters
+    for week in sched_weeks[1:]:
+        if week["two_starters"]:
+            next_two_recs = rank_streaming_sps(waivers, cat_status,
+                                               two_starters=week["two_starters"],
+                                               max_results=5)
+            if next_two_recs:
+                offset = week["week_offset"]
+                import re as _re3
+                _norm3 = lambda n: _re3.sub(r"[^a-z0-9]", "", n.lower())
+                for r in next_two_recs:
+                    if _norm3(r["player"]) in bb_two_starters:
+                        r["back_to_back"] = True
+                actions.append({
+                    "type":            "streaming_sp_next_week",
+                    "recommendations": next_two_recs,
+                    "week_offset":     offset,
+                    "note":            f"Week +{offset} 2-starters -- add now before lock.",
+                })
 
     if losing:
         all_waivers = fetch_waiver_wire(auth, league_id, sport,
@@ -142,9 +163,11 @@ def _h2h_decisions(auth, league_id, cfg, team, sport):
         waiver_recs = _waiver_adds_for_cats(all_waivers, losing)
         if waiver_recs:
             actions.append({"type": "waiver_adds", "recommendations": waiver_recs})
-        _add_drop_candidates(actions, team, all_waivers, nl_only=False)
+        _add_drop_candidates(actions, team, all_waivers, nl_only=False,
+                              stash_names=cfg.get("prospect_stash"))
     else:
-        _add_drop_candidates(actions, team, [], nl_only=False)
+        _add_drop_candidates(actions, team, [], nl_only=False,
+                             stash_names=cfg.get("prospect_stash"))
 
     _add_closer_news(actions)
     _add_trade_signals(actions, team)
@@ -199,7 +222,8 @@ def _roto_decisions(auth, league_id, cfg, team, sport):
             ]
         actions.append({"type": "waiver_adds", "recommendations": waiver_recs})
 
-    _add_drop_candidates(actions, team, nl_waivers, nl_only=True)
+    _add_drop_candidates(actions, team, nl_waivers, nl_only=True,
+                         stash_names=cfg.get("prospect_stash"))
 
     try:
         raw_stats = fetch_matchup_stats(auth, league_id, sport)
@@ -227,9 +251,11 @@ def _roto_decisions(auth, league_id, cfg, team, sport):
 
 # -- Helpers --------------------------------------------------------------
 
-def _add_drop_candidates(actions, team, waiver_wire, nl_only=False):
+def _add_drop_candidates(actions, team, waiver_wire, nl_only=False, stash_names=None):
     try:
-        drops = find_drop_candidates(team.roster, waiver_wire, nl_only=nl_only)
+        drops = find_drop_candidates(
+            team.roster, waiver_wire, nl_only=nl_only, stash_names=stash_names
+        )
         if drops:
             actions.append({"type": "drop_candidates", "drops": drops})
     except Exception as e:

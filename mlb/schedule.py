@@ -82,6 +82,53 @@ def is_two_starter(player_name: str, two_starters: dict[str, int]) -> bool:
     return _norm(player_name) in two_starters
 
 
+def schedule_weeks(n: int = 3, d: date = None) -> list[dict]:
+    """Return per-week start counts for the next n CBS scoring weeks.
+
+    Returns a list of n dicts:
+      [
+        {"week_offset": 0, "monday": date, "sunday": date,
+         "two_starters": {norm_name: start_count}},
+        ...
+      ]
+
+    week_offset=0 is the current week, 1 is next week, etc.
+    Only SPs with 2+ starts in a week appear in two_starters.
+    """
+    if d is None:
+        d = _today_et()
+    weeks = []
+    for offset in range(n):
+        is_next = offset > 0
+        monday, sunday = week_bounds(d, next_week=False)
+        # Shift by offset weeks
+        monday += timedelta(weeks=offset)
+        sunday += timedelta(weeks=offset)
+        counts = _fetch_start_counts(monday.isoformat(), sunday.isoformat())
+        weeks.append({
+            "week_offset": offset,
+            "monday":      monday,
+            "sunday":      sunday,
+            "two_starters": {name: n for name, n in counts.items() if n >= 2},
+        })
+    return weeks
+
+
+def back_to_back_two_starters(weeks_data: list[dict],
+                               min_weeks: int = 2) -> set[str]:
+    """Return norm names that are 2-starters in at least min_weeks of the schedule.
+
+    Use this to flag SP holds that are especially valuable and should not be
+    traded or dropped ("back-to-back 2-starter — elite hold").
+    """
+    from collections import Counter
+    counts: Counter = Counter()
+    for week in weeks_data:
+        for name in week["two_starters"]:
+            counts[name] += 1
+    return {name for name, cnt in counts.items() if cnt >= min_weeks}
+
+
 # ---------------------------------------------------------------------------
 # Daily schedule
 # ---------------------------------------------------------------------------

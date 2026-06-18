@@ -38,7 +38,7 @@ _IL_STATUS           = {"DL", "IL", "DTD", "SUSP", "NA"}
 _SCARCE_POS          = {"C", "SS"}
 
 
-def find_drop_candidates(roster, waiver_wire, nl_only=False):
+def find_drop_candidates(roster, waiver_wire, nl_only=False, stash_names=None):
     """
     Evaluate each roster player and return drop candidates.
 
@@ -46,7 +46,13 @@ def find_drop_candidates(roster, waiver_wire, nl_only=False):
       {player, team, positions, slot, is_starting, severity, reason, replace_with}
 
     severity: "cut" or "monitor"
+
+    stash_names: optional set/list of player names to never flag (prospect stash).
     """
+    import re as _re
+    _norm = lambda n: _re.sub(r"[^a-z0-9]", "", n.lower())
+    stash_set = {_norm(n) for n in (stash_names or [])}
+
     drops = []
 
     for rs in roster:
@@ -56,6 +62,9 @@ def find_drop_candidates(roster, waiver_wire, nl_only=False):
         if rs.slot == "BN" and not rs.is_starting:
             continue
         if not p.stats:
+            continue
+        # Skip players the manager is intentionally holding as prospect stash
+        if stash_set and _norm(p.name) in stash_set:
             continue
 
         is_pitcher = bool(set(p.positions) & _PITCHER_POS)
