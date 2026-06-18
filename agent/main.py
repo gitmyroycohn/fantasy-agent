@@ -96,11 +96,38 @@ def run_league(auth, league, sport, run_type, dry_run, history=None):
             return None
 
 
+_CHURN_THRESHOLD = 4   # total adds+drops above this triggers the guardrail
+_PRIORITY_CAP    = 3   # show at most this many items per section when capped
+
+
+def _move_volume(actions: list) -> int:
+    """Count total recommended moves (adds + cuts) across all action types."""
+    total = 0
+    for action in actions:
+        if action.get("type") == "waiver_adds":
+            total += len(action.get("recommendations", []))
+        elif action.get("type") == "drop_candidates":
+            for severity in ("cut", "monitor"):
+                total += sum(
+                    1 for d in action.get("drops", [])
+                    if d.get("severity") == severity
+                )
+    return total
+
+
 def _print_decisions(result, dry_run):
     fmt = result.get("format", "")
     print(f"  Format: {fmt}")
 
-    for action in result.get("actions", []):
+    actions     = result.get("actions", [])
+    total_moves = _move_volume(actions)
+    capped      = total_moves >= _CHURN_THRESHOLD
+    if capped:
+        print(f"\n  ⚠  CHURN GUARD: {total_moves} moves recommended -- "
+              f"showing top {_PRIORITY_CAP} per section. "
+              f"Prioritize ruthlessly; avoid making all moves at once.")
+
+    for action in actions:
         atype = action.get("type", "")
 
         if atype == "matchup_summary":
@@ -140,8 +167,11 @@ def _print_decisions(result, dry_run):
         elif atype == "waiver_adds":
             recs = action.get("recommendations", [])
             if recs:
-                print(f"  Waiver adds ({len(recs)} suggestions):")
-                for r in recs:
+                shown = recs[:_PRIORITY_CAP] if capped else recs
+                extra = len(recs) - len(shown)
+                note  = f" (top {len(shown)} shown -- {extra} more suppressed)" if extra else ""
+                print(f"  Waiver adds ({len(recs)} suggestions){note}:")
+                for r in shown:
                     cats  = r.get("helps_cats") or []
                     pos   = "/".join(r.get("positions", []))
                     dtag  = f"  [{r['_days']}]" if "_days" in r else ""
@@ -179,8 +209,11 @@ def _print_decisions(result, dry_run):
             if drops:
                 print(f"\n  --- Drop Candidates ---")
             if cut:
-                print(f"  CUT ({len(cut)}) -- below replacement level:")
-                for d in cut:
+                shown_cut = cut[:_PRIORITY_CAP] if capped else cut
+                extra_cut = len(cut) - len(shown_cut)
+                note_cut  = f" (top {len(shown_cut)} -- {extra_cut} more)" if extra_cut else ""
+                print(f"  CUT ({len(cut)}) -- below replacement level{note_cut}:")
+                for d in shown_cut:
                     pos  = "/".join(d.get("positions", []))
                     rep  = d.get("replace_with")
                     dtag = f"  [{d['_days']}]" if "_days" in d else ""
