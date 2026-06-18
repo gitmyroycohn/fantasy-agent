@@ -353,6 +353,39 @@ def _print_decisions(result, dry_run):
                         print(f"    [{mark:>20}] {a['player']} ({a['team']}) [{pos}]")
                 print(f"  Batters with games today: {len(bat_on)}")
 
+        elif atype == "injury_report":
+            txns        = action.get("transactions", [])
+            roster_hits = action.get("roster_hits", [])
+            roster_norms = action.get("roster_norms", set())
+
+            print(f"\n  --- Injury Report (last 7 days) ---")
+
+            if roster_hits:
+                print(f"  ★ YOUR ROSTER PLAYERS:")
+                for t in roster_hits:
+                    icon = "🚑" if t["type"] == "placed" else ("✅" if t["type"] == "activated" else "🔄")
+                    date_str = t.get("date", "")
+                    try:
+                        from datetime import datetime
+                        date_str = datetime.strptime(date_str[:10], "%Y-%m-%d").strftime("%-m/%-d")
+                    except Exception:
+                        pass
+                    print(f"    {icon} {t['player']} ({t['team']}) — {t['type_desc']}  [{date_str}]")
+
+            other_txns = [t for t in txns if t["norm"] not in roster_norms]
+            if other_txns:
+                placed    = [t for t in other_txns if t["type"] == "placed"]
+                activated = [t for t in other_txns if t["type"] == "activated"]
+                if placed:
+                    print(f"  🚑 Placed ({len(placed)}):", ", ".join(
+                        f"{t['player']} ({t['team']})" for t in placed[:8]))
+                if activated:
+                    print(f"  ✅ Activated ({len(activated)}):", ", ".join(
+                        f"{t['player']} ({t['team']})" for t in activated[:8]))
+
+            if not txns:
+                print("  No IL moves in the last 7 days.")
+
     if dry_run:
         print(f"\n  DRY_RUN=True -- no submissions made.")
 

@@ -26,6 +26,7 @@ from savant.client import SavantClient, enrich_with_savant
 from agent.tradevalue import analyze_roster_value
 from cbs.standings import fetch_all_teams_stats
 from agent.surplusmap import build_surplus_map, trade_leads_from_map, my_category_profile
+from mlb.injuries import fetch_il_transactions, annotate_roster_injuries, format_transactions
 
 logger = logging.getLogger(__name__)
 
@@ -172,6 +173,7 @@ def _h2h_decisions(auth, league_id, cfg, team, sport):
                              stash_names=cfg.get("prospect_stash"))
 
     _add_closer_news(actions)
+    _add_injury_report(actions, team)
     _add_trade_signals(actions, team)
     _add_trade_leads(actions, auth, league_id, cfg, system="h2h")
     _add_lineup_advice(actions, team, no_bench=cfg.get("no_bench", False))
@@ -241,6 +243,7 @@ def _roto_decisions(auth, league_id, cfg, team, sport):
         logger.warning("Roto scoring fetch failed: %s", e)
 
     _add_closer_news(actions)
+    _add_injury_report(actions, team)
     _add_trade_signals(actions, team)
     _add_trade_leads(actions, auth, league_id, cfg, system="roto")
     _add_lineup_advice(actions, team, no_bench=cfg.get("no_bench", False))
@@ -455,6 +458,29 @@ def _add_trade_leads(actions: list, auth, league_id: str, cfg: dict,
             })
     except Exception as e:
         logger.warning("Trade leads analysis failed: %s", e)
+
+
+
+def _add_injury_report(actions: list, team) -> None:
+    """Fetch recent IL transactions and cross-reference against roster."""
+    try:
+        import re as _re
+        _norm = lambda n: _re.sub(r"[^a-z0-9]", "", n.lower())
+        roster_norms = {_norm(s.player.name) for s in team.roster}
+
+        txns = fetch_il_transactions(lookback_days=7)
+        # Cross-reference transactions against your roster
+        roster_txns = [t for t in txns if t["norm"] in roster_norms]
+
+        if txns or roster_txns:
+            actions.append({
+                "type":        "injury_report",
+                "transactions": txns,
+                "roster_hits":  roster_txns,
+                "roster_norms": roster_norms,
+            })
+    except Exception as e:
+        logger.warning("Injury report fetch failed: %s", e)
 
 
 def _current_week():
