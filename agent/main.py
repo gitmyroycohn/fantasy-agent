@@ -219,6 +219,27 @@ def _print_decisions(result, dry_run):
                         print(f"    ~ {s['name']} ({s['team']}) [{pos}] [{conf}]")
                         print(f"      {s['reason']}")
 
+        elif atype == "trade_leads":
+            profile = action.get("profile", {})
+            leads   = action.get("leads", [])
+            n_teams = action.get("n_teams", 0)
+            if profile or leads:
+                print(f"\n  --- Trade Board ({n_teams} teams scanned) ---")
+                if profile:
+                    surplus = ", ".join(profile.get("surplus", [])) or "none"
+                    deficit = ", ".join(profile.get("deficit", [])) or "none"
+                    print(f"  My surplus (can sell): {surplus}")
+                    print(f"  My deficit (need buy): {deficit}")
+                if leads:
+                    print(f"  Top trade targets:")
+                    for lead in leads:
+                        i_want    = ", ".join(lead.get("i_want",    [])) or "—"
+                        they_want = ", ".join(lead.get("they_want", [])) or "—"
+                        align     = lead.get("alignment", 0)
+                        print(f"    >> {lead['team_name']}  [alignment={align}]")
+                        print(f"       They have: {i_want}")
+                        print(f"       They need: {they_want}")
+
         elif atype == "closer_news":
             posts = action.get("posts", [])
             if posts:

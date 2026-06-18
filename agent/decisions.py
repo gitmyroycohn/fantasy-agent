@@ -24,6 +24,8 @@ from fantasypros.client import FantasyProsClient, enrich_with_fp_projections
 from closermonkey.client import CloserMonkeyClient
 from savant.client import SavantClient, enrich_with_savant
 from agent.tradevalue import analyze_roster_value
+from cbs.standings import fetch_all_teams_stats
+from agent.surplusmap import build_surplus_map, trade_leads_from_map, my_category_profile
 
 logger = logging.getLogger(__name__)
 
@@ -171,6 +173,7 @@ def _h2h_decisions(auth, league_id, cfg, team, sport):
 
     _add_closer_news(actions)
     _add_trade_signals(actions, team)
+    _add_trade_leads(actions, auth, league_id, cfg, system="h2h")
     _add_lineup_advice(actions, team, no_bench=cfg.get("no_bench", False))
 
     league_name = cfg.get("name") or league_id
@@ -239,6 +242,7 @@ def _roto_decisions(auth, league_id, cfg, team, sport):
 
     _add_closer_news(actions)
     _add_trade_signals(actions, team)
+    _add_trade_leads(actions, auth, league_id, cfg, system="roto")
     _add_lineup_advice(actions, team, no_bench=cfg.get("no_bench", False))
 
     league_name = cfg.get("name") or league_id
@@ -422,6 +426,35 @@ def _add_trade_signals(actions: list, team) -> None:
             actions.append({"type": "trade_signals", "signals": signals})
     except Exception as e:
         logger.warning("Trade signal analysis failed: %s", e)
+
+
+def _add_trade_leads(actions: list, auth, league_id: str, cfg: dict,
+                    system: str = "roto") -> None:
+    """Fetch all teams' category stats and surface trade partner leads."""
+    try:
+        scoring = cfg.get("scoring", {})
+        scoring_cats = list(scoring.get("hitting", [])) + list(scoring.get("pitching", []))
+        my_team_id = str(cfg.get("cbs_team_id", ""))
+
+        all_teams = fetch_all_teams_stats(auth, league_id,
+                                          sport="baseball", system=system)
+        if not all_teams:
+            logger.warning("trade_leads: no team stats returned for %s", league_id)
+            return
+
+        surplus_map = build_surplus_map(all_teams, scoring_cats)
+        profile     = my_category_profile(surplus_map, my_team_id)
+        leads       = trade_leads_from_map(surplus_map, my_team_id, top_n=4)
+
+        if profile or leads:
+            actions.append({
+                "type":    "trade_leads",
+                "profile": profile,
+                "leads":   leads,
+                "n_teams": len(all_teams),
+            })
+    except Exception as e:
+        logger.warning("Trade leads analysis failed: %s", e)
 
 
 def _current_week():
