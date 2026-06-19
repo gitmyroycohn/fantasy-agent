@@ -1,10 +1,36 @@
 # CBS Fantasy Baseball Agent
 
-Read-only agent that fetches your CBS Sports fantasy rosters, analyzes matchups, and recommends streamers and waiver adds. Does not submit anything to CBS (`DRY_RUN = True` by default).
+Read-only agent that fetches your CBS Sports fantasy rosters, analyzes matchups,
+and recommends streamers, waiver adds, drops, and trades. Runs automatically
+every day via GitHub Actions and can also be invoked on demand from Claude
+Desktop. **`DRY_RUN = True` always — the agent never submits anything to CBS.**
 
 ## Leagues
-- **Pins & Pills** (`hemp`) — H2H 9-category
-- **The Casey Stengel Amazin' Experience** (`baberuthdivingclubformen`) — NL-only Rotisserie
+- **Pins & Pills** (`hemp`) — H2H 9-category (R/HR/RBI/SB/AVG/OPS/TB/XBH + W/SV/K/ERA/WHIP/QS/HLD/INNdGS/K_BB)
+- **The Casey Stengel Amazin' Experience** (`baberuthdivingclubformen`) — NL-only Rotisserie, no bench
+
+---
+
+## What it does
+
+| Capability | Module |
+|---|---|
+| Matchup / standings analysis | `sports/baseball/categories.py` |
+| Waiver wire recommendations (cat-targeted) | `agent/decisions.py` |
+| SP streaming, incl. 3-week schedule lookahead + back-to-back 2-starter flag | `sports/baseball/streaming.py`, `mlb/schedule.py` |
+| Drop candidates (prospect-stash aware) | `sports/baseball/drops.py` |
+| Daily lineup advice | `sports/baseball/lineup_optimizer.py` |
+| Closer depth chart + news | `closermonkey/client.py` |
+| Injury report — IL placements/activations, your roster flagged | `mlb/injuries.py` |
+| Buy-low / sell-high trade signals | `agent/tradevalue.py` |
+| League-wide surplus/deficit trade board (who to target) | `agent/surplusmap.py` |
+| Specific trade evaluator (give vs. receive → verdict) | `agent/trade_eval.py` |
+| Move-volume churn guard (caps recs when ≥4 moves) | `agent/main.py` |
+| Decision memory (avoids repeating the same rec daily) | `agent/history.py` |
+
+Enrichment layers feeding the above: **FantasyPros** (ROS projections, `fp_*` keys),
+**Baseball Savant** (xStats, `sv_*` keys), **MLB Stats API** (schedule, IL,
+probable starters — no auth needed).
 
 ---
 
@@ -12,36 +38,29 @@ Read-only agent that fetches your CBS Sports fantasy rosters, analyzes matchups,
 
 ### 1. Get the code
 ```
-git clone <repo-url> fantasy-agent
+git clone https://github.com/gitmyroycohn/fantasy-agent.git
 cd fantasy-agent
 ```
-Or just unzip/copy the folder.
 
 ### 2. Install dependencies
 ```
 pip install -r requirements.txt
+pip install -r requirements-mcp.txt   # only if using the MCP server
 ```
 
-### 3. Set your CBS cookie
-CBS login is a JavaScript flow — the agent uses a browser-captured session cookie instead of username/password.
-
-**How to get your cookie (one-time, ~5 min):**
-1. Log into [cbssports.com](https://cbssports.com) in Chrome
-2. Open DevTools → **Network** tab (F12)
-3. Navigate to one of your fantasy league pages
-4. Click any request to `cbssports.com` → Headers → Request Headers
-5. Copy the entire value of the `Cookie:` header (one long line)
-
-Then:
+### 3. Set credentials
 ```
 cp .env.example .env
-# edit .env and paste your cookie value after CBS_COOKIE=
 ```
+Edit `.env`:
+- `CBS_COOKIE` — browser-captured session cookie (CBS login is JS-based, no API key).
+  Log into cbssports.com → DevTools → Network tab → any request to cbssports.com →
+  copy the full `Cookie:` header value. Lasts ~30–90 days; re-capture on auth errors.
+- `FANTASYPROS_API_KEY` — from your FantasyPros account.
 
-The cookie lasts ~30–90 days. When it expires you'll see an auth error and need to repeat the steps above.
-
-### 4. Verify leagues are configured
-`config/leagues.yaml` already has the two leagues and team IDs. No changes needed unless you add football leagues.
+### 4. Leagues
+`config/leagues.yaml` already has both leagues, team IDs, scoring categories, and
+`prospect_stash` (players to never auto-flag as drop candidates).
 
 ---
 
@@ -54,68 +73,112 @@ python -m agent.main --run daily --dry-run
 # One league
 python -m agent.main --run daily --dry-run --league hemp
 
-# Verbose (shows DEBUG logs)
+# Verbose (DEBUG logs)
 python -m agent.main --run daily --dry-run --verbose
 ```
 
-Sample output:
-```
-=== Pins and Pills (baseball) ===
-  Roster: 34 players  |  Stats enriched: 29/34
-  Matchup: Week 12 vs Captain Jack: 7-4-1
-  Priority categories (losing): H, W, S, SB, K
-  Streaming SP: Andrew Alvarez (WAS) score=6.51  ERA 3.7, K/9 9.62
-  Waiver adds: Andrew Abbott (CIN) [SP]  helps: W, K
-```
+Output is written to `logs/latest_output.md` and decision memory to `logs/history.json`.
 
 ---
 
-## Run modes
+## GitHub Actions (automatic daily run)
 
-| Flag | What it does |
-|------|--------------|
-| `--run daily` | Full analysis: matchup, streamers, waiver adds |
-| `--run weekly` | Same as daily |
-| `--run waivers` | Waiver analysis only |
-| `--run lineup` | (future) Lineup optimization |
-| `--dry-run` | Always set — no CBS submissions |
-| `--league <id>` | Run one league; `all` = both |
-| `--sport <name>` | `baseball`, `football`, or `all` |
+`.github/workflows/daily.yml` runs both leagues and commits `logs/` back to the
+repo. Configured for `0 12 * * *` (noon UTC / 8am ET), but **GitHub's scheduler
+runs low-traffic public repos late** — in practice it has been firing ~3 hours
+after the configured time (~11am ET), not at 8am. This is expected GitHub
+behavior, not a bug in this repo; the cron expression is a "no earlier than,"
+not a guarantee.
+
+Each run's header timestamp is generated with proper `zoneinfo` ET conversion
+(fixed June 19, 2026 — it previously used naive `datetime.now()`, which returns
+UTC on the runner, and mislabeled it "ET," making every timestamp read 4 hours
+ahead of the real time).
+
+Secrets required in the repo: `CBS_COOKIE`, `FANTASYPROS_API_KEY`.
+
+---
+
+## MCP server (on-demand, from Claude Desktop)
+
+`mcp_server.py` exposes the agent as 5 tools via FastMCP:
+`evaluate_trade_tool`, `get_roster`, `waiver_recommendations`,
+`roster_value_signals`, `daily_decisions`.
+
+**Important: this uses stdio transport.** It only works inside the **Claude
+Desktop app**, launched as a local subprocess — it is NOT reachable from a
+claude.ai web Project, and the host PC must be on and Claude Desktop running.
+
+Setup — create `%APPDATA%\Claude\claude_desktop_config.json`:
+```json
+{
+  "mcpServers": {
+    "fantasy-baseball": {
+      "command": "python",
+      "args": ["C:\\Users\\guido\\fantasy-agent\\mcp_server.py"],
+      "env": { "PYTHONPATH": "C:\\Users\\guido\\fantasy-agent" }
+    }
+  }
+}
+```
+Restart Claude Desktop after editing. Tools then appear in any Desktop chat.
 
 ---
 
 ## Project structure
 ```
 fantasy-agent/
+├── mcp_server.py            # FastMCP server (Claude Desktop only)
+├── run_agent.py
+├── requirements.txt
+├── requirements-mcp.txt
+│
 ├── agent/
-│   ├── main.py         # CLI entry point
-│   └── decisions.py    # recommendation engine
+│   ├── main.py               # CLI entry point + output printer
+│   ├── decisions.py          # recommendation engine (H2H + roto)
+│   ├── tradevalue.py         # buy-low / sell-high signals
+│   ├── trade_eval.py         # specific trade evaluator
+│   ├── surplusmap.py         # league-wide surplus/deficit map
+│   ├── history.py            # decision memory
+│   └── summary.py            # TL;DR header + formatter
+│
 ├── cbs/
-│   ├── auth.py         # CBS cookie auth + per-league token extraction
-│   ├── roster.py       # roster fetch (JSON API + HTML fallback)
-│   ├── waivers.py      # free agent list
-│   ├── stats.py        # live scoring / matchup stats
-│   └── lineup.py       # stub (write path not yet implemented)
+│   ├── auth.py · roster.py · waivers.py · stats.py · lineup.py
+│   └── standings.py          # all-teams category stats (for trade board)
+│
 ├── mlb/
-│   └── stats.py        # free MLB Stats API for player stat enrichment
-├── sports/
-│   └── baseball/
-│       ├── categories.py   # H2H + roto category analysis
-│       └── streaming.py    # SP streaming scorer
-├── data/
-│   └── models.py       # Player, RosterSlot, Team, Matchup dataclasses
+│   ├── stats.py               # player stat enrichment (free MLB Stats API)
+│   ├── schedule.py            # 3-week lookahead, 2-starter detection
+│   └── injuries.py            # IL transactions + active IL roster
+│
+├── sports/baseball/
+│   ├── categories.py · drops.py · streaming.py · lineup_optimizer.py
+│
+├── fantasypros/client.py     # ROS projections
+├── savant/client.py          # Baseball Savant xStats
+├── closermonkey/client.py    # depth chart + news (scrape, no API)
+│
 ├── config/
-│   ├── settings.py     # DRY_RUN flag, thresholds
-│   └── leagues.yaml    # league + team IDs
-├── .env                # your CBS_COOKIE (gitignored)
-├── .env.example        # template
-└── requirements.txt
+│   ├── settings.py            # DRY_RUN flag, thresholds
+│   └── leagues.yaml           # leagues, team IDs, scoring, prospect_stash
+│
+├── data/models.py             # Player, RosterSlot, Team, Matchup
+├── logs/
+│   ├── latest_output.md       # committed by GitHub Actions each run
+│   └── history.json           # decision memory
+│
+└── .github/workflows/daily.yml
 ```
 
 ---
 
 ## Known limits
 
-- **CBS player stats unavailable** — CBS API doesn't expose per-player stats at this subscription level. Stats come from the free [MLB Stats API](https://statsapi.mlb.com) instead (~90% match rate; minor leaguers/recent callups may be missed).
-- **Ownership %** — CBS returns 0 for all players. Streaming filter uses `MIN_SP_OWNERSHIP_DROP = 50` which passes everything; tweak in `config/settings.py` if CBS starts returning real values.
-- **Write paths disabled** — `set_lineup()` and `claim_player()` are stubs. To enable, capture the relevant POST requests from Chrome DevTools and implement them.
+- **CBS player stats unavailable at this subscription tier** — stats come from
+  the free MLB Stats API instead (~90% match rate; recent callups may be missed).
+- **Ownership %** — CBS returns 0 for all players; not used as a filter.
+- **Write paths disabled** — `set_lineup()` / `claim_player()` are stubs.
+  `DRY_RUN` must be explicitly flipped and the POST requests implemented before
+  any submission path could ever be enabled — not currently planned.
+- **Cron timing** — see GitHub Actions section above; expect ~11am ET, not 8am.
+- **MCP server reach** — Claude Desktop only, PC must be on. See MCP section above.
