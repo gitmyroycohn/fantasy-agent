@@ -66,6 +66,36 @@ def _fmt(d: str) -> str:
 # Recent IL transactions
 # ---------------------------------------------------------------------------
 
+_IL_DAY_RE = re.compile(r"(\d+)-day injured list", re.IGNORECASE)
+
+
+def _classify_il(description: str) -> tuple[str, str] | tuple[None, None]:
+    """
+    Classify a transaction's free-text description as an IL move.
+
+    The MLB API's typeDesc field is a generic bucket ("Status Change" covers
+    BOTH placements and activations, plus unrelated roster moves) -- the
+    actual placed/activated/transferred signal only lives in this text, e.g.
+    "Toronto Blue Jays activated C Alejandro Kirk from the 60-day injured list."
+    "Milwaukee Brewers placed RHP Coleman Crow on the 15-day injured list..."
+    "Philadelphia Phillies activated RF Derek Hill."  <- NOT an IL move, excluded
+
+    Returns (txn_type, label) or (None, None) if not IL-related.
+    """
+    d = description.lower()
+    if "injured list" not in d:
+        return None, None
+    m = _IL_DAY_RE.search(description)
+    day_label = f"{m.group(1)}-Day IL" if m else "IL"
+    if "activated" in d or "reinstated" in d:
+        return "activated", f"Activated from {day_label}"
+    if "transferred" in d:
+        return "transfer", f"Transferred to {day_label}"
+    if "placed" in d:
+        return "placed", f"Placed on {day_label}"
+    return None, None
+
+
 def fetch_il_transactions(lookback_days: int = 7) -> list[dict]:
     """
     Return recent IL placements, activations, and transfers.
@@ -91,32 +121,24 @@ def fetch_il_transactions(lookback_days: int = 7) -> list[dict]:
 
     results = []
     for txn in data.get("transactions", []):
-        type_desc = txn.get("typeDesc", "") or txn.get("type", {}).get("description", "")
+        description = txn.get("description", "")
+        txn_type, type_desc = _classify_il(description)
+        if txn_type is None:
+            continue  # not an IL-related transaction
+
         player_data = txn.get("person") or txn.get("player") or {}
         player_name = (
             player_data.get("fullName")
             or player_data.get("nameFirstLast")
             or ""
         )
-        team_data = txn.get("toTeam") or txn.get("team") or {}
+        team_data = txn.get("toTeam") or txn.get("fromTeam") or txn.get("team") or {}
         team_name = team_data.get("abbreviation") or team_data.get("name") or ""
         eff_date = (
             txn.get("effectiveDate")
             or txn.get("date")
             or ""
         )[:10]
-        description = txn.get("description", "")
-
-        # Classify
-        if any(t.lower() in type_desc.lower() for t in ["placement", "placed", "il"]) and \
-           "activ" not in type_desc.lower() and "transfer" not in type_desc.lower():
-            txn_type = "placed"
-        elif any(t.lower() in type_desc.lower() for t in ["activ", "reinstat"]):
-            txn_type = "activated"
-        elif "transfer" in type_desc.lower():
-            txn_type = "transfer"
-        else:
-            continue  # skip non-IL transactions
 
         if not player_name:
             continue
