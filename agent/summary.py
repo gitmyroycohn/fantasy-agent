@@ -2,6 +2,9 @@
 Phone-friendly TL;DR summary block — prepended to latest_output.md.
 """
 from datetime import datetime
+from zoneinfo import ZoneInfo
+
+_ET = ZoneInfo("America/New_York")
 
 
 def format_tldr(results: list[dict]) -> str:
@@ -11,7 +14,7 @@ def format_tldr(results: list[dict]) -> str:
 
     Each dict has keys: league, format, actions, and optionally matchup.
     """
-    now = datetime.now().strftime("%a %b %-d, %Y  %-I:%M %p ET")
+    now = datetime.now(_ET).strftime("%a %b %-d, %Y  %-I:%M %p ET")
     lines = [
         "=" * 48,
         f"  FANTASY AGENT  --  {now}",
