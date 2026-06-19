@@ -1,5 +1,5 @@
 ================================================
-  FANTASY AGENT  --  Fri Jun 19, 2026  3:16 PM ET
+  FANTASY AGENT  --  Fri Jun 19, 2026  2:35 PM ET
 ================================================
 
 [ PINS & PILLS  |  H2H Categories ]
@@ -73,6 +73,12 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
     Thursday’s eight-game slate featured three reliever wins, four saves, and four losses, with only one blown save. Here are the saves in condensed form: There have been 563 saves this season by 170 different pitchers.&#160; Here are the limited vulture options:&#160; Vulture Save Option for 6.19.2026 Vultu
     https://closermonkey.com/2026/06/19/closer-monkeys-leverage-ledger-6-19-2026/
 
+  --- Injury Report (last 7 days) ---
+  ★ YOUR ROSTER PLAYERS:
+    ✅ Drake Baldwin (Atlanta Braves) — Activated from 10-Day IL  [6/15]
+  🚑 Placed (32): Coleman Crow (Milwaukee Brewers), Brent Rooker (Athletics), Seth Lugo (Kansas City Royals), Daulton Varsho (Toronto Blue Jays), Ramón Urías (St. Louis Cardinals), Adolis García (Philadelphia Phillies), Evan Carter (Texas Rangers), Spencer Strider (Atlanta Braves)
+  ✅ Activated (27): Kenley Jansen (Detroit Tigers), Jacob Wilson (Athletics), Hurston Waldrep (Atlanta Braves), Jordan Lawlar (Arizona Diamondbacks), Alejandro Kirk (Toronto Blue Jays), Jasson Domínguez (New York Yankees), Tarik Skubal (Detroit Tigers), Craig Kimbrel (Tampa Bay Rays)
+
   --- Trade Value Signals ---
   SELL HIGH (9) -- outpacing projections:
     ~ Raisel Iglesias (ATL) [RP] [strong]
@@ -111,9 +117,9 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
     [     already benched] Yoshinobu Yamamoto (LAD)  LAD playing but not listed as probable starter
     [     already benched] Joe Musgrove (SD)  SD has no game today
   Batters with off days - bench these (7):
-    [     ACTIVE - bench!] Juan Soto (NYM) [RF]
     [     already benched] Bryce Harper (PHI) [1B]
     [     already benched] Bo Bichette (NYM) [SS]
+    [     already benched] Juan Soto (NYM) [RF]
     [     already benched] Daylen Lile (WAS) [RF]
     [     already benched] Aidan Miller (PHI) [SS]
     [     already benched] Maikel Garcia (KC) [3B]
@@ -159,6 +165,12 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
     Closer Monkey - Instant emails for every closer change. Closer depth charts to keep you ahead.
     Thursday’s eight-game slate featured three reliever wins, four saves, and four losses, with only one blown save. Here are the saves in condensed form: There have been 563 saves this season by 170 different pitchers.&#160; Here are the limited vulture options:&#160; Vulture Save Option for 6.19.2026 Vultu
     https://closermonkey.com/2026/06/19/closer-monkeys-leverage-ledger-6-19-2026/
+
+  --- Injury Report (last 7 days) ---
+  ★ YOUR ROSTER PLAYERS:
+    ✅ Hurston Waldrep (Atlanta Braves) — Activated from 60-Day IL  [6/12]
+  🚑 Placed (32): Coleman Crow (Milwaukee Brewers), Brent Rooker (Athletics), Seth Lugo (Kansas City Royals), Daulton Varsho (Toronto Blue Jays), Ramón Urías (St. Louis Cardinals), Adolis García (Philadelphia Phillies), Evan Carter (Texas Rangers), Spencer Strider (Atlanta Braves)
+  ✅ Activated (27): Kenley Jansen (Detroit Tigers), Jacob Wilson (Athletics), Jordan Lawlar (Arizona Diamondbacks), Alejandro Kirk (Toronto Blue Jays), Jasson Domínguez (New York Yankees), Tarik Skubal (Detroit Tigers), Craig Kimbrel (Tampa Bay Rays), Jose Trevino (Cincinnati Reds)
 
   --- Trade Value Signals ---
   SELL HIGH (13) -- outpacing projections:
