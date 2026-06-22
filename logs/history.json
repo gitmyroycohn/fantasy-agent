@@ -3,8 +3,8 @@
     "waiver_adds": {
       "Willy Adames": {
         "first": "2026-06-17",
-        "last": "2026-06-21",
-        "n": 5
+        "last": "2026-06-22",
+        "n": 6
       },
       "Luisangel Acuna": {
         "first": "2026-06-17",
@@ -13,8 +13,8 @@
       },
       "Blaze Alexander": {
         "first": "2026-06-17",
-        "last": "2026-06-21",
-        "n": 5
+        "last": "2026-06-22",
+        "n": 6
       },
       "Nick Allen": {
         "first": "2026-06-17",
@@ -25,18 +25,33 @@
         "first": "2026-06-17",
         "last": "2026-06-21",
         "n": 5
+      },
+      "Andrew Abbott": {
+        "first": "2026-06-22",
+        "last": "2026-06-22",
+        "n": 1
+      },
+      "Jose Alvarado": {
+        "first": "2026-06-22",
+        "last": "2026-06-22",
+        "n": 1
+      },
+      "Andrew Alvarez": {
+        "first": "2026-06-22",
+        "last": "2026-06-22",
+        "n": 1
       }
     },
     "streaming_sp": {
       "Mason Barnett": {
         "first": "2026-06-17",
-        "last": "2026-06-18",
-        "n": 2
+        "last": "2026-06-22",
+        "n": 3
       },
       "Andrew Alvarez": {
         "first": "2026-06-17",
-        "last": "2026-06-21",
-        "n": 5
+        "last": "2026-06-22",
+        "n": 6
       },
       "Slade Cecconi": {
         "first": "2026-06-18",
@@ -67,8 +82,8 @@
     "drop_candidates": {
       "Justin Crawford": {
         "first": "2026-06-17",
-        "last": "2026-06-21",
-        "n": 5,
+        "last": "2026-06-22",
+        "n": 6,
         "sev": "cut"
       }
     }
@@ -77,36 +92,36 @@
     "waiver_adds": {
       "Jose Alvarado": {
         "first": "2026-06-17",
-        "last": "2026-06-21",
-        "n": 5
+        "last": "2026-06-22",
+        "n": 6
       },
       "Andrew Alvarez": {
         "first": "2026-06-17",
-        "last": "2026-06-21",
-        "n": 5
+        "last": "2026-06-22",
+        "n": 6
       },
       "Tyler Alexander": {
         "first": "2026-06-17",
-        "last": "2026-06-21",
-        "n": 5
+        "last": "2026-06-22",
+        "n": 6
       },
       "Adbert Alzolay": {
         "first": "2026-06-17",
-        "last": "2026-06-21",
-        "n": 5
+        "last": "2026-06-22",
+        "n": 6
       },
       "Zach Agnos": {
         "first": "2026-06-17",
-        "last": "2026-06-21",
-        "n": 5
+        "last": "2026-06-22",
+        "n": 6
       }
     },
     "streaming_sp": {},
     "drop_candidates": {
       "Andrew Vaughn": {
         "first": "2026-06-17",
-        "last": "2026-06-21",
-        "n": 5,
+        "last": "2026-06-22",
+        "n": 6,
         "sev": "monitor"
       },
       "Miguel Amaya": {
