@@ -73,7 +73,14 @@ class CBSAuth:
     """Cookie-based CBS session with per-league API token management."""
 
     def __init__(self, cookie: str | None = None):
-        self.cookie = cookie or os.getenv("CBS_COOKIE", "")
+        raw = cookie or os.getenv("CBS_COOKIE", "")
+        # Defensive: strip embedded newlines/carriage returns. This very
+        # long cookie string is prone to corruption when copy-pasted
+        # through a UI that inserts a literal newline at each visual
+        # line-wrap (chat windows, some terminals) -- HTTP headers can't
+        # contain raw newlines, so an unsanitized value breaks every
+        # request with no useful error until you trace it back here.
+        self.cookie = raw.replace("\r", "").replace("\n", "").strip()
         if not self.cookie:
             raise CBSAuthError("No CBS_COOKIE set.\n" + COOKIE_HELP)
         self._session: requests.Session | None = None
