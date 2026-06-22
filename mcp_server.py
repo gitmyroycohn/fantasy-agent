@@ -6,7 +6,9 @@ Exposes the agent's capabilities as tools for Claude Projects / Claude Desktop.
 Tools:
   evaluate_trade          -- evaluate a specific trade offer
   daily_decisions         -- run full daily analysis for a league
-  get_roster              -- current roster for a league
+  get_roster              -- your current roster for a league
+  get_team_roster         -- ANY team's current roster, by name (trade research)
+  list_league_teams       -- list team names in a league (helper for get_team_roster)
   waiver_recommendations  -- top waiver wire adds
   roster_value_signals    -- buy-low / sell-high signals
 
@@ -40,7 +42,7 @@ from mcp.server.fastmcp import FastMCP
 
 from config.settings import CBS_COOKIE, FANTASYPROS_API_KEY, DRY_RUN
 from cbs.auth import CBSAuth, CBSAuthError
-from cbs.roster import get_roster as cbs_get_roster
+from cbs.roster import get_roster as cbs_get_roster, get_all_team_rosters, resolve_team_id
 from mlb.stats import enrich_roster
 from fantasypros.client import FantasyProsClient
 from savant.client import SavantClient
@@ -179,6 +181,101 @@ def get_roster(league_id: str = "all") -> str:
     except Exception as e:
         logger.exception("get_roster failed")
         return f"Error fetching roster: {e}"
+
+
+# ---------------------------------------------------------------------------
+# Tool: get_team_roster -- ANY team in the league, not just your own
+# ---------------------------------------------------------------------------
+
+@mcp.tool()
+def get_team_roster(league_id: str, team_name: str) -> str:
+    """
+    Get any team's current roster by name -- useful for trade research,
+    scouting an opponent, or checking who's still rosters a player before
+    proposing a deal. Not limited to your own team.
+
+    Args:
+        league_id: League id from config (e.g. "pins_and_pills" or
+                   "casey_stengel" -- see config/leagues.yaml's "id" field,
+                   NOT the CBS league id). "all" is not supported here since
+                   a team name must be looked up within one league.
+        team_name: Full or partial team name, case-insensitive
+                   (e.g. "Men of Steal" or just "steal").
+                   Call list_league_teams first if you don't know the exact name.
+
+    Returns a formatted roster, or the list of valid team names if no match.
+    """
+    try:
+        auth    = _get_auth()
+        leagues = _resolve_leagues(league_id)
+        if not leagues:
+            return f"No league found matching '{league_id}'."
+        if len(leagues) > 1:
+            return ("Multiple leagues matched -- specify one league_id "
+                     f"({', '.join(l[0].get('cbs_league_id','?') for l in leagues)}).")
+
+        league_cfg, sport = leagues[0]
+        lid = league_cfg["cbs_league_id"]
+        all_rosters = get_all_team_rosters(auth, lid, sport)
+
+        tid = resolve_team_id(all_rosters, team_name)
+        if tid is None:
+            names = ", ".join(info["name"] for info in all_rosters.values())
+            return f"No team matching '{team_name}'. Teams in this league: {names}"
+
+        info = all_rosters[tid]
+        out = [f"=== {info['name']} ({sport}) -- {len(info['roster'])} players ==="]
+        out.append(f"{'Slot':<6} {'Player':<24} {'Team':<5} {'Status'}")
+        out.append("-" * 55)
+        for rs in info["roster"]:
+            p = rs.player
+            out.append(f"{rs.slot:<6} {p.name:<24} {(p.team or '?'):<5} {p.status or ''}")
+        return "\n".join(out)
+
+    except CBSAuthError as e:
+        return f"CBS auth error: {e}"
+    except Exception as e:
+        logger.exception("get_team_roster failed")
+        return f"Error fetching team roster: {e}"
+
+
+# ---------------------------------------------------------------------------
+# Tool: list_league_teams -- discovery helper for get_team_roster
+# ---------------------------------------------------------------------------
+
+@mcp.tool()
+def list_league_teams(league_id: str) -> str:
+    """
+    List every team name in a league, with team IDs.
+
+    Use this first if you don't know the exact team name to pass to
+    get_team_roster.
+
+    Args:
+        league_id: League id from config (e.g. "pins_and_pills" or
+                   "casey_stengel" -- see config/leagues.yaml's "id" field,
+                   NOT the CBS league id), or "all" for every league.
+    """
+    try:
+        auth    = _get_auth()
+        leagues = _resolve_leagues(league_id)
+        if not leagues:
+            return f"No league found matching '{league_id}'."
+
+        out = []
+        for league_cfg, sport in leagues:
+            lid = league_cfg["cbs_league_id"]
+            all_rosters = get_all_team_rosters(auth, lid, sport)
+            out.append(f"=== {league_cfg.get('name', lid)} ===")
+            for tid, info in all_rosters.items():
+                out.append(f"  {info['name']}  (id={tid}, {len(info['roster'])} players)")
+        return "\n".join(out)
+
+    except CBSAuthError as e:
+        return f"CBS auth error: {e}"
+    except Exception as e:
+        logger.exception("list_league_teams failed")
+        return f"Error listing teams: {e}"
 
 
 # ---------------------------------------------------------------------------

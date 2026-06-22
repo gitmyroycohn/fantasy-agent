@@ -101,9 +101,14 @@ Secrets required in the repo: `CBS_COOKIE`, `FANTASYPROS_API_KEY`.
 
 ## MCP server (on-demand, from Claude Desktop)
 
-`mcp_server.py` exposes the agent as 5 tools via FastMCP:
-`evaluate_trade_tool`, `get_roster`, `waiver_recommendations`,
-`roster_value_signals`, `daily_decisions`.
+`mcp_server.py` exposes the agent as 7 tools via FastMCP:
+`evaluate_trade_tool`, `get_roster`, `get_team_roster`, `list_league_teams`,
+`waiver_recommendations`, `roster_value_signals`, `daily_decisions`.
+
+`get_team_roster(league_id, team_name)` looks up **any** team in the league
+by name (not just your own) — useful for trade research, e.g. "what does
+Men of Steal have right now?" `list_league_teams(league_id)` lists all team
+names/IDs if you don't know the exact name to pass in.
 
 **Important: this uses stdio transport.** It only works inside the **Claude
 Desktop app**, launched as a local subprocess — it is NOT reachable from a
