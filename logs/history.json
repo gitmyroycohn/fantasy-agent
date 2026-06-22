@@ -3,28 +3,28 @@
     "waiver_adds": {
       "Willy Adames": {
         "first": "2026-06-17",
-        "last": "2026-06-19",
-        "n": 3
+        "last": "2026-06-21",
+        "n": 5
       },
       "Luisangel Acuna": {
         "first": "2026-06-17",
-        "last": "2026-06-19",
-        "n": 3
+        "last": "2026-06-21",
+        "n": 5
       },
       "Blaze Alexander": {
         "first": "2026-06-17",
-        "last": "2026-06-19",
-        "n": 3
+        "last": "2026-06-21",
+        "n": 5
       },
       "Nick Allen": {
         "first": "2026-06-17",
-        "last": "2026-06-19",
-        "n": 3
+        "last": "2026-06-21",
+        "n": 5
       },
       "Adael Amador": {
         "first": "2026-06-17",
-        "last": "2026-06-19",
-        "n": 3
+        "last": "2026-06-21",
+        "n": 5
       }
     },
     "streaming_sp": {
@@ -35,23 +35,23 @@
       },
       "Andrew Alvarez": {
         "first": "2026-06-17",
-        "last": "2026-06-19",
-        "n": 3
+        "last": "2026-06-21",
+        "n": 5
       },
       "Slade Cecconi": {
         "first": "2026-06-18",
-        "last": "2026-06-19",
-        "n": 2
+        "last": "2026-06-21",
+        "n": 4
       },
       "Robert Gasser": {
         "first": "2026-06-18",
-        "last": "2026-06-19",
-        "n": 2
+        "last": "2026-06-21",
+        "n": 4
       },
       "Grant Holmes": {
         "first": "2026-06-18",
-        "last": "2026-06-19",
-        "n": 2
+        "last": "2026-06-21",
+        "n": 4
       },
       "Adrian Houser": {
         "first": "2026-06-18",
@@ -60,15 +60,15 @@
       },
       "Ryan Gusto": {
         "first": "2026-06-19",
-        "last": "2026-06-19",
-        "n": 1
+        "last": "2026-06-21",
+        "n": 3
       }
     },
     "drop_candidates": {
       "Justin Crawford": {
         "first": "2026-06-17",
-        "last": "2026-06-19",
-        "n": 3,
+        "last": "2026-06-21",
+        "n": 5,
         "sev": "cut"
       }
     }
@@ -77,37 +77,37 @@
     "waiver_adds": {
       "Jose Alvarado": {
         "first": "2026-06-17",
-        "last": "2026-06-19",
-        "n": 3
+        "last": "2026-06-21",
+        "n": 5
       },
       "Andrew Alvarez": {
         "first": "2026-06-17",
-        "last": "2026-06-19",
-        "n": 3
+        "last": "2026-06-21",
+        "n": 5
       },
       "Tyler Alexander": {
         "first": "2026-06-17",
-        "last": "2026-06-19",
-        "n": 3
+        "last": "2026-06-21",
+        "n": 5
       },
       "Adbert Alzolay": {
         "first": "2026-06-17",
-        "last": "2026-06-19",
-        "n": 3
+        "last": "2026-06-21",
+        "n": 5
       },
       "Zach Agnos": {
         "first": "2026-06-17",
-        "last": "2026-06-19",
-        "n": 3
+        "last": "2026-06-21",
+        "n": 5
       }
     },
     "streaming_sp": {},
     "drop_candidates": {
       "Andrew Vaughn": {
         "first": "2026-06-17",
-        "last": "2026-06-19",
-        "n": 3,
-        "sev": "cut"
+        "last": "2026-06-21",
+        "n": 5,
+        "sev": "monitor"
       },
       "Miguel Amaya": {
         "first": "2026-06-17",
