@@ -482,11 +482,20 @@ def daily_decisions(league_id: str = "all") -> str:
 #                            custom connector by URL. Reachable from any
 #                            device, independent of any one PC's state.
 #
-# The http mode is gated by a bearer token (MCP_AUTH_TOKEN) since this
-# server can reach your CBS fantasy data -- the URL alone must not be
-# enough to call it. DNS-rebinding host-allowlisting is relaxed instead
-# (we don't know the cloud host's domain at code-time, and the bearer
-# token is the real gate here).
+# The http mode is gated by a token (MCP_AUTH_TOKEN) since this server can
+# reach your CBS fantasy data -- the URL alone must not be enough to call
+# it. DNS-rebinding host-allowlisting is relaxed instead (we don't know
+# the cloud host's domain at code-time, and the token is the real gate).
+#
+# Token is accepted two ways:
+#   - Authorization: Bearer <token> header (for curl/PowerShell testing)
+#   - ?token=<token> query param (for Claude's custom connector dialog,
+#     which only supports OAuth or no-auth -- no plain bearer-token field.
+#     Putting the token in the connector URL itself is the workaround;
+#     Claude sends the URL as configured on every call, query string
+#     included. Tradeoff: query-string tokens can end up in access logs,
+#     unlike header-based tokens. Acceptable here since the worst case of
+#     compromise is read-only access to fantasy baseball data.)
 # ---------------------------------------------------------------------------
 
 def _run_http():
@@ -504,8 +513,10 @@ def _run_http():
 
     class BearerAuthMiddleware(BaseHTTPMiddleware):
         async def dispatch(self, request, call_next):
-            got = request.headers.get("authorization", "")
-            if got != f"Bearer {auth_token}":
+            header_val = request.headers.get("authorization", "")
+            query_val  = request.query_params.get("token", "")
+            ok = (header_val == f"Bearer {auth_token}") or (query_val == auth_token)
+            if not ok:
                 return JSONResponse({"error": "unauthorized"}, status_code=401)
             return await call_next(request)
 
