@@ -1,3 +1,4 @@
 # Additional dependency for the MCP server (mcp_server.py)
 # Install with: pip install -r requirements-mcp.txt
 mcp[cli]>=1.0.0
+uvicorn>=0.30.0

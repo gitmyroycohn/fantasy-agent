@@ -1,0 +1,27 @@
+# Render Blueprint for the fantasy-baseball MCP server.
+#
+# Deploys mcp_server.py as a standalone HTTP service (not the local stdio
+# mode used by Claude Desktop's config.json) so it's reachable by URL from
+# any device, independent of any one PC being on.
+#
+# Secrets (CBS_COOKIE, FANTASYPROS_API_KEY, MCP_AUTH_TOKEN) use
+# `sync: false` -- Render prompts for these during Blueprint creation and
+# does NOT store the values in this file, since this repo is public.
+#
+# Deploy: Render dashboard -> New -> Blueprint -> point at this repo.
+services:
+  - type: web
+    name: fantasy-baseball-mcp
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt -r requirements-mcp.txt
+    startCommand: python mcp_server.py
+    envVars:
+      - key: MCP_TRANSPORT
+        value: http
+      - key: CBS_COOKIE
+        sync: false
+      - key: FANTASYPROS_API_KEY
+        sync: false
+      - key: MCP_AUTH_TOKEN
+        sync: false

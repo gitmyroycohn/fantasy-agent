@@ -114,6 +114,8 @@ names/IDs if you don't know the exact name to pass in.
 Desktop app**, launched as a local subprocess — it is NOT reachable from a
 claude.ai web Project, and the host PC must be on and Claude Desktop running.
 
+### Local (stdio) -- Claude Desktop only, PC must be on
+
 Setup — create `%APPDATA%\Claude\claude_desktop_config.json`:
 ```json
 {
@@ -127,6 +129,31 @@ Setup — create `%APPDATA%\Claude\claude_desktop_config.json`:
 }
 ```
 Restart Claude Desktop after editing. Tools then appear in any Desktop chat.
+
+**Note (June 2026):** this Claude Desktop build's Connectors panel only
+supports remote connectors added by URL — it does not surface local
+stdio servers from `claude_desktop_config.json` at all. The stdio setup
+above may not actually work depending on your Desktop version; the cloud
+deployment below is the confirmed-working path.
+
+### Cloud (HTTP) -- reachable from any device, no PC required
+
+`mcp_server.py` can also run as a standalone web service (`MCP_TRANSPORT=http`),
+gated by a bearer token (`MCP_AUTH_TOKEN`) since the URL is publicly
+reachable and can query your CBS fantasy data.
+
+Deploy to Render (free tier — cold starts after ~15 min idle, 30–60s to
+wake on the next request):
+1. Render dashboard → **New** → **Blueprint** → point at this repo (uses `render.yaml`).
+2. When prompted, set secrets: `CBS_COOKIE`, `FANTASYPROS_API_KEY`, `MCP_AUTH_TOKEN` (make up any long random string for the token).
+3. Once deployed, your server URL is `https://<service-name>.onrender.com/mcp`.
+4. In Claude, go to **Settings → Connectors → +**, add it as a custom connector with that URL, and supply the bearer token when prompted for auth.
+
+Local testing before deploying:
+```bash
+MCP_TRANSPORT=http MCP_AUTH_TOKEN=test-secret python mcp_server.py
+# then: curl -H "Authorization: Bearer test-secret" http://127.0.0.1:8000/mcp
+```
 
 ---
 

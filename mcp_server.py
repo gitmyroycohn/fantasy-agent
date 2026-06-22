@@ -473,7 +473,56 @@ def daily_decisions(league_id: str = "all") -> str:
 
 # ---------------------------------------------------------------------------
 # Entry point
+#
+# Two modes, switched by the MCP_TRANSPORT env var:
+#   - "stdio" (default)  -- local use from Claude Desktop's config.json,
+#                            which launches this file as a subprocess.
+#   - "http"             -- standalone web service for cloud hosting
+#                            (Render/Railway/etc), added to Claude as a
+#                            custom connector by URL. Reachable from any
+#                            device, independent of any one PC's state.
+#
+# The http mode is gated by a bearer token (MCP_AUTH_TOKEN) since this
+# server can reach your CBS fantasy data -- the URL alone must not be
+# enough to call it. DNS-rebinding host-allowlisting is relaxed instead
+# (we don't know the cloud host's domain at code-time, and the bearer
+# token is the real gate here).
 # ---------------------------------------------------------------------------
 
+def _run_http():
+    import uvicorn
+    from starlette.middleware.base import BaseHTTPMiddleware
+    from starlette.responses import JSONResponse
+
+    auth_token = os.environ.get("MCP_AUTH_TOKEN")
+    if not auth_token:
+        raise RuntimeError(
+            "MCP_AUTH_TOKEN must be set when running with MCP_TRANSPORT=http "
+            "-- this server can reach your CBS fantasy data and must not be "
+            "left reachable by anyone who finds the URL."
+        )
+
+    class BearerAuthMiddleware(BaseHTTPMiddleware):
+        async def dispatch(self, request, call_next):
+            got = request.headers.get("authorization", "")
+            if got != f"Bearer {auth_token}":
+                return JSONResponse({"error": "unauthorized"}, status_code=401)
+            return await call_next(request)
+
+    # Relax DNS-rebinding host allowlisting -- the cloud host's domain
+    # isn't known at code-time, and BearerAuthMiddleware above is the
+    # actual access gate.
+    mcp.settings.transport_security.enable_dns_rebinding_protection = False
+
+    app = mcp.streamable_http_app()
+    app.add_middleware(BearerAuthMiddleware)
+
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
+
+
 if __name__ == "__main__":
-    mcp.run()
+    if os.environ.get("MCP_TRANSPORT") == "http":
+        _run_http()
+    else:
+        mcp.run()
