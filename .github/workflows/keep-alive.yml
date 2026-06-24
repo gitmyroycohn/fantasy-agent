@@ -1,0 +1,26 @@
+name: Keep Render Alive
+
+# Pings the MCP server every 10 minutes so Render's free tier never suspends
+# the service (it sleeps after 15 min idle, causing 30-60s cold starts that
+# time out the MCP connector handshake in Claude).
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping MCP server
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            "https://fantasy-baseball-mcp-l8vw.onrender.com/mcp?token=${{ secrets.MCP_AUTH_TOKEN }}" \
+            --max-time 60)
+          echo "Render ping: HTTP $STATUS"
+          # 405 Method Not Allowed is expected for a GET on the MCP endpoint -- server is up
+          if [[ "$STATUS" == "000" ]]; then
+            echo "WARNING: server unreachable"
+            exit 1
+          fi
