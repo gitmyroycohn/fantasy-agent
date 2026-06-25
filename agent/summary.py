@@ -35,7 +35,8 @@ def format_tldr(results: list[dict]) -> str:
 
     Each dict has keys: league, format, actions, and optionally matchup.
     """
-    now = datetime.now(_ET).strftime("%a %b %-d, %Y  %-I:%M %p ET")
+    _n  = datetime.now(_ET)
+    now = f"{_n.strftime('%a %b')} {_n.day}, {_n.year}  {_n.hour % 12 or 12}:{_n.strftime('%M')} {_n.strftime('%p')} ET"
     lines = [
         "=" * 48,
         f"  FANTASY AGENT  --  {now}",

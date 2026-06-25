@@ -67,8 +67,8 @@ def two_start_pitchers(d: date = None, next_week: bool = False,
     norm_name matches the same normalization used in mlb/stats.py.
     """
     if next_week:
-        _, next_monday = week_bounds(d, next_week=True)
-        start = next_monday - timedelta(days=6)   # next Monday
+        next_monday, _ = week_bounds(d, next_week=True)  # (monday, sunday)
+        start = next_monday
         end   = start + timedelta(days=lookahead_days - 1)
     else:
         start = _today_et() if d is None else d

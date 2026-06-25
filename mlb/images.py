@@ -142,10 +142,10 @@ def _best_loc_image_url(item: dict) -> str | None:
             if url and url.endswith("/"):
                 return f"{url}full/pct:25/0/default.jpg"
 
-    if item_id:
-        clean = item_id.strip("/")
-        return f"https://www.loc.gov/{clean}/full/pct:25/0/default.jpg"
-
+    # Cannot reliably construct a valid tile URL from only the item ID —
+    # the IIIF image server (tile.loc.gov) requires the resource identifier,
+    # not the item identifier. Returning None here is safer than returning a
+    # URL that will 404 and render as a broken image in markdown.
     return None
 
 

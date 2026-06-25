@@ -273,7 +273,8 @@ def _add_lineup_advice(actions, team, no_bench=False):
     try:
         teams_today    = teams_playing_today()
         starters_today = probable_starters_today()
-        today_str      = _today_et().strftime("%a %b %-d")
+        _d = _today_et()
+        today_str = f"{_d.strftime('%a %b')} {_d.day}"
 
         lineup_slots = [
             {
@@ -423,12 +424,15 @@ def _waiver_adds_for_cats(
     min_batters: int = 2,
     limit: int = 5,
 ):
+    # CBS stores outfielders as LF/CF/RF, never the bare "OF" token.
+    # Include all three tags (plus "OF" as a belt-and-suspenders catch)
+    # so outfielders aren't silently excluded from all hitting categories.
     CAT_POSITIONS = {
-        "SB":  ["OF", "SS", "2B"],
-        "HR":  ["1B", "OF", "3B"],
-        "R":   ["OF", "SS", "2B"],
-        "RBI": ["1B", "3B", "OF"],
-        "AVG": ["OF", "1B", "2B", "SS", "3B", "C"],
+        "SB":  ["LF", "CF", "RF", "OF", "SS", "2B"],
+        "HR":  ["1B", "LF", "CF", "RF", "OF", "3B"],
+        "R":   ["LF", "CF", "RF", "OF", "SS", "2B"],
+        "RBI": ["1B", "3B", "LF", "CF", "RF", "OF"],
+        "AVG": ["LF", "CF", "RF", "OF", "1B", "2B", "SS", "3B", "C"],
         "K":   ["SP", "RP"],
         "SV":  ["RP"],
         "QS":  ["SP"],

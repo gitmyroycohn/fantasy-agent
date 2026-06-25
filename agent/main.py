@@ -37,7 +37,10 @@ class _Tee:
         self.b.flush()
 
 
-def load_leagues(path="config/leagues.yaml"):
+def load_leagues(path=None):
+    if path is None:
+        path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                            "..", "config", "leagues.yaml")
     with open(path) as f:
         return yaml.safe_load(f) or {}
 
@@ -367,7 +370,8 @@ def _print_decisions(result, dry_run):
                     date_str = t.get("date", "")
                     try:
                         from datetime import datetime
-                        date_str = datetime.strptime(date_str[:10], "%Y-%m-%d").strftime("%-m/%-d")
+                        _dt = datetime.strptime(date_str[:10], "%Y-%m-%d")
+                        date_str = f"{_dt.month}/{_dt.day}"
                     except Exception:
                         pass
                     print(f"    {icon} {t['player']} ({t['team']}) — {t['type_desc']}  [{date_str}]")

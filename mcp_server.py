@@ -61,7 +61,10 @@ logger = logging.getLogger(__name__)
 
 mcp = FastMCP("Fantasy Baseball Agent")
 
-def _load_leagues(path="config/leagues.yaml"):
+def _load_leagues(path=None):
+    if path is None:
+        path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                            "config", "leagues.yaml")
     with open(path) as f:
         return yaml.safe_load(f) or {}
 

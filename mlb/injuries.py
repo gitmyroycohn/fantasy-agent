@@ -55,9 +55,10 @@ def _norm(name: str) -> str:
 
 
 def _fmt(d: str) -> str:
-    """Convert YYYY-MM-DD to MM/DD."""
+    """Convert YYYY-MM-DD to M/D (no leading zeros, cross-platform)."""
     try:
-        return datetime.strptime(d[:10], "%Y-%m-%d").strftime("%-m/%-d")
+        dt = datetime.strptime(d[:10], "%Y-%m-%d")
+        return f"{dt.month}/{dt.day}"
     except Exception:
         return d[:10]
 
