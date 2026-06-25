@@ -70,6 +70,9 @@ def _available_from_api(auth: CBSAuth, league_id: str, sport: str,
         ))
     if not results:
         raise CBSAPIError("players/list returned no unowned players")
+    # Sort highest-owned first so that downstream limit=N slices always
+    # capture the most-relevant players rather than alphabetical-first.
+    results.sort(key=lambda wp: wp.ownership_pct, reverse=True)
     logger.info("API free agents: %d players in %s", len(results), league_id)
     return results
 
