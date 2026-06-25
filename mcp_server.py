@@ -48,7 +48,7 @@ from fantasypros.client import FantasyProsClient
 from savant.client import SavantClient
 from agent.trade_eval import evaluate_trade, format_trade_result
 from agent.tradevalue import analyze_roster_value
-from agent.decisions import run_decisions
+from agent.decisions import run_decisions, get_filtered_waiver_adds
 from data.models import Team
 
 logging.basicConfig(level=logging.WARNING,
@@ -283,56 +283,102 @@ def list_league_teams(league_id: str) -> str:
 # ---------------------------------------------------------------------------
 
 @mcp.tool()
-def waiver_recommendations(league_id: str = "all") -> str:
+def waiver_recommendations(
+    league_id: str = "all",
+    position: str | None = None,
+    date: str | None = None,
+    min_batters: int = 2,
+    limit: int = 10,
+) -> str:
     """
     Get top waiver wire add recommendations for your league.
 
     Args:
-        league_id: League id from config, or "all" for all leagues.
+        league_id:   League id from config, or "all" for all leagues.
+        position:    Filter to a specific position, e.g. "SP", "RP", "OF",
+                     "SS", "C", "1B", "3B". Leave blank for all positions.
+        date:        Only show players whose team plays on this date.
+                     "today", "tomorrow", or "YYYY-MM-DD". Leave blank for all.
+        min_batters: Minimum number of batter recommendations to include even
+                     if pitcher categories are the priority. Default 2. Set to
+                     0 to disable (useful when position="SP" or position="RP").
+        limit:       Maximum number of recommendations to return. Default 10.
 
     Returns ranked waiver adds with category fit, Savant xStats, and CM closer tags.
     """
+    from datetime import date as _date, timedelta
+    from zoneinfo import ZoneInfo
+    _ET = ZoneInfo("America/New_York")
+
     try:
         auth    = _get_auth()
         leagues = _resolve_leagues(league_id)
         if not leagues:
             return f"No league found matching '{league_id}'."
 
-        buf = io.StringIO()
-        original = sys.stdout
-        sys.stdout = buf
-        try:
-            for league_cfg, sport in leagues:
-                lid  = league_cfg["cbs_league_id"]
-                tid  = str(league_cfg["cbs_team_id"])
-                name = league_cfg.get("name", lid)
-                roster = cbs_get_roster(auth, lid, tid, sport)
-                team   = Team(id=tid, name=name, roster=roster)
-                result = run_decisions(auth, lid, league_cfg, team, sport)
-                print(f"\n=== {name} -- Waiver Adds ===")
-                for action in result.get("actions", []):
-                    if action.get("type") == "waiver_adds":
-                        for r in action.get("recommendations", []):
-                            cats = ", ".join(r.get("helps_cats", []))
-                            pos  = "/".join(r.get("positions", []))
-                            stats = r.get("_stats") or {}
-                            sav_parts = []
-                            if stats.get("sv_xwoba"):
-                                sav_parts.append(f"xwOBA={stats['sv_xwoba']:.3f}")
-                            if stats.get("sv_barrel_pct") is not None:
-                                sav_parts.append(f"Brl%={stats['sv_barrel_pct']:.1f}")
-                            if stats.get("sv_xera") is not None:
-                                sav_parts.append(f"xERA={stats['sv_xera']:.2f}")
-                            sav_str = ("  [" + " | ".join(sav_parts) + "]") if sav_parts else ""
-                            cm_tag = ""
-                            if r.get("cm_role"):
-                                cm_tag = f"  [CM: {r['cm_role']} | {r.get('cm_tendency','')}]"
-                            print(f"  + {r['player']} ({r.get('team','?')}) [{pos}]"
-                                  f"  helps: {cats}{cm_tag}{sav_str}")
-        finally:
-            sys.stdout = original
+        # Parse date param
+        playing_on = None
+        if date:
+            d_lower = date.strip().lower()
+            today = _date.fromisoformat(
+                __import__("datetime").datetime.now(_ET).date().isoformat()
+            )
+            if d_lower == "today":
+                playing_on = today
+            elif d_lower == "tomorrow":
+                playing_on = today + timedelta(days=1)
+            else:
+                try:
+                    playing_on = _date.fromisoformat(d_lower)
+                except ValueError:
+                    return f"Invalid date '{date}'. Use 'today', 'tomorrow', or 'YYYY-MM-DD'."
 
-        return buf.getvalue() or "No waiver recommendations generated."
+        out = []
+        for league_cfg, sport in leagues:
+            lid  = league_cfg["cbs_league_id"]
+            name = league_cfg.get("name", lid)
+
+            recs = get_filtered_waiver_adds(
+                auth, lid, league_cfg, sport,
+                position_filter=position,
+                playing_on=playing_on,
+                min_batters=min_batters,
+                limit=limit,
+            )
+
+            header_parts = [name]
+            if position:
+                header_parts.append(f"position={position.upper()}")
+            if playing_on:
+                header_parts.append(f"playing={playing_on.isoformat()}")
+            out.append(f"\n=== {' | '.join(header_parts)} -- Waiver Adds ===")
+
+            if not recs:
+                out.append("  No recommendations found matching these filters.")
+                continue
+
+            for r in recs:
+                cats  = ", ".join(r.get("helps_cats", []))
+                pos   = "/".join(r.get("positions", []))
+                stats = r.get("_stats") or {}
+
+                sav_parts = []
+                if stats.get("sv_xwoba"):
+                    sav_parts.append(f"xwOBA={stats['sv_xwoba']:.3f}")
+                if stats.get("sv_barrel_pct") is not None:
+                    sav_parts.append(f"Brl%={stats['sv_barrel_pct']:.1f}")
+                if stats.get("sv_xera") is not None:
+                    sav_parts.append(f"xERA={stats['sv_xera']:.2f}")
+                sav_str = ("  [" + " | ".join(sav_parts) + "]") if sav_parts else ""
+
+                cm_tag = ""
+                if r.get("cm_role"):
+                    cm_tag = f"  [CM: {r['cm_role']} | {r.get('cm_tendency','')}]"
+
+                out.append(f"  + {r['player']} ({r.get('team','?')}) [{pos}]"
+                           f"  helps: {cats}{cm_tag}{sav_str}")
+
+        return "\n".join(out) if out else "No waiver recommendations generated."
 
     except CBSAuthError as e:
         return f"CBS auth error: {e}"

@@ -322,7 +322,69 @@ def _add_closer_news(actions):
         logger.warning("CM news fetch failed: %s", e)
 
 
-def _waiver_adds_for_cats(waivers, losing_cats):
+def get_filtered_waiver_adds(
+    auth, league_id, league_cfg, sport="baseball",
+    position_filter: str | None = None,
+    playing_on=None,          # date object — only players whose team plays that day
+    min_batters: int = 2,
+    limit: int = 10,
+):
+    """Direct waiver fetch with optional position + game-day filters.
+
+    Bypasses the full run_decisions pipeline so it's fast and composable.
+    Called by the MCP waiver_recommendations tool.
+    """
+    from cbs.waivers import fetch_waiver_wire
+    from mlb.stats import enrich_players
+    from mlb.schedule import teams_playing_today
+    from cbs.stats import fetch_matchup_stats
+    from sports.baseball.categories import analyze_matchup, priority_categories
+
+    waivers = fetch_waiver_wire(auth, league_id, sport, position="all", limit=200)
+    try:
+        enrich_players(waivers[:150])
+    except Exception as e:
+        logger.warning("Waiver enrichment failed: %s", e)
+    _fp_enrich(waivers[:150], "wire")
+    _sav_enrich(waivers[:150], "wire")
+
+    # Position filter
+    if position_filter:
+        pos_up = position_filter.upper()
+        waivers = [wp for wp in waivers
+                   if pos_up in (wp.player.positions or [])]
+
+    # Game-day filter
+    if playing_on is not None:
+        try:
+            playing_teams = teams_playing_today(playing_on)
+            waivers = [wp for wp in waivers
+                       if (wp.player.team or "").upper() in playing_teams]
+        except Exception as e:
+            logger.warning("Game-day filter failed: %s", e)
+
+    # Determine losing categories from current matchup
+    try:
+        raw_stats = fetch_matchup_stats(auth, league_id, sport)
+        matchup   = analyze_matchup(raw_stats, week=_current_week())
+        losing    = priority_categories(matchup)
+    except Exception:
+        # Fallback: treat all categories as targets
+        scoring = league_cfg.get("scoring", {})
+        losing = (list(scoring.get("hitting", [])) +
+                  list(scoring.get("pitching", [])))
+
+    # If position is filtered to pitchers, no need to force batter balance
+    PITCHER_POS = {"SP", "RP", "P"}
+    _min_batters = 0 if (position_filter and position_filter.upper() in PITCHER_POS) else min_batters
+
+    recs = _waiver_adds_for_cats(
+        waivers, losing, min_batters=_min_batters, limit=limit
+    )
+    return recs
+
+
+def _waiver_adds_for_cats(waivers, losing_cats, *, min_batters: int = 2, limit: int = 5):
     CAT_POSITIONS = {
         "SB":  ["OF", "SS", "2B"],
         "HR":  ["1B", "OF", "3B"],
@@ -411,8 +473,28 @@ def _waiver_adds_for_cats(waivers, losing_cats):
 
         recs.append(rec)
 
-    recs.sort(key=lambda r: r.pop("_score"), reverse=True)
-    return recs[:5]
+    recs.sort(key=lambda r: r["_score"], reverse=True)
+
+    # Guarantee min_batters batter recommendations so pitcher category gaps
+    # don't crowd out all hitter suggestions.
+    if min_batters > 0:
+        BATTER_POS = {"C", "1B", "2B", "3B", "SS", "OF", "DH", "U", "CF", "LF", "RF"}
+        def _is_batter(r):
+            return any(p in BATTER_POS for p in (r.get("positions") or []))
+        batters  = [r for r in recs if _is_batter(r)]
+        # guaranteed batter slots, then fill remainder from overall ranked list
+        pinned_ids  = {id(r) for r in batters[:min_batters]}
+        guaranteed  = batters[:min_batters]
+        remaining   = [r for r in recs if id(r) not in pinned_ids]
+        final = guaranteed + remaining[:limit - len(guaranteed)]
+        # re-sort so output order still reflects relative quality
+        final.sort(key=lambda r: r["_score"], reverse=True)
+    else:
+        final = recs[:limit]
+
+    for r in final:
+        r.pop("_score", None)
+    return final
 
 
 def _add_trade_signals(actions: list, team) -> None:
