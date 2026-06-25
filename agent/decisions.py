@@ -328,17 +328,23 @@ def get_filtered_waiver_adds(
     playing_on=None,          # date object — only players whose team plays that day
     min_batters: int = 2,
     limit: int = 10,
+    week_offset: int = 0,     # 0 = current scoring week, 1 = next week, etc.
 ):
-    """Direct waiver fetch with optional position + game-day filters.
+    """Direct waiver fetch with optional position, game-day, and week filters.
 
     Bypasses the full run_decisions pipeline so it's fast and composable.
     Called by the MCP waiver_recommendations tool.
+
+    week_offset=1 looks ahead to the next CBS scoring period: 2-start SPs for
+    that week get a score boost so they surface above equivalent one-starters.
     """
     from cbs.waivers import fetch_waiver_wire
     from mlb.stats import enrich_players
-    from mlb.schedule import teams_playing_today
+    from mlb.schedule import teams_playing_today, schedule_weeks, back_to_back_two_starters
     from cbs.stats import fetch_matchup_stats
     from sports.baseball.categories import analyze_matchup, priority_categories
+    import re as _re
+    _norm = lambda n: _re.sub(r"[^a-z0-9]", "", n.lower())
 
     waivers = fetch_waiver_wire(auth, league_id, sport, position="all", limit=200)
     try:
@@ -349,12 +355,18 @@ def get_filtered_waiver_adds(
     _sav_enrich(waivers[:150], "wire")
 
     # Position filter
+    # CBS stores outfielders as LF/CF/RF, not OF — expand the alias so
+    # position="OF" matches all three CBS outfield tags.
     if position_filter:
         pos_up = position_filter.upper()
+        if pos_up == "OF":
+            pos_set = {"OF", "LF", "CF", "RF"}
+        else:
+            pos_set = {pos_up}
         waivers = [wp for wp in waivers
-                   if pos_up in (wp.player.positions or [])]
+                   if pos_set & set(wp.player.positions or [])]
 
-    # Game-day filter
+    # Game-day filter (only applies when explicitly requested via `date=`)
     if playing_on is not None:
         try:
             playing_teams = teams_playing_today(playing_on)
@@ -374,17 +386,43 @@ def get_filtered_waiver_adds(
         losing = (list(scoring.get("hitting", [])) +
                   list(scoring.get("pitching", [])))
 
-    # If position is filtered to pitchers, no need to force batter balance
+    # Two-start map for the target week
+    # week_offset=0 → this week's 2-starters, week_offset=1 → next week's, etc.
+    two_starters: dict[str, int] = {}
+    bb_two_starters: set[str] = set()
+    try:
+        weeks = schedule_weeks(n=max(2, week_offset + 1))
+        if week_offset < len(weeks):
+            two_starters = weeks[week_offset].get("two_starters", {})
+        if week_offset == 0:
+            bb_two_starters = back_to_back_two_starters(weeks, min_weeks=2)
+    except Exception as e:
+        logger.warning("Schedule fetch for week_offset=%d failed: %s", week_offset, e)
+
+    # If position is filtered to pitchers only, batter balance doesn't apply
     PITCHER_POS = {"SP", "RP", "P"}
-    _min_batters = 0 if (position_filter and position_filter.upper() in PITCHER_POS) else min_batters
+    _is_pitcher_filter = (position_filter and
+                          position_filter.upper() in PITCHER_POS and
+                          position_filter.upper() != "OF")
+    _min_batters = 0 if _is_pitcher_filter else min_batters
 
     recs = _waiver_adds_for_cats(
-        waivers, losing, min_batters=_min_batters, limit=limit
+        waivers, losing,
+        two_starters=two_starters,
+        bb_two_starters=bb_two_starters,
+        min_batters=_min_batters,
+        limit=limit,
     )
     return recs
 
 
-def _waiver_adds_for_cats(waivers, losing_cats, *, min_batters: int = 2, limit: int = 5):
+def _waiver_adds_for_cats(
+    waivers, losing_cats, *,
+    two_starters: dict | None = None,
+    bb_two_starters: set | None = None,
+    min_batters: int = 2,
+    limit: int = 5,
+):
     CAT_POSITIONS = {
         "SB":  ["OF", "SS", "2B"],
         "HR":  ["1B", "OF", "3B"],
@@ -450,14 +488,31 @@ def _waiver_adds_for_cats(waivers, losing_cats, *, min_batters: int = 2, limit: 
         if xera is not None and any(c in helps for c in ("K", "ERA", "WHIP", "W")):
             sort_score -= xera * 3.0
 
+        # Two-start boost: SPs/RPs with 2+ starts in the target week get a
+        # significant lift so they surface over equivalent one-starters.
+        is_two_starter = False
+        is_bb_two_starter = False
+        if two_starters or bb_two_starters:
+            import re as _re2
+            _n = _re2.sub(r"[^a-z0-9]", "", wp.player.name.lower())
+            if two_starters and _n in two_starters:
+                n_starts = two_starters[_n]
+                sort_score += 20.0 * n_starts   # 2 starts → +40, 3 → +60
+                is_two_starter = True
+            if bb_two_starters and _n in bb_two_starters:
+                sort_score += 10.0              # back-to-back weeks bonus
+                is_bb_two_starter = True
+
         rec = {
-            "player":     wp.player.name,
-            "team":       wp.player.team,
-            "positions":  wp.player.positions,
-            "ownership":  wp.ownership_pct,
-            "helps_cats": helps,
-            "_score":     sort_score,
-            "_stats":     stats,
+            "player":       wp.player.name,
+            "team":         wp.player.team,
+            "positions":    wp.player.positions,
+            "ownership":    wp.ownership_pct,
+            "helps_cats":   helps,
+            "_score":       sort_score,
+            "_stats":       stats,
+            "two_starter":  is_two_starter,
+            "back_to_back": is_bb_two_starter,
         }
 
         # Closer Monkey annotation for SV picks
