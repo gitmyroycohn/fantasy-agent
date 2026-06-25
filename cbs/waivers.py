@@ -47,6 +47,26 @@ def _available_from_api(auth: CBSAuth, league_id: str, sport: str,
     # waivers rather than immediate add.
     data = auth.api_get("players/list", league_id, sport)
     raw = (data.get("body", {}) or {}).get("players", []) or []
+
+    # Log CBS field keys from first player to diagnose ownership field name
+    if raw:
+        logger.info("CBS players/list sample keys: %s", list(raw[0].keys())[:20])
+
+    # CBS ownership field may be named differently across API versions —
+    # try all known variants.
+    _OWN_KEYS = ("pct_owned", "owned_pct", "ownership_pct", "ownership",
+                 "add_pct", "percent_owned", "pct_rostered")
+
+    def _own(p: dict) -> float:
+        for k in _OWN_KEYS:
+            v = p.get(k)
+            if v is not None:
+                try:
+                    return float(v)
+                except (TypeError, ValueError):
+                    pass
+        return 0.0
+
     results = []
     for i, p in enumerate(raw):
         if p.get("owned_by_team_id"):
@@ -65,7 +85,7 @@ def _available_from_api(auth: CBSAuth, league_id: str, sport: str,
         results.append(WaiverPlayer(
             player=player,
             add_rank=i,
-            ownership_pct=float(p.get("owned_pct") or p.get("ownership_pct") or 0),
+            ownership_pct=_own(p),
             on_waivers=on_w,
         ))
     if not results:
@@ -73,7 +93,9 @@ def _available_from_api(auth: CBSAuth, league_id: str, sport: str,
     # Sort highest-owned first so that downstream limit=N slices always
     # capture the most-relevant players rather than alphabetical-first.
     results.sort(key=lambda wp: wp.ownership_pct, reverse=True)
-    logger.info("API free agents: %d players in %s", len(results), league_id)
+    logger.info("API free agents: %d players in %s (max own=%.1f%%)",
+                len(results), league_id,
+                results[0].ownership_pct if results else 0.0)
     return results
 
 

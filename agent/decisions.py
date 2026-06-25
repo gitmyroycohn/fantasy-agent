@@ -347,13 +347,15 @@ def get_filtered_waiver_adds(
     import re as _re
     _norm = lambda n: _re.sub(r"[^a-z0-9]", "", n.lower())
 
-    waivers = fetch_waiver_wire(auth, league_id, sport, position="all", limit=200)
+    # Fetch the full free-agent pool (no limit here — CBS returns ~8400 players
+    # in one call; filtering + enrichment happen below on the relevant subset).
+    waivers = fetch_waiver_wire(auth, league_id, sport, position="all", limit=0)
     try:
-        enrich_players(waivers[:150])
+        enrich_players(waivers)
     except Exception as e:
         logger.warning("Waiver enrichment failed: %s", e)
-    _fp_enrich(waivers[:150], "wire")
-    _sav_enrich(waivers[:150], "wire")
+    _fp_enrich(waivers, "wire")
+    _sav_enrich(waivers, "wire")
 
     # Position filter
     # CBS stores outfielders as LF/CF/RF, not OF — expand the alias so
@@ -621,14 +623,16 @@ def _waiver_adds_for_cats(
     recs.sort(key=lambda r: r["_score"], reverse=True)
 
     # Guarantee min_batters batter recommendations so pitcher category gaps
-    # don't crowd out all hitter suggestions.
+    # don't crowd out all hitter suggestions. Only pin batters that have
+    # meaningful scores (> 0) so 0-stat minor leaguers don't crowd out
+    # pitchers who actually have MLB numbers.
     if min_batters > 0:
         def _is_batter(r):
             return any(p in BATTER_POS for p in (r.get("positions") or []))
-        batters    = [r for r in recs if _is_batter(r)]
-        pinned_ids = {id(r) for r in batters[:min_batters]}
-        guaranteed = batters[:min_batters]
-        remaining  = [r for r in recs if id(r) not in pinned_ids]
+        scored_batters = [r for r in recs if _is_batter(r) and r["_score"] > 0]
+        pinned_ids     = {id(r) for r in scored_batters[:min_batters]}
+        guaranteed     = scored_batters[:min_batters]
+        remaining      = [r for r in recs if id(r) not in pinned_ids]
         final = guaranteed + remaining[:limit - len(guaranteed)]
         # re-sort so output order still reflects relative quality
         final.sort(key=lambda r: r["_score"], reverse=True)
