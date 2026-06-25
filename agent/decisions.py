@@ -528,30 +528,31 @@ def _waiver_adds_for_cats(
             if whip > 0:
                 score -= whip * 40  # 1.20 WHIP → -48 penalty
 
-        # --- COMPONENT 4: Quality signals ---
-        # OPS as overall offensive quality (bonus for meaningful OPS only)
-        if is_batter:
+        # --- COMPONENT 4: Quality signals (minimum sample required) ---
+        # OPS as overall offensive quality — require 20+ games to avoid tiny-sample inflation
+        if is_batter and g >= 20:
             ops = float(stats.get("OPS") or 0)
             if ops > 0.600:
                 score += (ops - 0.600) * 100  # .850 OPS → +25 bonus
 
-        # K9 as pitcher stuff quality
-        if is_pitcher:
+        # K9 as pitcher stuff quality — require 10+ IP
+        if is_pitcher and ip >= 10:
             k9 = float(stats.get("K9") or 0)
             score += k9 * 2  # 10.0 K9 → +20 bonus
 
-        # Savant: barrel% for power, xwOBA for overall bat quality, xERA for pitchers
-        barrel = stats.get("sv_barrel_pct")
-        if barrel is not None and any(c in helps for c in ("HR", "RBI", "SB")):
-            score += max(0.0, barrel - 8.0) * 5.0
+        # Savant: require 20+ PA/IP to trust the numbers
+        if g >= 20 or ip >= 10:
+            barrel = stats.get("sv_barrel_pct")
+            if barrel is not None and any(c in helps for c in ("HR", "RBI", "SB")):
+                score += max(0.0, barrel - 8.0) * 5.0
 
-        xwoba = stats.get("sv_xwoba")
-        if xwoba is not None:
-            score += xwoba * 80.0   # .380 xwOBA → +30
+            xwoba = stats.get("sv_xwoba")
+            if xwoba is not None:
+                score += xwoba * 80.0   # .380 xwOBA → +30
 
-        xera = stats.get("sv_xera")
-        if xera is not None and any(c in helps for c in ("K", "ERA", "WHIP", "W")):
-            score -= xera * 5.0
+            xera = stats.get("sv_xera")
+            if xera is not None and any(c in helps for c in ("K", "ERA", "WHIP", "W")):
+                score -= xera * 5.0
 
         # Category breadth: bonus for helping multiple losing categories
         score += len(helps) * 3
