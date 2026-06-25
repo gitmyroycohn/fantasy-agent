@@ -287,6 +287,7 @@ def waiver_recommendations(
     league_id: str = "all",
     position: str | None = None,
     date: str | None = None,
+    next_week: bool = False,
     min_batters: int = 2,
     limit: int = 10,
 ) -> str:
@@ -299,6 +300,11 @@ def waiver_recommendations(
                      "SS", "C", "1B", "3B". Leave blank for all positions.
         date:        Only show players whose team plays on this date.
                      "today", "tomorrow", or "YYYY-MM-DD". Leave blank for all.
+        next_week:   If True, look ahead to the next CBS scoring period.
+                     SPs with 2 starts next week are boosted to the top.
+                     Back-to-back 2-starters (this week AND next) get an
+                     additional boost. Use this on Friday/Saturday to plan
+                     adds before the Monday scoring lock.
         min_batters: Minimum number of batter recommendations to include even
                      if pitcher categories are the priority. Default 2. Set to
                      0 to disable (useful when position="SP" or position="RP").
@@ -338,15 +344,20 @@ def waiver_recommendations(
             lid  = league_cfg["cbs_league_id"]
             name = league_cfg.get("name", lid)
 
+            week_offset = 1 if next_week else 0
+
             recs = get_filtered_waiver_adds(
                 auth, lid, league_cfg, sport,
                 position_filter=position,
                 playing_on=playing_on,
                 min_batters=min_batters,
                 limit=limit,
+                week_offset=week_offset,
             )
 
             header_parts = [name]
+            if next_week:
+                header_parts.append("NEXT WEEK")
             if position:
                 header_parts.append(f"position={position.upper()}")
             if playing_on:
@@ -375,8 +386,14 @@ def waiver_recommendations(
                 if r.get("cm_role"):
                     cm_tag = f"  [CM: {r['cm_role']} | {r.get('cm_tendency','')}]"
 
+                start_tag = ""
+                if r.get("back_to_back"):
+                    start_tag = "  ★★ 2-start back-to-back"
+                elif r.get("two_starter"):
+                    start_tag = "  ★ 2-start"
+
                 out.append(f"  + {r['player']} ({r.get('team','?')}) [{pos}]"
-                           f"  helps: {cats}{cm_tag}{sav_str}")
+                           f"  helps: {cats}{cm_tag}{sav_str}{start_tag}")
 
         return "\n".join(out) if out else "No waiver recommendations generated."
 
@@ -515,6 +532,62 @@ def daily_decisions(league_id: str = "all") -> str:
     except Exception as e:
         logger.exception("daily_decisions failed")
         return f"Error running daily decisions: {e}"
+
+
+# ---------------------------------------------------------------------------
+# Tool: get_baseball_image
+# ---------------------------------------------------------------------------
+
+@mcp.tool()
+def get_baseball_image(player_name: str | None = None) -> str:
+    """
+    Find and display a historical baseball image.
+
+    Searches the Library of Congress Photographs collection first (excellent
+    pre-1970 coverage), then Wikimedia Commons as a fallback for more modern
+    players.
+
+    Args:
+        player_name: Player or subject to search for, e.g. "Babe Ruth",
+                     "Tom Seaver", "Christy Mathewson", "Casey Stengel",
+                     "Pete Alonso", "1927 Yankees". Leave blank to get a
+                     random historic baseball image.
+
+    Returns an image URL with title, date, and source attribution.
+    The image can be displayed inline in any markdown-aware viewer.
+    """
+    import random as _random
+    from mlb.images import search_player_images, random_historic_image
+
+    try:
+        if player_name:
+            results = search_player_images(player_name, limit=6)
+            if not results:
+                return (f"No images found for '{player_name}'.\n"
+                        "Try a variation (e.g. 'Ruth' instead of 'Babe Ruth') "
+                        "or a broader search like 'vintage pitcher 1950s'.")
+            img = _random.choice(results[:3])   # pick from top 3 for variety
+        else:
+            img = random_historic_image()
+            if not img:
+                return "Could not fetch a random historic image right now."
+
+        lines = [
+            f"![{img['title']}]({img['url']})",
+            "",
+            f"**{img['title']}**",
+        ]
+        if img.get("date"):
+            lines.append(f"📅 {img['date']}")
+        if img.get("description"):
+            lines.append(f"_{img['description']}_")
+        lines.append(f"Source: [{img['source']}]({img['source_url']})")
+
+        return "\n".join(lines)
+
+    except Exception as e:
+        logger.exception("get_baseball_image failed")
+        return f"Image lookup failed: {e}"
 
 
 # ---------------------------------------------------------------------------

@@ -7,6 +7,27 @@ from zoneinfo import ZoneInfo
 _ET = ZoneInfo("America/New_York")
 
 
+def _random_image_block() -> str:
+    """Fetch a random historic baseball image for the daily header.
+    Returns a markdown image block, or empty string on failure."""
+    try:
+        from mlb.images import random_historic_image
+        img = random_historic_image()
+        if not img:
+            return ""
+        title = img.get("title", "Historic Baseball")
+        url   = img.get("url", "")
+        src   = img.get("source", "")
+        date  = img.get("date", "")
+        date_str = f" ({date})" if date else ""
+        return (
+            f"\n![{title}]({url})\n"
+            f"*{title}{date_str} — {src}*\n"
+        )
+    except Exception:
+        return ""
+
+
 def format_tldr(results: list[dict]) -> str:
     """
     Build a short summary block from the list of per-league result dicts
@@ -19,6 +40,7 @@ def format_tldr(results: list[dict]) -> str:
         "=" * 48,
         f"  FANTASY AGENT  --  {now}",
         "=" * 48,
+        _random_image_block(),
     ]
 
     for res in results:
