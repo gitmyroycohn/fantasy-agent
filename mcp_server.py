@@ -539,38 +539,58 @@ def daily_decisions(league_id: str = "all") -> str:
 # ---------------------------------------------------------------------------
 
 @mcp.tool()
-def get_baseball_image(player_name: str | None = None) -> str:
+def get_baseball_image(
+    subject: str | None = None,
+    year: str | None = None,
+    location: str | None = None,
+) -> str:
     """
     Find and display a historical baseball image.
 
     Searches the Library of Congress Photographs collection first (excellent
     pre-1970 coverage), then Wikimedia Commons as a fallback for more modern
-    players.
+    subjects. All three parameters are combined into a single search query,
+    so you can mix and match freely.
 
     Args:
-        player_name: Player or subject to search for, e.g. "Babe Ruth",
-                     "Tom Seaver", "Christy Mathewson", "Casey Stengel",
-                     "Pete Alonso", "1927 Yankees". Leave blank to get a
-                     random historic baseball image.
+        subject:  Player, team, or topic.
+                  e.g. "Babe Ruth", "Satchel Paige", "Brooklyn Dodgers",
+                  "Negro Leagues", "1927 Yankees", "World Series"
+        year:     Year or decade to narrow results.
+                  e.g. "1925", "1940", "1930s", "1950-1955"
+        location: Venue, city, or ballpark.
+                  e.g. "Yankee Stadium", "Birmingham", "Ebbets Field",
+                  "Polo Grounds", "Fenway Park"
 
-    Returns an image URL with title, date, and source attribution.
-    The image can be displayed inline in any markdown-aware viewer.
+    Examples:
+        subject="Babe Ruth", location="Yankee Stadium", year="1925"
+        subject="Satchel Paige", location="Birmingham", year="1940"
+        subject="Brooklyn Dodgers", year="1955"
+        location="Ebbets Field", year="1940s"
+
+    Leave all blank for a random historic baseball image.
+
+    Returns an image with title, date, and source attribution.
     """
     import random as _random
     from mlb.images import search_player_images, random_historic_image
 
     try:
-        if player_name:
-            results = search_player_images(player_name, limit=6)
+        # Build compound query from whichever params were provided
+        parts = [p for p in (subject, location, year) if p]
+        query = " ".join(parts) if parts else None
+
+        if query:
+            results = search_player_images(query, limit=6)
             if not results:
-                return (f"No images found for '{player_name}'.\n"
-                        "Try a variation (e.g. 'Ruth' instead of 'Babe Ruth') "
-                        "or a broader search like 'vintage pitcher 1950s'.")
+                return (f"No images found for '{query}'.\n"
+                        "Try loosening the search — drop the year or location, "
+                        "or use a broader subject like 'vintage pitcher 1950s'.")
             img = _random.choice(results[:3])   # pick from top 3 for variety
         else:
             img = random_historic_image()
             if not img:
-                return "Could not fetch a random historic image right now."
+                return "Could not fetch a random historic image right now — try naming a player or team."
 
         lines = [
             f"![{img['title']}]({img['url']})",
