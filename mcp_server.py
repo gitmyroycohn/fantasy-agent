@@ -372,9 +372,10 @@ def waiver_recommendations(
                 continue
 
             for r in recs:
-                cats  = ", ".join(r.get("helps_cats", []))
-                pos   = "/".join(r.get("positions", []))
-                stats = r.get("_stats") or {}
+                cats      = ", ".join(r.get("helps_cats", []))
+                pos       = "/".join(r.get("positions", []))
+                stats     = r.get("_stats") or {}
+                stat_line = r.get("_stat_line", "")
 
                 sav_parts = []
                 if stats.get("sv_xwoba"):
@@ -383,7 +384,7 @@ def waiver_recommendations(
                     sav_parts.append(f"Brl%={stats['sv_barrel_pct']:.1f}")
                 if stats.get("sv_xera") is not None:
                     sav_parts.append(f"xERA={stats['sv_xera']:.2f}")
-                sav_str = ("  [" + " | ".join(sav_parts) + "]") if sav_parts else ""
+                sav_str = (" [" + " | ".join(sav_parts) + "]") if sav_parts else ""
 
                 cm_tag = ""
                 if r.get("cm_role"):
@@ -395,8 +396,12 @@ def waiver_recommendations(
                 elif r.get("two_starter"):
                     start_tag = "  ★ 2-start"
 
-                out.append(f"  + {r['player']} ({r.get('team','?')}) [{pos}]"
-                           f"  helps: {cats}{cm_tag}{sav_str}{start_tag}")
+                header = (f"  + {r['player']} ({r.get('team','?')}) [{pos}]"
+                          f"  helps: {cats}{cm_tag}{start_tag}")
+                detail = ""
+                if stat_line or sav_str:
+                    detail = f"\n      {stat_line}{sav_str}"
+                out.append(header + detail)
 
         return "\n".join(out) if out else "No waiver recommendations generated."
 

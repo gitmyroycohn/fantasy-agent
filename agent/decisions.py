@@ -424,6 +424,13 @@ def _waiver_adds_for_cats(
     min_batters: int = 2,
     limit: int = 5,
 ):
+    """Score and rank waiver wire pickups using a four-component composite score:
+
+      1. Ownership %      -- crowd signal for overall value (strongest weight)
+      2. YTD rate stats   -- per-game/per-IP rates, not raw counts
+      3. FP ROS proj      -- rest-of-season projections override YTD rates when available
+      4. Quality signals  -- OPS for batters, K9 for pitchers, Savant xwOBA/xERA/barrel%
+    """
     # CBS stores outfielders as LF/CF/RF, never the bare "OF" token.
     # Include all three tags (plus "OF" as a belt-and-suspenders catch)
     # so outfielders aren't silently excluded from all hitting categories.
@@ -440,28 +447,22 @@ def _waiver_adds_for_cats(
         "ERA": ["SP"],
         "WHIP":["SP"],
     }
-    CAT_SORT_STAT = {
-        "SB":  ("sb",   False),
-        "HR":  ("hr",   False),
-        "R":   ("r",    False),
-        "RBI": ("rbi",  False),
-        "AVG": ("avg",  False),
-        "K":   ("k",    False),
-        "SV":  ("sv",   False),
-        "QS":  ("QS",   False),
-        "W":   ("w",    False),
-        "ERA": ("era",  True),
-        "WHIP":("whip", True),
-    }
 
-    def _stat_val(stats, base_key, lower):
-        if not stats:
+    BATTER_POS = {"C", "1B", "2B", "3B", "SS", "OF", "DH", "U", "CF", "LF", "RF"}
+    PITCHER_POS = {"SP", "RP", "P"}
+
+    def _rate(stats, count_key, opp_key, scale, min_opp=10):
+        """count_key / opp_key * scale, or 0 if sample too small."""
+        count = float(stats.get(count_key) or 0)
+        opp   = float(stats.get(opp_key) or 0)
+        if opp < min_opp:
             return 0.0
-        for key in (f"fp_{base_key}", base_key.upper(), base_key.lower(), base_key):
-            v = stats.get(key)
-            if v is not None:
-                return float(v)
-        return 0.0
+        return (count / opp) * scale
+
+    def _fp(stats, key):
+        """Return FP ROS projection value, or None if not available."""
+        v = stats.get(f"fp_{key.lower()}")
+        return float(v) if v is not None else None
 
     recs = []
     for wp in waivers:
@@ -471,26 +472,87 @@ def _waiver_adds_for_cats(
         if not helps or not wp.player.positions:
             continue
 
-        stats = wp.player.stats or {}
-        sort_score = 0.0
-        for cat in helps:
-            base_key, lower = CAT_SORT_STAT.get(cat, (None, False))
-            if base_key:
-                val = _stat_val(stats, base_key, lower)
-                sort_score += (-val if lower else val)
+        stats      = wp.player.stats or {}
+        is_batter  = any(p in BATTER_POS  for p in wp.player.positions)
+        is_pitcher = any(p in PITCHER_POS for p in wp.player.positions)
+        g   = float(stats.get("G")  or 0)
+        gs  = float(stats.get("GS") or 0)
+        ip  = float(stats.get("IP") or 0)
+        own = float(wp.ownership_pct or 0)
 
-        # Savant boosts: barrel% for power hitters, xwOBA for contact, xERA for pitchers
+        # --- COMPONENT 1: Ownership signal (strongest single predictor) ---
+        # 50% owned → +1000;  5% owned → +100
+        score = own * 20.0
+
+        # --- COMPONENT 2+3: YTD rate stats, overridden by FP ROS if available ---
+        # Hitting
+        if "SB" in helps:
+            fp_v = _fp(stats, "SB")
+            score += fp_v * 4.0 if fp_v is not None else _rate(stats, "SB", "G", 300)
+        if "HR" in helps:
+            fp_v = _fp(stats, "HR")
+            score += fp_v * 3.0 if fp_v is not None else _rate(stats, "HR", "G", 600)
+        if "R" in helps:
+            fp_v = _fp(stats, "R")
+            score += fp_v * 1.0 if fp_v is not None else _rate(stats, "R", "G", 150)
+        if "RBI" in helps:
+            fp_v = _fp(stats, "RBI")
+            score += fp_v * 1.0 if fp_v is not None else _rate(stats, "RBI", "G", 150)
+        if "AVG" in helps:
+            fp_v = _fp(stats, "AVG")
+            avg  = fp_v if fp_v is not None else float(stats.get("AVG") or 0)
+            score += avg * 200  # .300 avg → +60
+        # Pitching
+        if "K" in helps:
+            fp_v = _fp(stats, "K")
+            score += fp_v * 0.8 if fp_v is not None else _rate(stats, "K", "IP", 72, min_opp=10)
+        if "SV" in helps:
+            fp_v = _fp(stats, "SV")
+            score += fp_v * 4.0 if fp_v is not None else _rate(stats, "SV", "G", 300)
+        if "W" in helps:
+            fp_v = _fp(stats, "W")
+            score += fp_v * 5.0 if fp_v is not None else _rate(stats, "W", "GS", 150, min_opp=5)
+        if "QS" in helps:
+            fp_v = _fp(stats, "QS")
+            score += fp_v * 3.0 if fp_v is not None else _rate(stats, "QS", "GS", 150, min_opp=5)
+        if "ERA" in helps:
+            fp_v = _fp(stats, "ERA")
+            era  = fp_v if fp_v is not None else float(stats.get("ERA") or 0)
+            if era > 0:
+                score -= era * 15  # 4.00 ERA → -60 penalty
+        if "WHIP" in helps:
+            fp_v = _fp(stats, "WHIP")
+            whip = fp_v if fp_v is not None else float(stats.get("WHIP") or 0)
+            if whip > 0:
+                score -= whip * 40  # 1.20 WHIP → -48 penalty
+
+        # --- COMPONENT 4: Quality signals ---
+        # OPS as overall offensive quality (bonus for meaningful OPS only)
+        if is_batter:
+            ops = float(stats.get("OPS") or 0)
+            if ops > 0.600:
+                score += (ops - 0.600) * 100  # .850 OPS → +25 bonus
+
+        # K9 as pitcher stuff quality
+        if is_pitcher:
+            k9 = float(stats.get("K9") or 0)
+            score += k9 * 2  # 10.0 K9 → +20 bonus
+
+        # Savant: barrel% for power, xwOBA for overall bat quality, xERA for pitchers
         barrel = stats.get("sv_barrel_pct")
         if barrel is not None and any(c in helps for c in ("HR", "RBI", "SB")):
-            sort_score += max(0.0, barrel - 8.0) * 2.0
+            score += max(0.0, barrel - 8.0) * 5.0
 
         xwoba = stats.get("sv_xwoba")
-        if xwoba is not None and any(c in helps for c in ("AVG", "R", "RBI", "HR")):
-            sort_score += xwoba * 50.0
+        if xwoba is not None:
+            score += xwoba * 80.0   # .380 xwOBA → +30
 
         xera = stats.get("sv_xera")
         if xera is not None and any(c in helps for c in ("K", "ERA", "WHIP", "W")):
-            sort_score -= xera * 3.0
+            score -= xera * 5.0
+
+        # Category breadth: bonus for helping multiple losing categories
+        score += len(helps) * 3
 
         # Two-start boost: SPs/RPs with 2+ starts in the target week get a
         # significant lift so they surface over equivalent one-starters.
@@ -501,20 +563,44 @@ def _waiver_adds_for_cats(
             _n = _re2.sub(r"[^a-z0-9]", "", wp.player.name.lower())
             if two_starters and _n in two_starters:
                 n_starts = two_starters[_n]
-                sort_score += 20.0 * n_starts   # 2 starts → +40, 3 → +60
+                score += 20.0 * n_starts   # 2 starts → +40, 3 → +60
                 is_two_starter = True
             if bb_two_starters and _n in bb_two_starters:
-                sort_score += 10.0              # back-to-back weeks bonus
+                score += 10.0              # back-to-back weeks bonus
                 is_bb_two_starter = True
+
+        # Build a human-readable stat line for display
+        stat_parts = []
+        if own > 0:
+            stat_parts.append(f"own={own:.0f}%")
+        if g > 0:
+            stat_parts.append(f"G={int(g)}")
+        if is_batter:
+            for k in ("SB", "HR", "R", "RBI", "AVG", "OPS"):
+                v = stats.get(k)
+                if v:
+                    if k in ("AVG", "OPS"):
+                        stat_parts.append(f"{k}={float(v):.3f}")
+                    else:
+                        stat_parts.append(f"{k}={int(v)}")
+        if is_pitcher:
+            for k in ("K", "SV", "W", "QS", "ERA", "WHIP", "K9"):
+                v = stats.get(k)
+                if v:
+                    if k in ("ERA", "WHIP", "K9"):
+                        stat_parts.append(f"{k}={float(v):.2f}")
+                    else:
+                        stat_parts.append(f"{k}={int(v)}")
 
         rec = {
             "player":       wp.player.name,
             "team":         wp.player.team,
             "positions":    wp.player.positions,
-            "ownership":    wp.ownership_pct,
+            "ownership":    own,
             "helps_cats":   helps,
-            "_score":       sort_score,
+            "_score":       score,
             "_stats":       stats,
+            "_stat_line":   " | ".join(stat_parts),
             "two_starter":  is_two_starter,
             "back_to_back": is_bb_two_starter,
         }
@@ -537,14 +623,12 @@ def _waiver_adds_for_cats(
     # Guarantee min_batters batter recommendations so pitcher category gaps
     # don't crowd out all hitter suggestions.
     if min_batters > 0:
-        BATTER_POS = {"C", "1B", "2B", "3B", "SS", "OF", "DH", "U", "CF", "LF", "RF"}
         def _is_batter(r):
             return any(p in BATTER_POS for p in (r.get("positions") or []))
-        batters  = [r for r in recs if _is_batter(r)]
-        # guaranteed batter slots, then fill remainder from overall ranked list
-        pinned_ids  = {id(r) for r in batters[:min_batters]}
-        guaranteed  = batters[:min_batters]
-        remaining   = [r for r in recs if id(r) not in pinned_ids]
+        batters    = [r for r in recs if _is_batter(r)]
+        pinned_ids = {id(r) for r in batters[:min_batters]}
+        guaranteed = batters[:min_batters]
+        remaining  = [r for r in recs if id(r) not in pinned_ids]
         final = guaranteed + remaining[:limit - len(guaranteed)]
         # re-sort so output order still reflects relative quality
         final.sort(key=lambda r: r["_score"], reverse=True)
