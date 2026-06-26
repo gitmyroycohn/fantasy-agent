@@ -559,8 +559,20 @@ def hitting_matchups(
             return f"No MLB games found for {eval_date.isoformat()}."
 
         # Build fast lookup: cbs_team → matchup info
+        # --- fetch weather per game (keyed by home_team) ---
+        from mlb.weather import fetch_game_weather
+        game_weather: dict[str, dict] = {}
+        for m in matchups:
+            ht = m.get("home_team", "")
+            if ht and ht not in game_weather:
+                try:
+                    game_weather[ht] = fetch_game_weather(ht, eval_date)
+                except Exception:
+                    game_weather[ht] = {}
+
         team_to_matchup: dict[str, dict] = {}
         for m in matchups:
+            wx = game_weather.get(m.get("home_team", ""), {})
             # Batter on home team faces the AWAY starter
             if m["home_team"]:
                 team_to_matchup[m["home_team"]] = {
@@ -570,6 +582,7 @@ def hitting_matchups(
                     "is_home":          True,
                     "park_factor":      m["park_factor"],
                     "park_factor_hr":   m["park_factor_hr"],
+                    "weather":          wx,
                 }
             # Batter on away team faces the HOME starter
             if m["away_team"]:
@@ -580,6 +593,7 @@ def hitting_matchups(
                     "is_home":          False,
                     "park_factor":      m["park_factor"],
                     "park_factor_hr":   m["park_factor_hr"],
+                    "weather":          wx,
                 }
 
         # --- fetch split and recent-form data ---
@@ -664,6 +678,14 @@ def hitting_matchups(
                 pf       = m["park_factor"]
                 pf_label = park_label(pf)
 
+                # --- weather ---
+                wx           = m.get("weather", {})
+                wx_bonus     = wx.get("score_bonus", 0.0)
+                wx_summary   = wx.get("summary", "")
+                wx_wind      = wx.get("wind_label", "")
+                wx_precip    = wx.get("precip_pct", 0)
+                wx_temp      = wx.get("temp_f", 70)
+
                 # --- composite matchup score ---
                 score = 0.0
 
@@ -678,6 +700,9 @@ def hitting_matchups(
 
                 # Park factor component
                 score += (pf - 100) * 0.3
+
+                # Weather component
+                score += wx_bonus
 
                 # Penalty: handedness unknown (starter TBD)
                 if hand is None:
@@ -717,6 +742,8 @@ def hitting_matchups(
                     "pf_label":     pf_label,
                     "split_label":  split_label,
                     "hot_label":    hot_label,
+                    "wx_summary":   wx_summary,
+                    "wx_precip":    wx_precip,
                 })
 
             # Sort by score descending
@@ -737,6 +764,9 @@ def hitting_matchups(
                     out.append(f"           {item['split_label']}")
                 if item["hot_label"]:
                     out.append(f"           {item['hot_label']}")
+                if item["wx_summary"] and "unavailable" not in item["wx_summary"] and "dome" not in item["wx_summary"]:
+                    rain_str = f" ⛈ rain {item['wx_precip']}%" if item["wx_precip"] >= 20 else ""
+                    out.append(f"           wx: {item['wx_summary']}{rain_str}")
 
             if no_game:
                 out.append(f"\n  Off today: {', '.join(no_game)}")
