@@ -8,8 +8,8 @@
       },
       "Luisangel Acuna": {
         "first": "2026-06-17",
-        "last": "2026-06-21",
-        "n": 5
+        "last": "2026-06-26",
+        "n": 6
       },
       "Blaze Alexander": {
         "first": "2026-06-17",
@@ -18,8 +18,8 @@
       },
       "Nick Allen": {
         "first": "2026-06-17",
-        "last": "2026-06-21",
-        "n": 5
+        "last": "2026-06-26",
+        "n": 6
       },
       "Adael Amador": {
         "first": "2026-06-17",
@@ -33,8 +33,8 @@
       },
       "Jose Alvarado": {
         "first": "2026-06-22",
-        "last": "2026-06-25",
-        "n": 4
+        "last": "2026-06-26",
+        "n": 5
       },
       "Andrew Alvarez": {
         "first": "2026-06-22",
@@ -43,25 +43,30 @@
       },
       "Tyler Alexander": {
         "first": "2026-06-23",
-        "last": "2026-06-25",
-        "n": 3
+        "last": "2026-06-26",
+        "n": 4
       },
       "Elvis Alvarado": {
         "first": "2026-06-24",
         "last": "2026-06-25",
         "n": 2
+      },
+      "Travis Adams": {
+        "first": "2026-06-26",
+        "last": "2026-06-26",
+        "n": 1
       }
     },
     "streaming_sp": {
       "Mason Barnett": {
         "first": "2026-06-17",
-        "last": "2026-06-25",
-        "n": 6
+        "last": "2026-06-26",
+        "n": 7
       },
       "Andrew Alvarez": {
         "first": "2026-06-17",
-        "last": "2026-06-25",
-        "n": 9
+        "last": "2026-06-26",
+        "n": 10
       },
       "Slade Cecconi": {
         "first": "2026-06-18",
@@ -95,12 +100,22 @@
       },
       "Mick Abel": {
         "first": "2026-06-25",
-        "last": "2026-06-25",
-        "n": 1
+        "last": "2026-06-26",
+        "n": 2
       },
       "Brady Singer": {
         "first": "2026-06-25",
         "last": "2026-06-25",
+        "n": 1
+      },
+      "Aaron Civale": {
+        "first": "2026-06-26",
+        "last": "2026-06-26",
+        "n": 1
+      },
+      "Mitch Keller": {
+        "first": "2026-06-26",
+        "last": "2026-06-26",
         "n": 1
       }
     },
@@ -117,8 +132,8 @@
     "waiver_adds": {
       "Jose Alvarado": {
         "first": "2026-06-17",
-        "last": "2026-06-25",
-        "n": 9
+        "last": "2026-06-26",
+        "n": 10
       },
       "Andrew Alvarez": {
         "first": "2026-06-17",
@@ -127,8 +142,8 @@
       },
       "Tyler Alexander": {
         "first": "2026-06-17",
-        "last": "2026-06-25",
-        "n": 9
+        "last": "2026-06-26",
+        "n": 10
       },
       "Adbert Alzolay": {
         "first": "2026-06-17",
@@ -142,12 +157,22 @@
       },
       "Luisangel Acuna": {
         "first": "2026-06-25",
-        "last": "2026-06-25",
-        "n": 1
+        "last": "2026-06-26",
+        "n": 2
       },
       "Maximo Acosta": {
         "first": "2026-06-25",
         "last": "2026-06-25",
+        "n": 1
+      },
+      "Philip Abner": {
+        "first": "2026-06-26",
+        "last": "2026-06-26",
+        "n": 1
+      },
+      "Kevin Alcantara": {
+        "first": "2026-06-26",
+        "last": "2026-06-26",
         "n": 1
       }
     },
@@ -155,8 +180,8 @@
     "drop_candidates": {
       "Andrew Vaughn": {
         "first": "2026-06-17",
-        "last": "2026-06-25",
-        "n": 9,
+        "last": "2026-06-26",
+        "n": 10,
         "sev": "monitor"
       },
       "Miguel Amaya": {
