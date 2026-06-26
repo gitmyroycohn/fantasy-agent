@@ -18,6 +18,7 @@ Desktop. **`DRY_RUN = True` always — the agent never submits anything to CBS.*
 | Matchup / standings analysis | `sports/baseball/categories.py` |
 | Waiver wire recommendations (cat-targeted) | `agent/decisions.py` |
 | SP streaming, incl. 3-week schedule lookahead + back-to-back 2-starter flag | `sports/baseball/streaming.py`, `mlb/schedule.py` |
+| **Hitting matchup expert** — L/R splits, park factors, hot streak, weather | `mcp_server.py` → `hitting_matchups` tool |
 | Drop candidates (prospect-stash aware) | `sports/baseball/drops.py` |
 | Daily lineup advice | `sports/baseball/lineup_optimizer.py` |
 | Closer depth chart + news | `closermonkey/client.py` |
@@ -30,7 +31,9 @@ Desktop. **`DRY_RUN = True` always — the agent never submits anything to CBS.*
 
 Enrichment layers feeding the above: **FantasyPros** (ROS projections, `fp_*` keys),
 **Baseball Savant** (xStats, `sv_*` keys), **MLB Stats API** (schedule, IL,
-probable starters — no auth needed).
+probable starters, L/R splits, recent form — no auth needed),
+**Open-Meteo** (game-time weather forecast — no API key needed),
+**FanGraphs park factors** (5-year baked-in table, all 30 parks).
 
 ---
 
@@ -53,9 +56,11 @@ pip install -r requirements-mcp.txt   # only if using the MCP server
 cp .env.example .env
 ```
 Edit `.env`:
-- `CBS_COOKIE` — browser-captured session cookie (CBS login is JS-based, no API key).
-  Log into cbssports.com → DevTools → Network tab → any request to cbssports.com →
-  copy the full `Cookie:` header value. Lasts ~30–90 days; re-capture on auth errors.
+- **Option A (recommended):** `CBS_USERNAME` + `CBS_PASSWORD` — auto-login on startup,
+  transparent cookie refresh on expiry. No manual steps ever needed.
+- **Option B (manual):** `CBS_COOKIE` — browser-captured session cookie.
+  Log into cbssports.com → DevTools → Network tab → any request → copy the full
+  `Cookie:` header value. Lasts ~30–90 days; re-capture on auth errors.
 - `FANTASYPROS_API_KEY` — from your FantasyPros account.
 
 ### 4. Leagues
@@ -95,15 +100,16 @@ Each run's header timestamp is generated with proper `zoneinfo` ET conversion
 UTC on the runner, and mislabeled it "ET," making every timestamp read 4 hours
 ahead of the real time).
 
-Secrets required in the repo: `CBS_COOKIE`, `FANTASYPROS_API_KEY`.
+Secrets required in the repo: `CBS_COOKIE` (or `CBS_USERNAME`+`CBS_PASSWORD`), `FANTASYPROS_API_KEY`.
 
 ---
 
 ## MCP server (on-demand, from Claude Desktop)
 
-`mcp_server.py` exposes the agent as 7 tools via FastMCP:
+`mcp_server.py` exposes the agent as 8 tools via FastMCP:
 `evaluate_trade_tool`, `get_roster`, `get_team_roster`, `list_league_teams`,
-`waiver_recommendations`, `roster_value_signals`, `daily_decisions`.
+`waiver_recommendations`, `roster_value_signals`, `daily_decisions`,
+`hitting_matchups`.
 
 `get_team_roster(league_id, team_name)` looks up **any** team in the league
 by name (not just your own) — useful for trade research, e.g. "what does
@@ -180,8 +186,11 @@ fantasy-agent/
 │
 ├── mlb/
 │   ├── stats.py               # player stat enrichment (free MLB Stats API)
-│   ├── schedule.py            # 3-week lookahead, 2-starter detection
-│   └── injuries.py            # IL transactions + active IL roster
+│   ├── schedule.py            # 3-week lookahead, 2-starter detection, today's matchups
+│   ├── injuries.py            # IL transactions + active IL roster
+│   ├── splits.py              # L/R batter splits + recent form (last 14 days)
+│   ├── parks.py               # FanGraphs 5-year park factors, all 30 parks
+│   └── weather.py             # Open-Meteo game-time weather (wind/temp/precip)
 │
 ├── sports/baseball/
 │   ├── categories.py · drops.py · streaming.py · lineup_optimizer.py
@@ -199,7 +208,9 @@ fantasy-agent/
 │   ├── latest_output.md       # committed by GitHub Actions each run
 │   └── history.json           # decision memory
 │
-└── .github/workflows/daily.yml
+└── .github/workflows/
+    ├── daily.yml              # 8am ET daily run, commits logs/ back to repo
+    └── keep-alive.yml         # pings /health every 10 min to prevent Render cold starts
 ```
 
 ---
