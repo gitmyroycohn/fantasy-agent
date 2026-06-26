@@ -342,12 +342,24 @@ def waiver_recommendations(
                 except ValueError:
                     return f"Invalid date '{date}'. Use 'today', 'tomorrow', or 'YYYY-MM-DD'."
 
+        from datetime import datetime as _dtnow
+        from zoneinfo import ZoneInfo as _ZI
+        _et_now   = _dtnow.now(_ZI("America/New_York"))
+        _weekday  = _et_now.weekday()   # 0=Mon … 6=Sun
+
         out = []
         for league_cfg, sport in leagues:
             lid  = league_cfg["cbs_league_id"]
             name = league_cfg.get("name", lid)
 
-            week_offset = 1 if next_week else 0
+            # Detect weekly pitcher lock leagues (sp_must_be_claimed_before_week).
+            # Tue–Sun: pitcher adds only apply next week, so auto-shift the
+            # 2-starter window and add a note to the output.
+            weekly_lock = (league_cfg.get("constraints") or {}).get(
+                "sp_must_be_claimed_before_week", False)
+            pitcher_locked_midweek = weekly_lock and not next_week and _weekday > 0
+
+            week_offset = 1 if (next_week or pitcher_locked_midweek) else 0
 
             recs = get_filtered_waiver_adds(
                 auth, lid, league_cfg, sport,
@@ -359,13 +371,17 @@ def waiver_recommendations(
             )
 
             header_parts = [name]
-            if next_week:
+            if next_week or pitcher_locked_midweek:
                 header_parts.append("NEXT WEEK")
             if position:
                 header_parts.append(f"position={position.upper()}")
             if playing_on:
                 header_parts.append(f"playing={playing_on.isoformat()}")
             out.append(f"\n=== {' | '.join(header_parts)} -- Waiver Adds ===")
+
+            if pitcher_locked_midweek:
+                out.append("  ⚠️  Pitcher adds this week are locked — SP/RP recommendations "
+                           "are for NEXT scoring period. Add hitters freely.")
 
             if not recs:
                 out.append("  No recommendations found matching these filters.")
@@ -488,6 +504,241 @@ def roster_value_signals(league_id: str = "all") -> str:
     except Exception as e:
         logger.exception("roster_value_signals failed")
         return f"Error fetching roster value signals: {e}"
+
+
+# ---------------------------------------------------------------------------
+# Tool: hitting_matchups
+# ---------------------------------------------------------------------------
+
+@mcp.tool()
+def hitting_matchups(
+    league_id: str = "all",
+    date: str | None = None,
+) -> str:
+    """
+    Score your roster batters' hitting matchups for today (or another date).
+
+    For each batter, considers:
+      • L/R split advantage — season OPS vs the probable starter's handedness
+      • Park factor — how hitter-friendly the today's ballpark is
+      • Hot streak — OPS and HR over the last 14 days
+
+    Returns a ranked list from best to worst matchup, with a START / OK / SIT
+    recommendation. Use this to set your daily lineup or pick the right bench
+    player to activate.
+
+    Args:
+        league_id: League id from config, or "all" for all leagues.
+        date:      Date to evaluate. "today" (default), "tomorrow", or "YYYY-MM-DD".
+    """
+    from datetime import date as _date, datetime as _dt, timedelta
+    from zoneinfo import ZoneInfo
+    from mlb.schedule import todays_matchups
+    from mlb.splits  import fetch_batter_splits, fetch_recent_form
+    from mlb.parks   import park_label, park_factor as _pf
+    from mlb.teams   import norm_name as _norm
+
+    _ET = ZoneInfo("America/New_York")
+
+    try:
+        # --- resolve date ---
+        today = _dt.now(_ET).date()
+        if not date or date.strip().lower() == "today":
+            eval_date = today
+        elif date.strip().lower() == "tomorrow":
+            eval_date = today + timedelta(days=1)
+        else:
+            try:
+                eval_date = _date.fromisoformat(date.strip())
+            except ValueError:
+                return f"Invalid date '{date}'. Use 'today', 'tomorrow', or 'YYYY-MM-DD'."
+
+        # --- fetch matchup schedule ---
+        matchups = todays_matchups(eval_date)
+        if not matchups:
+            return f"No MLB games found for {eval_date.isoformat()}."
+
+        # Build fast lookup: cbs_team → matchup info
+        team_to_matchup: dict[str, dict] = {}
+        for m in matchups:
+            # Batter on home team faces the AWAY starter
+            if m["home_team"]:
+                team_to_matchup[m["home_team"]] = {
+                    "opp_starter_hand": m["away_starter_hand"],
+                    "opp_starter_name": m["away_starter_name"],
+                    "home_team":        m["home_team"],
+                    "is_home":          True,
+                    "park_factor":      m["park_factor"],
+                    "park_factor_hr":   m["park_factor_hr"],
+                }
+            # Batter on away team faces the HOME starter
+            if m["away_team"]:
+                team_to_matchup[m["away_team"]] = {
+                    "opp_starter_hand": m["home_starter_hand"],
+                    "opp_starter_name": m["home_starter_name"],
+                    "home_team":        m["home_team"],
+                    "is_home":          False,
+                    "park_factor":      m["park_factor"],
+                    "park_factor_hr":   m["park_factor_hr"],
+                }
+
+        # --- fetch split and recent-form data ---
+        splits = fetch_batter_splits()
+        recent = fetch_recent_form(14)
+
+        auth    = _get_auth()
+        leagues = _resolve_leagues(league_id)
+        if not leagues:
+            return f"No league found matching '{league_id}'."
+
+        _PITCHER_POS = {"SP", "RP", "P"}
+        out = []
+
+        for league_cfg, sport in leagues:
+            lid  = league_cfg["cbs_league_id"]
+            tid  = str(league_cfg["cbs_team_id"])
+            name = league_cfg.get("name", lid)
+            roster = cbs_get_roster(auth, lid, tid, sport)
+            try:
+                enrich_roster(roster)
+            except Exception:
+                pass
+
+            date_label = eval_date.isoformat()
+            out.append(f"\n=== {name} | Hitting Matchups — {date_label} ===")
+
+            scored: list[dict] = []
+            no_game: list[str] = []
+            pitchers_skipped  = 0
+
+            for rs in roster:
+                p = rs.player
+                if not p.team:
+                    continue
+                if set(p.positions) & _PITCHER_POS and not (
+                        set(p.positions) - _PITCHER_POS):
+                    pitchers_skipped += 1
+                    continue  # pure pitchers — skip
+
+                cbs_team = (p.team or "").upper()
+                m = team_to_matchup.get(cbs_team)
+                if m is None:
+                    no_game.append(p.name)
+                    continue
+
+                key = _norm(p.name)
+
+                # --- L/R split ---
+                hand = m["opp_starter_hand"]  # "L" / "R" / "S" / None
+                split_key = None
+                split_ops = None
+                split_avg = None
+                split_pa  = 0
+                if hand in ("L", "S"):
+                    split_key = "vs_l"
+                elif hand == "R":
+                    split_key = "vs_r"
+
+                split_label = ""
+                if key in splits and split_key:
+                    sd = splits[key].get(split_key, {})
+                    split_ops = sd.get("ops", 0.0)
+                    split_avg = sd.get("avg", 0.0)
+                    split_pa  = sd.get("pa", 0)
+                    if split_pa >= 30:
+                        split_label = (f"OPS vs {'LHP' if split_key=='vs_l' else 'RHP'}"
+                                       f"={split_ops:.3f} ({split_pa} PA)")
+
+                # --- recent form (last 14 days) ---
+                rd = recent.get(key, {})
+                recent_ops    = rd.get("ops", 0.0)
+                recent_avg    = rd.get("avg", 0.0)
+                recent_hr     = rd.get("hr", 0)
+                recent_games  = rd.get("games", 0)
+                hot_label = ""
+                if recent_games >= 5:
+                    hot_label = (f"L14: AVG={recent_avg:.3f} OPS={recent_ops:.3f}"
+                                 f" HR={recent_hr} ({recent_games}G)")
+
+                # --- park factor ---
+                pf       = m["park_factor"]
+                pf_label = park_label(pf)
+
+                # --- composite matchup score ---
+                score = 0.0
+
+                # Split component (OPS relative to .750 baseline)
+                if split_ops and split_pa >= 30:
+                    score += (split_ops - 0.750) * 40.0
+
+                # Recent form component
+                if recent_games >= 5:
+                    score += (recent_ops - 0.720) * 20.0
+                    score += recent_hr * 2.0
+
+                # Park factor component
+                score += (pf - 100) * 0.3
+
+                # Penalty: handedness unknown (starter TBD)
+                if hand is None:
+                    score -= 5.0
+
+                # Determine recommendation
+                if score >= 8:
+                    rec = "🟢 START"
+                elif score >= 2:
+                    rec = "🟡 OK"
+                elif score <= -5:
+                    rec = "🔴 SIT"
+                else:
+                    rec = "🟡 OK"
+
+                scored.append({
+                    "name":         p.name,
+                    "team":         cbs_team,
+                    "positions":    p.positions,
+                    "slot":         rs.slot,
+                    "score":        score,
+                    "rec":          rec,
+                    "opp_hand":     hand,
+                    "opp_starter":  m["opp_starter_name"],
+                    "is_home":      m["is_home"],
+                    "home_team":    m["home_team"],
+                    "pf":           pf,
+                    "pf_label":     pf_label,
+                    "split_label":  split_label,
+                    "hot_label":    hot_label,
+                })
+
+            # Sort by score descending
+            scored.sort(key=lambda x: x["score"], reverse=True)
+
+            for item in scored:
+                pos      = "/".join(item["positions"])
+                at_v     = "@" if not item["is_home"] else "vs"
+                opp_str  = f"{at_v} {item['home_team']}"
+                sp_str   = f" [{item['opp_starter'] or 'TBD'} {'('+item['opp_hand']+')' if item['opp_hand'] else ''}]"
+                pf_str   = f" | park={item['pf']} ({item['pf_label']})"
+                slot_str = f" [{item['slot']}]"
+                out.append(
+                    f"  {item['rec']}  {item['name']} ({item['team']}) [{pos}]{slot_str}"
+                    f"  {opp_str}{sp_str}{pf_str}"
+                )
+                if item["split_label"]:
+                    out.append(f"           {item['split_label']}")
+                if item["hot_label"]:
+                    out.append(f"           {item['hot_label']}")
+
+            if no_game:
+                out.append(f"\n  Off today: {', '.join(no_game)}")
+
+        return "\n".join(out) if out else "No matchup data generated."
+
+    except CBSAuthError as e:
+        return f"CBS auth error: {e}"
+    except Exception as e:
+        logger.exception("hitting_matchups failed")
+        return f"Error fetching hitting matchups: {e}"
 
 
 # ---------------------------------------------------------------------------
