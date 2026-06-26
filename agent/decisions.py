@@ -379,6 +379,13 @@ def get_filtered_waiver_adds(
         waivers = [wp for wp in waivers
                    if pos_set & set(wp.player.positions or [])]
 
+    # NL-only filter — drop AL players from NL-only leagues (Casey Stengel)
+    if league_cfg.get("nl_only"):
+        try:
+            waivers = filter_nl_waiver_pool(waivers)
+        except Exception as e:
+            logger.warning("NL filter failed: %s", e)
+
     # Game-day filter (only applies when explicitly requested via `date=`)
     if playing_on is not None:
         try:

@@ -683,8 +683,17 @@ def hitting_matchups(
                 if hand is None:
                     score -= 5.0
 
+                # Must-start floor: elite players always START regardless of park/matchup.
+                # Park factors and L/R splits should only differentiate borderline players,
+                # not override a .900+ OPS bat. OPS threshold set at .850 (top ~15% of starters).
+                ytd_ops = float((p.stats or {}).get("OPS") or 0)
+                is_must_start = ytd_ops >= 0.850
+
                 # Determine recommendation
-                if score >= 8:
+                if is_must_start:
+                    rec = "🟢 START"
+                    score = max(score, 12.0)   # float to top even with bad park
+                elif score >= 8:
                     rec = "🟢 START"
                 elif score >= 2:
                     rec = "🟡 OK"
