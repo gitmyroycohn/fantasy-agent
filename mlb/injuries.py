@@ -24,6 +24,8 @@ from zoneinfo import ZoneInfo
 
 import requests
 
+import re
+
 from mlb.teams import norm_name as _norm_teams
 
 logger = logging.getLogger(__name__)
