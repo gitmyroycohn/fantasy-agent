@@ -58,7 +58,7 @@ def find_drop_candidates(roster, waiver_wire, nl_only=False, stash_names=None):
         p = rs.player
         if p.status in _IL_STATUS:
             continue
-        if rs.slot == "BN" and not rs.is_starting:
+        if not rs.is_starting:
             continue
         if not p.stats:
             continue

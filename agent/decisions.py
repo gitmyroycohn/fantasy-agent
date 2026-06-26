@@ -380,9 +380,9 @@ def get_filtered_waiver_adds(
                    if pos_set & set(wp.player.positions or [])]
 
     # NL-only filter — drop AL players from NL-only leagues (Casey Stengel)
-    if league_cfg.get("nl_only"):
+    if league_cfg.get("nl_only") or league_cfg.get("roster_type") == "nl_only":
         try:
-            waivers = filter_nl_waiver_pool(waivers)
+            waivers = filter_nl_waiver_pool(waivers, league_cfg)
         except Exception as e:
             logger.warning("NL filter failed: %s", e)
 
@@ -751,6 +751,8 @@ def _add_injury_report(actions: list, team) -> None:
 
 def _current_week():
     from datetime import date
-    opening_day = date(2026, 3, 26)
-    delta = (date.today() - opening_day).days
+    today = date.today()
+    # MLB seasons open late March; approximate as March 28 of the current year
+    opening_day = date(today.year, 3, 28)
+    delta = (today - opening_day).days
     return max(1, delta // 7 + 1)

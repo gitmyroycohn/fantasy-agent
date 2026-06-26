@@ -193,5 +193,7 @@ def analyze_roster_value(roster_slots) -> list[dict]:
             "_sort":      (0 if signal == "sell_high" else 1, -raw_conf),
         })
 
-    signals.sort(key=lambda x: x.pop("_sort"))
+    signals.sort(key=lambda x: x["_sort"])
+    for s in signals:
+        s.pop("_sort", None)
     return signals

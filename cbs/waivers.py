@@ -72,8 +72,10 @@ def _available_from_api(auth: CBSAuth, league_id: str, sport: str,
         if p.get("owned_by_team_id"):
             continue
         pos = p.get("position", "")
-        if position not in ("all", "", "ALL") and pos != position:
-            continue
+        if position not in ("all", "", "ALL"):
+            pos_list = [x.strip() for x in pos.split("/") if x.strip()]
+            if position not in pos_list:
+                continue
         on_w = bool(p.get("on_waivers"))
         player = Player(
             id=str(p.get("id", "")),

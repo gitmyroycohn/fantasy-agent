@@ -44,6 +44,7 @@ def rank_streaming_sps(
         starts = two_starters.get(norm, 1)   # default to 1 if not in schedule yet
         score = _score_sp(wp.player, current_cat_standings, starts)
         if score > 0:
+            _stats = wp.player.stats or {}
             scored.append({
                 "player":      wp.player.name,
                 "team":        wp.player.team,
@@ -51,6 +52,8 @@ def rank_streaming_sps(
                 "starts":      starts,
                 "score":       round(score, 2),
                 "reason":      _reason(wp.player, current_cat_standings, starts),
+                "era":         _stats.get("ERA", "?"),
+                "k9":          _stats.get("K9",  "?"),
             })
 
     scored.sort(key=lambda x: x["score"], reverse=True)
