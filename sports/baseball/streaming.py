@@ -70,7 +70,7 @@ def _score_sp(player: Player, standings: dict, starts: int = 1) -> float:
     - K/9 contribution
     - Whether we're losing W, K, QS categories
     """
-    stats = player.stats
+    stats = player.stats or {}
     era   = stats.get("ERA", 99.0)
     k9    = stats.get("K9", 0.0)
     whip  = stats.get("WHIP", 9.0)

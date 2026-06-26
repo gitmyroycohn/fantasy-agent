@@ -579,6 +579,7 @@ def hitting_matchups(
                     "opp_starter_hand": m["away_starter_hand"],
                     "opp_starter_name": m["away_starter_name"],
                     "home_team":        m["home_team"],
+                    "away_team":        m["away_team"],
                     "is_home":          True,
                     "park_factor":      m["park_factor"],
                     "park_factor_hr":   m["park_factor_hr"],
@@ -590,6 +591,7 @@ def hitting_matchups(
                     "opp_starter_hand": m["home_starter_hand"],
                     "opp_starter_name": m["home_starter_name"],
                     "home_team":        m["home_team"],
+                    "away_team":        m["away_team"],
                     "is_home":          False,
                     "park_factor":      m["park_factor"],
                     "park_factor_hr":   m["park_factor_hr"],
@@ -752,7 +754,8 @@ def hitting_matchups(
             for item in scored:
                 pos      = "/".join(item["positions"])
                 at_v     = "@" if not item["is_home"] else "vs"
-                opp_str  = f"{at_v} {item['home_team']}"
+                opp_team = item["away_team"] if item["is_home"] else item["home_team"]
+                opp_str  = f"{at_v} {opp_team}"
                 sp_str   = f" [{item['opp_starter'] or 'TBD'} {'('+item['opp_hand']+')' if item['opp_hand'] else ''}]"
                 pf_str   = f" | park={item['pf']} ({item['pf_label']})"
                 slot_str = f" [{item['slot']}]"

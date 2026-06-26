@@ -174,7 +174,7 @@ def _parse_stat(raw: dict, group: str) -> dict:
 
 def _lookup(player, p_db: dict, h_db: dict) -> dict:
     """Return the stat dict for a player, or {} if not found."""
-    team = player.team.upper()
+    team = (player.team or "").upper()
     norm = norm_name(player.name)
     key  = f"{norm}_{team.lower()}"
 

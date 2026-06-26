@@ -92,7 +92,8 @@ def priority_categories(matchup: Matchup) -> list[str]:
     For H2H: losing cats sorted by gap (smallest gap = easiest flip).
     For Roto: bottom-half cats sorted by roto points (fewest pts = most room to gain).
     """
-    losing = [c for c in matchup.category_standings if not c.winning]
+    losing = [c for c in matchup.category_standings
+              if not c.winning and c.gap > 0]   # exclude ties (gap == 0)
     # For roto, rotopts > 0 and gap tells us room to gain; sort ascending gap
     losing.sort(key=lambda c: c.gap)
     return [c.category for c in losing]
