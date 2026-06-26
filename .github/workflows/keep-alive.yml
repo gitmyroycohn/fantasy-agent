@@ -1,8 +1,10 @@
 name: Keep Render Alive
 
-# Pings the MCP server every 10 minutes so Render's free tier never suspends
-# the service (it sleeps after 15 min idle, causing 30-60s cold starts that
-# time out the MCP connector handshake in Claude).
+# Pings /health every 10 minutes.
+# If the server is cold (Render free-tier sleeps after 15 min idle), the first
+# ping itself wakes it. This job then polls until it gets HTTP 200, confirming
+# the server is fully warm before exiting. Subsequent tool calls will hit a
+# live server with no cold-start delay.
 
 on:
   schedule:
@@ -13,14 +15,29 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping MCP server
+      - name: Wake and confirm Render server is warm
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            "https://fantasy-baseball-mcp-l8vw.onrender.com/mcp?token=${{ secrets.MCP_AUTH_TOKEN }}" \
-            --max-time 60)
-          echo "Render ping: HTTP $STATUS"
-          # 405 Method Not Allowed is expected for a GET on the MCP endpoint -- server is up
-          if [[ "$STATUS" == "000" ]]; then
-            echo "WARNING: server unreachable"
-            exit 1
-          fi
+          URL="https://fantasy-baseball-mcp.onrender.com/health"
+          MAX_WAIT=90   # seconds to wait for cold start to finish
+          INTERVAL=5    # seconds between retries
+          ELAPSED=0
+
+          echo "Pinging $URL ..."
+
+          while true; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$URL" || echo "000")
+            echo "  [${ELAPSED}s] HTTP $STATUS"
+
+            if [[ "$STATUS" == "200" ]]; then
+              echo "Server is warm (confirmed in ${ELAPSED}s)."
+              exit 0
+            fi
+
+            if [[ "$ELAPSED" -ge "$MAX_WAIT" ]]; then
+              echo "ERROR: server did not become healthy within ${MAX_WAIT}s (last status: $STATUS)"
+              exit 1
+            fi
+
+            sleep $INTERVAL
+            ELAPSED=$((ELAPSED + INTERVAL))
+          done
