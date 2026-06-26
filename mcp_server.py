@@ -30,6 +30,9 @@ import json
 import logging
 import sys
 import os
+import time
+
+_SERVER_START = time.time()   # recorded at cold-start; used to detect warm-up window
 
 # Bootstrap: add repo root to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -60,6 +63,27 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 mcp = FastMCP("Fantasy Baseball Agent")
+
+_COLD_START_WINDOW = 90   # seconds after startup considered a "cold start"
+
+def _warmup_notice() -> str:
+    """Return a friendly warm-up banner if the server just woke from a cold start."""
+    elapsed = int(time.time() - _SERVER_START)
+    if elapsed < _COLD_START_WINDOW:
+        remaining = _COLD_START_WINDOW - elapsed
+        return (
+            f"🔄 **Server just woke up from a cold start** (started {elapsed}s ago).\n"
+            f"   The first request after idle takes a little longer — "
+            f"everything should be fully warm in ~{remaining}s.\n"
+            f"   Your results are loading now...\n\n"
+        )
+    return ""
+
+
+def _respond(body: str) -> str:
+    """Prepend cold-start notice to any tool response when server just woke up."""
+    notice = _warmup_notice()
+    return notice + body if notice else body
 
 def _load_leagues(path=None):
     if path is None:
@@ -130,7 +154,7 @@ def evaluate_trade_tool(
             fp_client=fp_client,
             sav_client=sav_client,
         )
-        return format_trade_result(result)
+        return _respond(format_trade_result(result))
 
     except Exception as e:
         logger.exception("evaluate_trade failed")
@@ -177,7 +201,7 @@ def get_roster(league_id: str = "all") -> str:
                 out.append(f"{rs.slot:<6} {p.name:<24} {(p.team or '?'):<5} {status}")
             out.append("")
 
-        return "\n".join(out)
+        return _respond("\n".join(out))
 
     except CBSAuthError as e:
         return f"CBS auth error: {e}"
@@ -233,7 +257,7 @@ def get_team_roster(league_id: str, team_name: str) -> str:
         for rs in info["roster"]:
             p = rs.player
             out.append(f"{rs.slot:<6} {p.name:<24} {(p.team or '?'):<5} {p.status or ''}")
-        return "\n".join(out)
+        return _respond("\n".join(out))
 
     except CBSAuthError as e:
         return f"CBS auth error: {e}"
@@ -272,7 +296,7 @@ def list_league_teams(league_id: str) -> str:
             out.append(f"=== {league_cfg.get('name', lid)} ===")
             for tid, info in all_rosters.items():
                 out.append(f"  {info['name']}  (id={tid}, {len(info['roster'])} players)")
-        return "\n".join(out)
+        return _respond("\n".join(out))
 
     except CBSAuthError as e:
         return f"CBS auth error: {e}"
@@ -419,7 +443,7 @@ def waiver_recommendations(
                     detail = f"\n      {stat_line}{sav_str}"
                 out.append(header + detail)
 
-        return "\n".join(out) if out else "No waiver recommendations generated."
+        return _respond("\n".join(out) if out else "No waiver recommendations generated.")
 
     except CBSAuthError as e:
         return f"CBS auth error: {e}"
@@ -497,7 +521,7 @@ def roster_value_signals(league_id: str = "all") -> str:
                     out.append(f"    {s['reason']}")
             out.append("")
 
-        return "\n".join(out)
+        return _respond("\n".join(out))
 
     except CBSAuthError as e:
         return f"CBS auth error: {e}"
@@ -774,7 +798,7 @@ def hitting_matchups(
             if no_game:
                 out.append(f"\n  Off today: {', '.join(no_game)}")
 
-        return "\n".join(out) if out else "No matchup data generated."
+        return _respond("\n".join(out) if out else "No matchup data generated.")
 
     except CBSAuthError as e:
         return f"CBS auth error: {e}"
@@ -826,7 +850,7 @@ def daily_decisions(league_id: str = "all") -> str:
         finally:
             sys.stdout = original
 
-        return buf.getvalue() or "No output generated."
+        return _respond(buf.getvalue() or "No output generated.")
 
     except CBSAuthError as e:
         return f"CBS auth error: {e}"
