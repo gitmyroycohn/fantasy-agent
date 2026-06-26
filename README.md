@@ -149,7 +149,10 @@ gated by a bearer token (`MCP_AUTH_TOKEN`) since the URL is publicly
 reachable and can query your CBS fantasy data.
 
 Deploy to Render (free tier — cold starts after ~15 min idle, 30–60s to
-wake on the next request):
+wake on the next request). A GitHub Actions keep-alive pings `/health`
+every 10 minutes and polls until the server confirms warm, preventing
+cold starts during active hours. If a cold start does occur, all tool
+responses include a friendly notice explaining the delay.
 1. Render dashboard → **New** → **Blueprint** → point at this repo (uses `render.yaml`).
 2. When prompted, set secrets: `CBS_COOKIE`, `FANTASYPROS_API_KEY`, `MCP_AUTH_TOKEN` (make up any long random string for the token).
 3. Once deployed, your server URL is `https://<service-name>.onrender.com/mcp`.
