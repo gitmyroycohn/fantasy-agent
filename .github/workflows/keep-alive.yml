@@ -16,10 +16,11 @@ jobs:
       - name: Ping MCP server
         run: |
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            "https://fantasy-baseball-mcp.onrender.com/health" \
+            "https://fantasy-baseball-mcp-l8vw.onrender.com/mcp?token=${{ secrets.MCP_AUTH_TOKEN }}" \
             --max-time 60)
           echo "Render ping: HTTP $STATUS"
-          if [[ "$STATUS" != "200" ]]; then
-            echo "WARNING: unexpected status $STATUS"
+          # 405 Method Not Allowed is expected for a GET on the MCP endpoint -- server is up
+          if [[ "$STATUS" == "000" ]]; then
+            echo "WARNING: server unreachable"
             exit 1
           fi
