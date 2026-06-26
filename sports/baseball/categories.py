@@ -120,6 +120,14 @@ _AL_TEAMS = {
     "HOU", "LAA", "OAK", "ATH", "SEA", "TEX",  # ATH = A's (relocated from OAK)
 }
 
+# Positive allowlist — only these teams are NL-eligible.
+# Using an allowlist means unknown/empty team strings are automatically excluded.
+_NL_TEAMS = {
+    "ARI", "ATL", "CHC", "CIN", "COL",
+    "LAD", "MIA", "MIL", "NYM", "PHI",
+    "PIT", "SDP", "SFG", "STL", "WSH",
+}
+
 
 def check_nl_eligibility(players: list[Player]) -> list[dict]:
     """Flag any player on an AL team — ineligible for Casey Stengel."""
@@ -136,10 +144,14 @@ def check_nl_eligibility(players: list[Player]) -> list[dict]:
 
 
 def filter_nl_waiver_pool(players: list, league_config: dict) -> list:
-    """Remove AL players from the waiver pool for NL-only leagues."""
+    """Keep only NL-team players for NL-only leagues (Casey Stengel).
+
+    Uses a positive allowlist (_NL_TEAMS) so players with missing/unknown
+    team abbreviations are excluded rather than slipping through.
+    """
     if not league_config.get("nl_only") and league_config.get("roster_type") != "nl_only":
         return players
-    return [wp for wp in players if wp.player.team.upper() not in _AL_TEAMS]
+    return [wp for wp in players if (wp.player.team or "").upper() in _NL_TEAMS]
 
 
 # ---------------------------------------------------------------------------
