@@ -61,8 +61,7 @@ _SAV_DISPLAY = {
 _PITCHER_POS = {"SP", "RP", "P"}
 
 
-def _norm(name: str) -> str:
-    return re.sub(r"[^a-z0-9]", "", name.lower())
+from mlb.teams import norm_name as _norm
 
 
 def _fetch_fp_all(fp_client: FantasyProsClient) -> dict:

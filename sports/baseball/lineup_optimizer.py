@@ -9,18 +9,15 @@ Given today's MLB schedule, recommends:
 
 DRY_RUN=True: output only, no CBS submissions.
 """
-import re
 import logging
 from dataclasses import dataclass, field
 from typing import Optional
 
+from mlb.teams import norm_name as _norm
+
 logger = logging.getLogger(__name__)
 
 _PITCHER_POS = {"SP", "RP", "P"}
-
-
-def _norm(name: str) -> str:
-    return re.sub(r"[^a-z0-9]", "", name.lower())
 
 
 @dataclass
@@ -55,7 +52,22 @@ def optimize_daily_lineup(
     probable_starters: set of norm-names for pitchers starting today
 
     Returns a list of LineupAdvice objects.
+
+    IMPORTANT: schedule data may be incomplete (API lag, team abbrev mismatches,
+    UTC/ET boundary issues). The rule is: only assert positively confirmed facts.
+    Never tell the user to bench a batter based purely on absence from the
+    schedule set — that absence may reflect a data gap, not a true off day.
+    Only flag confirmed off days when the schedule API returned a healthy number
+    of games (>=10 teams playing), reducing false negatives on partial-data days.
     """
+    # Sanity check: if fewer than 10 team-sides are playing, the schedule data
+    # is likely incomplete (API error, off-season, or wrong date). Suppress all
+    # negative schedule inferences in that case.
+    schedule_reliable = len(teams_playing) >= 10
+
+    logger.info("optimize_daily_lineup: %d teams playing (reliable=%s), %d probable starters",
+                len(teams_playing), schedule_reliable, len(probable_starters))
+
     advice_list: list[LineupAdvice] = []
 
     for slot_info in lineup_slots:
@@ -69,42 +81,53 @@ def optimize_daily_lineup(
             continue
 
         is_pitcher = ("SP" in positions or "RP" in positions)
-        playing    = team in teams_playing
-        norm_name  = _norm(name)
+        confirmed_playing = team.upper() in teams_playing
+        norm_name = _norm(name)
 
         if is_pitcher:
             probable = norm_name in probable_starters
             if "SP" in positions:
                 if probable:
                     advice = "start" if not active else "ok"
-                    reason = f"Probable starter today ({team} playing)"
-                else:
+                    reason = f"Confirmed probable starter today ({team})"
+                elif confirmed_playing:
+                    # Team has a game but not yet listed as probable — inconclusive
+                    advice = "ok"
+                    reason = f"{team} has a game — probable starters not yet posted"
+                elif schedule_reliable:
+                    # Only flag as no-game when schedule data looks complete
                     advice = "bench_pitcher"
-                    reason = (f"{team} playing but not listed as probable starter"
-                              if playing
-                              else f"{team} has no game today")
+                    reason = f"{team} has no game today per MLB schedule"
+                else:
+                    advice = "ok"
+                    reason = f"{team} schedule unclear — verify before benching"
                 advice_list.append(LineupAdvice(
                     player_name=name, team=team, positions=positions,
                     slot=slot, is_starting=active, advice=advice, reason=reason,
-                    is_probable_starter=probable,
+                    is_probable_starter=probable if (probable or confirmed_playing) else None,
                 ))
             else:
-                # RP — just note if their team is playing
-                advice = "ok"
-                reason = f"{team} playing today" if playing else f"{team} off today"
+                # RP — informational only, never bench on schedule alone
+                reason = (f"{team} playing today" if confirmed_playing
+                          else f"{team} schedule unconfirmed")
                 advice_list.append(LineupAdvice(
                     player_name=name, team=team, positions=positions,
-                    slot=slot, is_starting=active, advice=advice, reason=reason,
+                    slot=slot, is_starting=active, advice="ok", reason=reason,
                     is_probable_starter=None,
                 ))
         else:
             # Batter
-            if playing:
+            if confirmed_playing:
                 advice = "start" if not active else "ok"
-                reason = f"{team} playing today"
-            else:
+                reason = f"{team} has a game today"
+            elif schedule_reliable:
+                # Only assert off-day when schedule data is healthy
                 advice = "bench"
-                reason = f"{team} has no game today - bench if possible"
+                reason = f"{team} has no game today per MLB schedule — verify before benching"
+            else:
+                # Inconclusive — don't recommend action
+                advice = "ok"
+                reason = f"{team} schedule unconfirmed"
             advice_list.append(LineupAdvice(
                 player_name=name, team=team, positions=positions,
                 slot=slot, is_starting=active, advice=advice, reason=reason,

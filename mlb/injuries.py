@@ -18,12 +18,13 @@ annotate_roster_injuries(roster_slots, active_il)
     Flags your CBS roster players found in the active IL.
 """
 
-import re
 import logging
 from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 
 import requests
+
+from mlb.teams import norm_name as _norm_teams
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +52,7 @@ def _today_et() -> date:
 
 
 def _norm(name: str) -> str:
-    return re.sub(r"[^a-z0-9]", "", name.lower())
+    return _norm_teams(name)
 
 
 def _fmt(d: str) -> str:

@@ -19,20 +19,12 @@ import logging
 import requests
 from functools import lru_cache
 
+from mlb.teams import mlb_to_cbs, norm_name
+
 logger = logging.getLogger(__name__)
 
 MLB_API = "https://statsapi.mlb.com/api/v1"
 TIMEOUT = 20
-
-# MLB API uses different abbreviations than CBS for some teams
-_MLB_TO_CBS_TEAM: dict[str, str] = {
-    "TB":  "TBR",
-    "CHW": "CWS",
-    "KC":  "KCR",
-    "SD":  "SDP",
-    "SF":  "SFG",
-    "MIL": "MIL",
-}
 
 # Pitcher positions as CBS encodes them
 _PITCHER_POSITIONS = {"SP", "RP", "P"}
@@ -106,11 +98,11 @@ def _fetch_stats(group: str, season: int) -> dict[str, dict]:
 
             full_name  = player_info.get("fullName", "")
             mlb_team   = team_info.get("abbreviation", "")
-            cbs_team   = _mlb_to_cbs(mlb_team)
+            cbs_team   = mlb_to_cbs(mlb_team)
 
             parsed = _parse_stat(raw_stat, group)
 
-            norm        = _norm(full_name)
+            norm        = norm_name(full_name)
             key_precise = f"{norm}_{cbs_team.lower()}"
 
             result[key_precise] = parsed
@@ -183,7 +175,7 @@ def _parse_stat(raw: dict, group: str) -> dict:
 def _lookup(player, p_db: dict, h_db: dict) -> dict:
     """Return the stat dict for a player, or {} if not found."""
     team = player.team.upper()
-    norm = _norm(player.name)
+    norm = norm_name(player.name)
     key  = f"{norm}_{team.lower()}"
 
     is_pitcher = any(pos in _PITCHER_POSITIONS for pos in player.positions)
@@ -199,15 +191,6 @@ def _lookup(player, p_db: dict, h_db: dict) -> dict:
 # ---------------------------------------------------------------------------
 # Utilities
 # ---------------------------------------------------------------------------
-
-def _norm(name: str) -> str:
-    """Lowercase, strip non-alphanumeric for fuzzy matching."""
-    return re.sub(r"[^a-z0-9]", "", name.lower())
-
-
-def _mlb_to_cbs(abbr: str) -> str:
-    return _MLB_TO_CBS_TEAM.get(abbr, abbr)
-
 
 def _f(val) -> float:
     try:

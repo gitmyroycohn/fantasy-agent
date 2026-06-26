@@ -26,8 +26,7 @@ _BASE = "https://api.fantasypros.com/public/v2/json"
 _CURRENT_SEASON = 2026
 
 
-def _norm(name: str) -> str:
-    return re.sub(r"[^a-z0-9]", "", name.lower())
+from mlb.teams import norm_name as _norm
 
 
 class FantasyProsClient:

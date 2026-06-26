@@ -28,8 +28,7 @@ _ENTITIES = {
 }
 
 
-def _norm(name: str) -> str:
-    return re.sub(r"[^a-z0-9]", "", name.lower())
+from mlb.teams import norm_name as _norm
 
 
 def _strip_html(text: str) -> str:

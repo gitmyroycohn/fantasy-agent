@@ -127,5 +127,4 @@ def _reason(player: Player, standings: dict, starts: int = 1) -> str:
     return " | ".join(parts)
 
 
-def _norm(name: str) -> str:
-    return re.sub(r"[^a-z0-9]", "", name.lower())
+from mlb.teams import norm_name as _norm

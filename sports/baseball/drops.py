@@ -49,8 +49,7 @@ def find_drop_candidates(roster, waiver_wire, nl_only=False, stash_names=None):
 
     stash_names: optional set/list of player names to never flag (prospect stash).
     """
-    import re as _re
-    _norm = lambda n: _re.sub(r"[^a-z0-9]", "", n.lower())
+    from mlb.teams import norm_name as _norm
     stash_set = {_norm(n) for n in (stash_names or [])}
 
     drops = []

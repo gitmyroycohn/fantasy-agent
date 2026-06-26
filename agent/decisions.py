@@ -3,6 +3,7 @@ Decision engine -- runs per league and produces a list of recommended actions.
 """
 import logging
 from data.models import Team, Matchup
+from mlb.teams import norm_name as _norm_name
 from sports.baseball.streaming import rank_streaming_sps
 from sports.baseball.categories import (
     analyze_matchup, priority_categories, summary_line,
@@ -27,6 +28,7 @@ from agent.tradevalue import analyze_roster_value
 from cbs.standings import fetch_all_teams_stats
 from agent.surplusmap import build_surplus_map, trade_leads_from_map, my_category_profile
 from mlb.injuries import fetch_il_transactions, annotate_roster_injuries, format_transactions
+from mlb.splits import fetch_recent_form as _fetch_recent_form
 
 logger = logging.getLogger(__name__)
 
@@ -109,8 +111,7 @@ def _h2h_decisions(auth, league_id, cfg, team, sport):
         ]
         print(f"  Schedule (3wk): {' | '.join(week_labels)}")
         if bb_two_starters:
-            import re as _re
-            _norm = lambda n: _re.sub(r"[^a-z0-9]", "", n.lower())
+            _norm = _norm_name
             bb_on_wire = [wp.player.name for wp in waivers
                           if _norm(wp.player.name) in bb_two_starters]
             if bb_on_wire:
@@ -123,10 +124,8 @@ def _h2h_decisions(auth, league_id, cfg, team, sport):
     sp_recs = rank_streaming_sps(waivers, cat_status, two_starters=two_start_now)
     if sp_recs:
         # Annotate back-to-back 2-starters
-        import re as _re2
-        _norm2 = lambda n: _re2.sub(r"[^a-z0-9]", "", n.lower())
         for r in sp_recs:
-            if _norm2(r["player"]) in bb_two_starters:
+            if _norm_name(r["player"]) in bb_two_starters:
                 r["back_to_back"] = True
         actions.append({
             "type":            "streaming_sp",
@@ -142,10 +141,8 @@ def _h2h_decisions(auth, league_id, cfg, team, sport):
                                                max_results=5)
             if next_two_recs:
                 offset = week["week_offset"]
-                import re as _re3
-                _norm3 = lambda n: _re3.sub(r"[^a-z0-9]", "", n.lower())
                 for r in next_two_recs:
-                    if _norm3(r["player"]) in bb_two_starters:
+                    if _norm_name(r["player"]) in bb_two_starters:
                         r["back_to_back"] = True
                 actions.append({
                     "type":            "streaming_sp_next_week",
@@ -344,8 +341,7 @@ def get_filtered_waiver_adds(
     from mlb.schedule import teams_playing_today, schedule_weeks, back_to_back_two_starters
     from cbs.stats import fetch_matchup_stats
     from sports.baseball.categories import analyze_matchup, priority_categories
-    import re as _re
-    _norm = lambda n: _re.sub(r"[^a-z0-9]", "", n.lower())
+    _norm = _norm_name
 
     # Fetch the full free-agent pool (no limit here — CBS returns ~8400 players
     # in one call; filtering + enrichment happen below on the relevant subset).
@@ -356,6 +352,20 @@ def get_filtered_waiver_adds(
         logger.warning("Waiver enrichment failed: %s", e)
     _fp_enrich(waivers, "wire")
     _sav_enrich(waivers, "wire")
+
+    # Enrich with recent form (last 14 days) — hot streak component for scorer
+    try:
+        recent_data = _fetch_recent_form(14)
+        for wp in waivers:
+            p = wp.player
+            key = _norm_name(p.name)
+            if key in recent_data:
+                if p.stats is None:
+                    p.stats = {}
+                for stat, val in recent_data[key].items():
+                    p.stats[f"recent_{stat}"] = val
+    except Exception as e:
+        logger.warning("Recent-form enrichment failed: %s", e)
 
     # Position filter
     # CBS stores outfielders as LF/CF/RF, not OF — expand the alias so
@@ -554,6 +564,19 @@ def _waiver_adds_for_cats(
             if xera is not None and any(c in helps for c in ("K", "ERA", "WHIP", "W")):
                 score -= xera * 5.0
 
+        # --- COMPONENT 4b: Hot streak (last 14 days) ---
+        # A batter on a tear gets a meaningful boost even if YTD is modest.
+        # Use recent_ops and recent_hr from mlb.splits.fetch_recent_form().
+        if is_batter:
+            recent_games = int(stats.get("recent_games") or 0)
+            if recent_games >= 5:
+                recent_ops = float(stats.get("recent_ops") or 0)
+                recent_hr  = int(stats.get("recent_hr") or 0)
+                # OPS above .750 in last 14 days is hot — scale bonus
+                if recent_ops > 0.600:
+                    score += (recent_ops - 0.700) * 30.0  # .900 → +6, .750 → +1.5
+                score += recent_hr * 3.0  # 3 HR in last 14 days → +9 bonus
+
         # Category breadth: bonus for helping multiple losing categories
         score += len(helps) * 3
 
@@ -562,8 +585,7 @@ def _waiver_adds_for_cats(
         is_two_starter = False
         is_bb_two_starter = False
         if two_starters or bb_two_starters:
-            import re as _re2
-            _n = _re2.sub(r"[^a-z0-9]", "", wp.player.name.lower())
+            _n = _norm_name(wp.player.name)
             if two_starters and _n in two_starters:
                 n_starts = two_starters[_n]
                 score += 20.0 * n_starts   # 2 starts → +40, 3 → +60
@@ -586,6 +608,15 @@ def _waiver_adds_for_cats(
                         stat_parts.append(f"{k}={float(v):.3f}")
                     else:
                         stat_parts.append(f"{k}={int(v)}")
+            # Hot streak indicator
+            rg = int(stats.get("recent_games") or 0)
+            if rg >= 5:
+                r_ops = stats.get("recent_ops")
+                r_hr  = stats.get("recent_hr")
+                if r_ops:
+                    stat_parts.append(f"L14_OPS={float(r_ops):.3f}({rg}G)")
+                if r_hr:
+                    stat_parts.append(f"L14_HR={r_hr}")
         if is_pitcher:
             for k in ("K", "SV", "W", "QS", "ERA", "WHIP", "K9"):
                 v = stats.get(k)
@@ -694,9 +725,7 @@ def _add_trade_leads(actions: list, auth, league_id: str, cfg: dict,
 def _add_injury_report(actions: list, team) -> None:
     """Fetch recent IL transactions and cross-reference against roster."""
     try:
-        import re as _re
-        _norm = lambda n: _re.sub(r"[^a-z0-9]", "", n.lower())
-        roster_norms = {_norm(s.player.name) for s in team.roster}
+        roster_norms = {_norm_name(s.player.name) for s in team.roster}
 
         txns = fetch_il_transactions(lookback_days=7)
         # Cross-reference transactions against your roster

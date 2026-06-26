@@ -10,7 +10,6 @@ Usage:
     # returns {norm_name: start_count}
 """
 
-import re
 import logging
 from datetime import date, datetime, timedelta
 from collections import defaultdict
@@ -18,6 +17,8 @@ from functools import lru_cache
 from zoneinfo import ZoneInfo
 
 import requests
+
+from mlb.teams import mlb_to_cbs, norm_name
 
 _ET = ZoneInfo("America/New_York")
 
@@ -133,11 +134,7 @@ def back_to_back_two_starters(weeks_data: list[dict],
 # Daily schedule
 # ---------------------------------------------------------------------------
 
-# MLB API abbrev → CBS abbrev (same mapping as mlb/stats.py)
-_MLB_TO_CBS: dict[str, str] = {
-    "TB":  "TBR", "CHW": "CWS", "KC": "KCR",
-    "SD":  "SDP", "SF":  "SFG",
-}
+# Team abbreviation mapping is now in mlb/teams.py (mlb_to_cbs / norm_name).
 
 
 def teams_playing_today(d: date = None) -> set[str]:
@@ -153,7 +150,12 @@ def teams_playing_today(d: date = None) -> set[str]:
                         .get("team", {})
                         .get("abbreviation", ""))
             if abbr:
-                teams.add(_MLB_TO_CBS.get(abbr, abbr))
+                cbs_abbr = mlb_to_cbs(abbr)
+                if abbr != cbs_abbr:
+                    logger.debug("Team abbrev mapped: %s → %s", abbr, cbs_abbr)
+                teams.add(cbs_abbr)
+    logger.info("teams_playing_today %s: %d teams — %s",
+                d.isoformat(), len(teams), sorted(teams))
     return teams
 
 
@@ -173,6 +175,71 @@ def probable_starters_today(d: date = None) -> set[str]:
                 if name:
                     starters.add(_norm(name))
     return starters
+
+
+def todays_matchups(d: date = None) -> list[dict]:
+    """
+    Return matchup data for every game today.
+
+    Each dict:
+        home_team        str  CBS team abbrev (home)
+        away_team        str  CBS team abbrev (away)
+        home_starter     str | None  norm_name of home probable starter
+        away_starter     str | None  norm_name of away probable starter
+        home_starter_hand str | None "L" | "R" | "S" (switch)
+        away_starter_hand str | None
+        home_starter_name str | None full name
+        away_starter_name str | None
+        park_factor      int  park factor for the HOME team's park (runs)
+        park_factor_hr   int  park factor for the HOME team's park (HR)
+
+    Returns [] if API is unreachable or schedule is empty.
+    """
+    from mlb.parks import park_factor as _pf
+    if d is None:
+        d = _today_et()
+    games = _fetch_today_games(d.isoformat())
+    result = []
+    for game in games:
+        teams = game.get("teams", {})
+        home_info = teams.get("home", {})
+        away_info = teams.get("away", {})
+
+        home_team_raw = (home_info.get("team", {}).get("abbreviation", "")
+                         or home_info.get("team", {}).get("teamCode", ""))
+        away_team_raw = (away_info.get("team", {}).get("abbreviation", "")
+                         or away_info.get("team", {}).get("teamCode", ""))
+
+        home_team = mlb_to_cbs(home_team_raw.upper()) if home_team_raw else ""
+        away_team = mlb_to_cbs(away_team_raw.upper()) if away_team_raw else ""
+
+        def _starter_info(side_info: dict) -> tuple:
+            """(norm_name | None, hand | None, full_name | None)"""
+            pitcher = side_info.get("probablePitcher")
+            if not pitcher:
+                return None, None, None
+            full = pitcher.get("fullName", "")
+            hand = pitcher.get("pitchHand", {}).get("code")  # "L" / "R" / "S"
+            return (norm_name(full) if full else None), hand, (full or None)
+
+        h_norm, h_hand, h_full = _starter_info(home_info)
+        a_norm, a_hand, a_full = _starter_info(away_info)
+
+        result.append({
+            "home_team":          home_team,
+            "away_team":          away_team,
+            "home_starter":       h_norm,
+            "away_starter":       a_norm,
+            "home_starter_hand":  h_hand,
+            "away_starter_hand":  a_hand,
+            "home_starter_name":  h_full,
+            "away_starter_name":  a_full,
+            "park_factor":        _pf(home_team, "runs"),
+            "park_factor_hr":     _pf(home_team, "hr"),
+        })
+
+    logger.info("todays_matchups %s: %d games", d.isoformat(), len(result))
+    return result
 
 
 @lru_cache(maxsize=7)
@@ -249,5 +316,5 @@ def _fetch_start_counts(start_date: str, end_date: str) -> dict[str, int]:
 # ---------------------------------------------------------------------------
 
 def _norm(name: str) -> str:
-    """Match the same normalization as mlb/stats.py for cross-referencing."""
-    return re.sub(r"[^a-z0-9]", "", name.lower())
+    """Canonical player-name normalizer — delegates to mlb.teams.norm_name."""
+    return norm_name(name)
