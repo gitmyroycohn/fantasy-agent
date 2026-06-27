@@ -17,7 +17,7 @@ jobs:
     steps:
       - name: Wake and confirm Render server is warm
         run: |
-          URL="https://fantasy-baseball-mcp.onrender.com/health"
+          URL="https://fantasy-baseball-mcp-l8vw.onrender.com/health"
           MAX_WAIT=90   # seconds to wait for cold start to finish
           INTERVAL=5    # seconds between retries
           ELAPSED=0
