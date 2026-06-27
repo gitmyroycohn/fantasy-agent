@@ -977,6 +977,11 @@ def _run_http():
 
     class BearerAuthMiddleware(BaseHTTPMiddleware):
         async def dispatch(self, request, call_next):
+            # Allow OAuth discovery + /health through unauthenticated
+            # Required for Claude.ai connector to complete its sign-in flow.
+            path = request.url.path
+            if path.startswith("/.well-known/") or path in ("/health", "/ping"):
+                return await call_next(request)
             header_val = request.headers.get("authorization", "")
             query_val  = request.query_params.get("token", "")
             ok = (header_val == f"Bearer {auth_token}") or (query_val == auth_token)
