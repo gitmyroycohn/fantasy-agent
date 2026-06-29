@@ -94,32 +94,32 @@ def _probe_endpoint(auth, league_id, sport, my_team_id, endpoint, week_offset):
         data = auth.api_get(endpoint, league_id, sport)
         body = data.get("body") or {}
 
-        logger.info("[schedule probe] %s -> HTTP 200, body keys: %s",
+        logger.warning("[schedule probe] %s -> HTTP 200, body keys: %s",
                     endpoint, list(body.keys()))
 
         # Walk every top-level key and log its type/length
         for key, val in body.items():
             if isinstance(val, list):
-                logger.info("[schedule probe]   %s[%s] = list(%d items)", endpoint, key, len(val))
+                logger.warning("[schedule probe]   %s[%s] = list(%d items)", endpoint, key, len(val))
                 if val and isinstance(val[0], dict):
-                    logger.info("[schedule probe]     first item keys: %s", list(val[0].keys()))
+                    logger.warning("[schedule probe]     first item keys: %s", list(val[0].keys()))
             elif isinstance(val, dict):
-                logger.info("[schedule probe]   %s[%s] = dict, keys: %s",
+                logger.warning("[schedule probe]   %s[%s] = dict, keys: %s",
                             endpoint, key, list(val.keys()))
             else:
-                logger.info("[schedule probe]   %s[%s] = %s: %r",
+                logger.warning("[schedule probe]   %s[%s] = %s: %r",
                             endpoint, key, type(val).__name__, str(val)[:80])
 
         # Try to parse matchup/opponent data out of whatever shape this is
         result = _parse_any_schedule(body, my_team_id, week_offset, source=endpoint)
         if result:
-            logger.info("[schedule probe] SUCCESS via %s: %s", endpoint, result)
+            logger.warning("[schedule probe] SUCCESS via %s: %s", endpoint, result)
         else:
-            logger.info("[schedule probe] %s returned data but no parseable matchup found", endpoint)
+            logger.warning("[schedule probe] %s returned data but no parseable matchup found", endpoint)
         return result
 
     except CBSAPIError as e:
-        logger.info("[schedule probe] %s -> CBS error: %s", endpoint, e)
+        logger.warning("[schedule probe] %s -> CBS error: %s", endpoint, e)
         return None
     except Exception as e:
         logger.warning("[schedule probe] %s -> unexpected error: %s", endpoint, e)
@@ -134,22 +134,22 @@ def _probe_period_param(auth, league_id, sport, my_team_id, week_offset):
         live = (data.get("body") or {}).get("live_scoring") or {}
         current_period = int(live.get("period", 0))
         if not current_period:
-            logger.info("[schedule probe] period param: could not determine current period")
+            logger.warning("[schedule probe] period param: could not determine current period")
             return None
 
         target_period = current_period + week_offset
-        logger.info("[schedule probe] Trying league/scoring/live?period=%d (current=%d, offset=%d)",
+        logger.warning("[schedule probe] Trying league/scoring/live?period=%d (current=%d, offset=%d)",
                     target_period, current_period, week_offset)
 
         data2 = auth.api_get("league/scoring/live", league_id, sport, period=target_period)
         live2 = (data2.get("body") or {}).get("live_scoring") or {}
 
-        logger.info("[schedule probe] period=%d response keys: %s", target_period, list(live2.keys()))
+        logger.warning("[schedule probe] period=%d response keys: %s", target_period, list(live2.keys()))
         returned_period = live2.get("period")
-        logger.info("[schedule probe] period=%d response.period = %r", target_period, returned_period)
+        logger.warning("[schedule probe] period=%d response.period = %r", target_period, returned_period)
 
         if str(returned_period) != str(target_period):
-            logger.info("[schedule probe] period param ignored by CBS (returned period %r, wanted %d)",
+            logger.warning("[schedule probe] period param ignored by CBS (returned period %r, wanted %d)",
                         returned_period, target_period)
             return None
 
@@ -173,11 +173,11 @@ def _probe_period_param(auth, league_id, sport, my_team_id, week_offset):
                             "_fallback":     False,
                         }
 
-        logger.info("[schedule probe] period=%d: found response but could not extract opponent", target_period)
+        logger.warning("[schedule probe] period=%d: found response but could not extract opponent", target_period)
         return None
 
     except CBSAPIError as e:
-        logger.info("[schedule probe] period param probe failed: %s", e)
+        logger.warning("[schedule probe] period param probe failed: %s", e)
         return None
     except Exception as e:
         logger.warning("[schedule probe] period param probe unexpected error: %s", e)
@@ -299,10 +299,10 @@ def _parse_schedule_list(items: list, my_team_id: str, week_offset: int,
     if not my_matchups:
         return None
 
-    logger.info("[schedule probe] %s[%s]: found %d matchups involving my team",
+    logger.warning("[schedule probe] %s[%s]: found %d matchups involving my team",
                 source, list_key, len(my_matchups))
     for m in my_matchups[:5]:
-        logger.info("[schedule probe]   period=%s opp_id=%s opp_name=%s",
+        logger.warning("[schedule probe]   period=%s opp_id=%s opp_name=%s",
                     m["period"], m["opp_id"], m["opp_name"])
 
     # Find the current period by finding the smallest period number with data
