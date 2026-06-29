@@ -459,11 +459,13 @@ def waiver_recommendations(
 @mcp.tool()
 def roster_value_signals(league_id: str = "all") -> str:
     """
-    Get buy-low / sell-high trade value signals for your current roster.
+    Get buy-low / sell-high trade value signals.
 
-    Compares each player's season pace against FP rest-of-season projections.
-    Players outpacing projections are sell-high candidates.
-    Players underperforming projections are buy-low targets.
+    SELL HIGH: your players outpacing their ROS projections -- trade them while
+               their perceived value is inflated.
+
+    BUY LOW:   players on OTHER teams underperforming their ROS projections --
+               target them in trades; their owner may sell cheap.
 
     Args:
         league_id: League id from config, or "all" for all leagues.
@@ -484,41 +486,74 @@ def roster_value_signals(league_id: str = "all") -> str:
             lid  = league_cfg["cbs_league_id"]
             tid  = str(league_cfg["cbs_team_id"])
             name = league_cfg.get("name", lid)
-            roster = cbs_get_roster(auth, lid, tid, sport)
+
+            # --- SELL HIGH: analyze YOUR roster ---
+            my_roster = cbs_get_roster(auth, lid, tid, sport)
             try:
-                enrich_roster(roster)
+                enrich_roster(my_roster)
             except Exception:
                 pass
             try:
-                enrich_with_fp_projections(roster, fp_client)
+                enrich_with_fp_projections(my_roster, fp_client)
             except Exception:
                 pass
             try:
-                enrich_with_savant(roster, sav_client)
+                enrich_with_savant(my_roster, sav_client)
             except Exception:
                 pass
 
-            signals = analyze_roster_value(roster)
+            my_signals = analyze_roster_value(my_roster)
+            sells = [s for s in my_signals if s["signal"] == "sell_high"]
+
+            # --- BUY LOW: scan every OTHER team's roster for underperformers ---
+            buy_targets = []
+            try:
+                all_rosters = get_all_team_rosters(auth, lid, sport)
+                for other_tid, info in all_rosters.items():
+                    if str(other_tid) == tid:
+                        continue  # skip your own team
+                    other_roster = info["roster"]
+                    try:
+                        enrich_roster(other_roster)
+                    except Exception:
+                        pass
+                    try:
+                        enrich_with_fp_projections(other_roster, fp_client)
+                    except Exception:
+                        pass
+                    try:
+                        enrich_with_savant(other_roster, sav_client)
+                    except Exception:
+                        pass
+                    for s in analyze_roster_value(other_roster):
+                        if s["signal"] == "buy_low":
+                            buy_targets.append({**s, "_owner": info["name"]})
+            except Exception as e:
+                logger.warning("buy-low scan failed: %s", e)
+
+            # Strongest signals first
+            buy_targets.sort(key=lambda x: (0 if x.get("confidence") == "strong" else 1))
+
             out.append(f"=== {name} -- Trade Value Signals ===")
-            if not signals:
-                out.append("  No signals generated (need FP projections + season stats).")
-                continue
-
-            sells = [s for s in signals if s["signal"] == "sell_high"]
-            buys  = [s for s in signals if s["signal"] == "buy_low"]
 
             if sells:
-                out.append(f"SELL HIGH ({len(sells)}) -- outpacing projections:")
+                out.append(f"SELL HIGH ({len(sells)}) -- your players outpacing projections:")
                 for s in sells:
                     pos = "/".join(s.get("positions", []))
                     out.append(f"  ~ {s['name']} ({s['team']}) [{pos}] [{s.get('confidence','')}]")
                     out.append(f"    {s['reason']}")
-            if buys:
-                out.append(f"BUY LOW ({len(buys)}) -- underperforming projections:")
-                for s in buys:
-                    pos = "/".join(s.get("positions", []))
-                    out.append(f"  ~ {s['name']} ({s['team']}) [{pos}] [{s.get('confidence','')}]")
+            else:
+                out.append("  SELL HIGH: no strong signals on your roster.")
+
+            if buy_targets:
+                out.append(f"\nBUY LOW ({len(buy_targets)}) -- underperformers on other teams to target in trades:")
+                for s in buy_targets:
+                    pos   = "/".join(s.get("positions", []))
+                    owner = s.get("_owner", "?")
+                    out.append(f"  + {s['name']} ({s['team']}) [{pos}] [{s.get('confidence','')}]  owned by: {owner}")
                     out.append(f"    {s['reason']}")
+            else:
+                out.append("\n  BUY LOW: no underperforming targets found on other teams.")
             out.append("")
 
         return _respond("\n".join(out))
