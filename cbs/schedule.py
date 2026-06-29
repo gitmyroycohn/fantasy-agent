@@ -159,19 +159,21 @@ def _probe_period_param(auth, league_id, sport, my_team_id, week_offset):
         for t in teams:
             tid = str(t.get("id") or t.get("team_id") or "")
             if tid and (tid == live_my_id or tid == my_team_id):
+                # opp_team_id is on the team object directly, NOT inside matchups[0]
+                # (mirrors cbs/stats.py _parse_h2h which uses my_team.get("opp_team_id"))
+                opp_id   = str(t.get("opp_team_id") or "")
                 matchups = t.get("matchups") or []
+                opp_name = ""
                 if matchups:
-                    m = matchups[0]
-                    opp_id   = str(m.get("opp_team_id") or m.get("opponent_id") or "")
-                    opp_name = m.get("opponent_team") or m.get("opponent_name") or ""
-                    if opp_id:
-                        return {
-                            "opponent_id":   opp_id,
-                            "opponent_name": opp_name,
-                            "period":        target_period,
-                            "_source":       f"league/scoring/live?period={target_period}",
-                            "_fallback":     False,
-                        }
+                    opp_name = matchups[0].get("opponent_team") or matchups[0].get("opponent_name") or ""
+                if opp_id:
+                    return {
+                        "opponent_id":   opp_id,
+                        "opponent_name": opp_name,
+                        "period":        target_period,
+                        "_source":       f"league/scoring/live?period={target_period}",
+                        "_fallback":     False,
+                    }
 
         logger.warning("[schedule probe] period=%d: found response but could not extract opponent", target_period)
         return None
