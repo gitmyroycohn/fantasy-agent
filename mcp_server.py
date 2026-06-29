@@ -971,6 +971,69 @@ def get_baseball_image(
 
 
 # ---------------------------------------------------------------------------
+# Tool: probe_schedule  [TEMPORARY — remove after CBS endpoint discovery]
+# ---------------------------------------------------------------------------
+
+@mcp.tool()
+def probe_schedule(league_id: str = "all") -> str:
+    """
+    TEMPORARY diagnostic tool for Phase A of matchup_outlook development.
+
+    Probes CBS API endpoints to discover which one exposes next-week matchup
+    data. All probe results are logged at INFO level (look for [schedule probe]
+    in Render logs). This tool returns a summary of what each endpoint returned.
+
+    Remove this tool once the right CBS endpoint is identified.
+
+    Args:
+        league_id: League id from config, or "all" for all leagues.
+    """
+    try:
+        from cbs.schedule import fetch_next_opponent
+
+        auth    = _get_auth()
+        leagues = _resolve_leagues(league_id)
+        if not leagues:
+            return f"No league found matching '{league_id}'."
+
+        out = []
+        for league_cfg, sport in leagues:
+            lid  = league_cfg["cbs_league_id"]
+            tid  = str(league_cfg["cbs_team_id"])
+            name = league_cfg.get("name", lid)
+
+            out.append(f"=== {name} — CBS Schedule Probe ===")
+            out.append(f"league_id={lid}  team_id={tid}  sport={sport}")
+            out.append("")
+
+            for offset in (1, 0):
+                label = "NEXT WEEK" if offset == 1 else "CURRENT WEEK"
+                result = fetch_next_opponent(auth, lid, sport,
+                                             my_team_id=tid, week_offset=offset)
+                if result:
+                    out.append(f"  {label} (week_offset={offset}):")
+                    out.append(f"    opponent_id   = {result.get('opponent_id')}")
+                    out.append(f"    opponent_name = {result.get('opponent_name')}")
+                    out.append(f"    period        = {result.get('period')}")
+                    out.append(f"    _source       = {result.get('_source')}")
+                    out.append(f"    _fallback     = {result.get('_fallback', False)}")
+                else:
+                    out.append(f"  {label} (week_offset={offset}): NO RESULT — all probes failed")
+                out.append("")
+
+            out.append("Check Render logs for [schedule probe] lines to see full CBS responses.")
+            out.append("")
+
+        return _respond("\n".join(out))
+
+    except CBSAuthError as e:
+        return f"CBS auth error: {e}"
+    except Exception as e:
+        logger.exception("probe_schedule failed")
+        return f"probe_schedule error: {e}"
+
+
+# ---------------------------------------------------------------------------
 # Entry point
 #
 # Two modes, switched by the MCP_TRANSPORT env var:
