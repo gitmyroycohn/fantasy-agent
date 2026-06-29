@@ -185,30 +185,26 @@ def _probe_period_param(auth, league_id, sport, my_team_id, week_offset):
 
 
 def _current_week_fallback(auth, league_id, sport, my_team_id):
-    """Last resort: extract current week's opponent from live scoring."""
+    """Last resort: extract current week's opponent using fetch_matchup_stats,
+    which is the proven working path for league/scoring/live."""
     try:
-        data = auth.api_get("league/scoring/live", league_id, sport)
-        live = (data.get("body") or {}).get("live_scoring") or {}
-        live_my_id = str(live.get("my_team_id", ""))
-        current_period = int(live.get("period", 0))
-        teams = live.get("teams", [])
-
-        for t in teams:
-            tid = str(t.get("id") or t.get("team_id") or "")
-            if tid == live_my_id or (my_team_id and tid == my_team_id):
-                matchups = t.get("matchups") or []
-                if matchups:
-                    m = matchups[0]
-                    opp_id   = str(m.get("opp_team_id") or "")
-                    opp_name = m.get("opponent_team") or ""
-                    if opp_id:
-                        return {
-                            "opponent_id":   opp_id,
-                            "opponent_name": opp_name,
-                            "period":        current_period,
-                            "_source":       "league/scoring/live (current week)",
-                            "_fallback":     False,
-                        }
+        from cbs.stats import fetch_matchup_stats
+        matchup = fetch_matchup_stats(auth, league_id, sport)
+        opp_id   = str(matchup.get("opponent_id") or "")
+        opp_name = matchup.get("opponent") or ""
+        period   = int(matchup.get("period") or 0)
+        if opp_id:
+            logger.warning("[schedule probe] current week fallback success: "
+                           "period=%d opp_id=%s opp_name=%r", period, opp_id, opp_name)
+            return {
+                "opponent_id":   opp_id,
+                "opponent_name": opp_name,
+                "period":        period,
+                "_source":       "league/scoring/live (current week via fetch_matchup_stats)",
+                "_fallback":     False,
+            }
+        logger.warning("[schedule probe] current week fallback: fetch_matchup_stats "
+                       "returned no opponent_id (system=%s)", matchup.get("system"))
     except Exception as e:
         logger.warning("[schedule probe] current week fallback failed: %s", e)
     return None
