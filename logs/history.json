@@ -8,18 +8,18 @@
       },
       "Luisangel Acuna": {
         "first": "2026-06-17",
-        "last": "2026-06-26",
-        "n": 6
+        "last": "2026-06-30",
+        "n": 7
       },
       "Blaze Alexander": {
         "first": "2026-06-17",
-        "last": "2026-06-22",
-        "n": 6
+        "last": "2026-06-30",
+        "n": 7
       },
       "Nick Allen": {
         "first": "2026-06-17",
-        "last": "2026-06-26",
-        "n": 6
+        "last": "2026-06-30",
+        "n": 7
       },
       "Adael Amador": {
         "first": "2026-06-17",
@@ -60,18 +60,28 @@
         "first": "2026-06-27",
         "last": "2026-06-27",
         "n": 1
+      },
+      "Kevin Alcantara": {
+        "first": "2026-06-30",
+        "last": "2026-06-30",
+        "n": 1
+      },
+      "Dominic Abbadessa": {
+        "first": "2026-06-30",
+        "last": "2026-06-30",
+        "n": 1
       }
     },
     "streaming_sp": {
       "Mason Barnett": {
         "first": "2026-06-17",
-        "last": "2026-06-29",
-        "n": 10
+        "last": "2026-06-30",
+        "n": 11
       },
       "Andrew Alvarez": {
         "first": "2026-06-17",
-        "last": "2026-06-29",
-        "n": 13
+        "last": "2026-06-30",
+        "n": 14
       },
       "Slade Cecconi": {
         "first": "2026-06-18",
@@ -105,8 +115,8 @@
       },
       "Mick Abel": {
         "first": "2026-06-25",
-        "last": "2026-06-29",
-        "n": 5
+        "last": "2026-06-30",
+        "n": 6
       },
       "Brady Singer": {
         "first": "2026-06-25",
@@ -142,8 +152,8 @@
     "waiver_adds": {
       "Jose Alvarado": {
         "first": "2026-06-17",
-        "last": "2026-06-29",
-        "n": 13
+        "last": "2026-06-30",
+        "n": 14
       },
       "Andrew Alvarez": {
         "first": "2026-06-17",
@@ -152,8 +162,8 @@
       },
       "Tyler Alexander": {
         "first": "2026-06-17",
-        "last": "2026-06-29",
-        "n": 13
+        "last": "2026-06-30",
+        "n": 14
       },
       "Adbert Alzolay": {
         "first": "2026-06-17",
@@ -177,18 +187,18 @@
       },
       "Philip Abner": {
         "first": "2026-06-26",
-        "last": "2026-06-29",
-        "n": 4
+        "last": "2026-06-30",
+        "n": 5
       },
       "Kevin Alcantara": {
         "first": "2026-06-26",
-        "last": "2026-06-29",
-        "n": 4
+        "last": "2026-06-30",
+        "n": 5
       },
       "Pablo Abreu": {
         "first": "2026-06-27",
-        "last": "2026-06-29",
-        "n": 3
+        "last": "2026-06-30",
+        "n": 4
       }
     },
     "streaming_sp": {},
