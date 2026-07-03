@@ -171,7 +171,8 @@ def _h2h_decisions(auth, league_id, cfg, team, sport):
 
     _add_closer_news(actions)
     _add_injury_report(actions, team)
-    _add_trade_signals(actions, team)
+    _add_trade_signals(actions, team, auth=auth, league_id=league_id,
+                       my_tid=cfg.get("cbs_team_id"), sport=sport)
     _add_trade_leads(actions, auth, league_id, cfg, system="h2h")
     _add_lineup_advice(actions, team, no_bench=cfg.get("no_bench", False))
 
@@ -241,7 +242,8 @@ def _roto_decisions(auth, league_id, cfg, team, sport):
 
     _add_closer_news(actions)
     _add_injury_report(actions, team)
-    _add_trade_signals(actions, team)
+    _add_trade_signals(actions, team, auth=auth, league_id=league_id,
+                       my_tid=cfg.get("cbs_team_id"), sport=sport)
     _add_trade_leads(actions, auth, league_id, cfg, system="roto")
     _add_lineup_advice(actions, team, no_bench=cfg.get("no_bench", False))
 
@@ -683,18 +685,47 @@ def _waiver_adds_for_cats(
     return final
 
 
-def _add_trade_signals(actions: list, team) -> None:
+def _add_trade_signals(actions: list, team, auth=None, league_id=None,
+                       my_tid=None, sport="baseball") -> None:
     """Analyze roster for buy-low / sell-high opportunities.
 
-    Enriches roster with FP ROS projections + Savant xStats on first call
-    so that analyze_roster_value has both current pace and projected stats.
+    SELL HIGH: your players outpacing ROS projections -- shop them while hot.
+    BUY LOW:   players on OTHER teams underperforming projections -- target
+               them in trades; their owner may sell cheap.
+
+    Scans all other team rosters when auth/league_id are provided.
     """
     try:
+        # --- SELL HIGH: analyze your own roster ---
         _fp_enrich(team.roster, "roster")
         _sav_enrich(team.roster, "roster")
-        signals = analyze_roster_value(team.roster)
-        if signals:
-            actions.append({"type": "trade_signals", "signals": signals})
+        my_signals = [s for s in analyze_roster_value(team.roster)
+                      if s["signal"] == "sell_high"]
+
+        # --- BUY LOW: scan every OTHER team's roster ---
+        buy_targets = []
+        if auth and league_id:
+            try:
+                from cbs.roster import get_all_team_rosters
+                all_rosters = get_all_team_rosters(auth, league_id, sport)
+                tid_str = str(my_tid) if my_tid else ""
+                for other_tid, info in all_rosters.items():
+                    if str(other_tid) == tid_str:
+                        continue
+                    other_roster = info["roster"]
+                    _fp_enrich(other_roster, f"team {other_tid}")
+                    _sav_enrich(other_roster, f"team {other_tid}")
+                    for s in analyze_roster_value(other_roster):
+                        if s["signal"] == "buy_low":
+                            buy_targets.append({**s, "_owner": info["name"]})
+                buy_targets.sort(
+                    key=lambda x: (0 if x.get("confidence") == "strong" else 1))
+            except Exception as e:
+                logger.warning("buy-low scan failed: %s", e)
+
+        combined = my_signals + buy_targets
+        if combined:
+            actions.append({"type": "trade_signals", "signals": combined})
     except Exception as e:
         logger.warning("Trade signal analysis failed: %s", e)
 
