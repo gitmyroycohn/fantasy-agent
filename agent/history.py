@@ -7,11 +7,16 @@ Storage: logs/history.json (committed to repo after each Actions run)
 Schema:
   {
     "<league_id>": {
-      "waiver_adds":     {"<player>": {"first": "YYYY-MM-DD", "last": "YYYY-MM-DD", "n": 3}},
-      "streaming_sp":    {"<player>": {"first": ..., "last": ..., "n": 1}},
-      "drop_candidates": {"<player>": {"first": ..., "last": ..., "n": 5, "sev": "cut"}}
+      "waiver_adds":      {"<player>": {"first": "YYYY-MM-DD", "last": "YYYY-MM-DD", "n": 3}},
+      "streaming_sp":     {"<player>": {"first": ..., "last": ..., "n": 1}},
+      "drop_candidates":  {"<player>": {"first": ..., "last": ..., "n": 5, "sev": "cut"}},
+      "recently_dropped": {"<player>": {"flagged": "YYYY-MM-DD"}}
     }
   }
+
+  recently_dropped: players that have been flagged as "cut" severity twice or more.
+  Waiver recommendations filter these out to avoid re-suggesting players the
+  agent has repeatedly recommended dropping.
 """
 import json
 import logging
@@ -21,7 +26,8 @@ from datetime import date, timedelta
 logger = logging.getLogger(__name__)
 
 HISTORY_PATH = "logs/history.json"
-PRUNE_AFTER_DAYS = 21   # drop entries not seen in 3 weeks
+PRUNE_AFTER_DAYS = 21       # drop entries not seen in 3 weeks
+RECENTLY_DROPPED_DAYS = 14  # suppress re-add suggestions for 2 weeks
 
 
 # ---- Load / save -------------------------------------------------------
@@ -51,10 +57,13 @@ def save_history(history: dict, path: str = HISTORY_PATH) -> None:
 def _ensure_league(history: dict, league_id: str) -> dict:
     if league_id not in history:
         history[league_id] = {
-            "waiver_adds":     {},
-            "streaming_sp":    {},
-            "drop_candidates": {},
+            "waiver_adds":      {},
+            "streaming_sp":     {},
+            "drop_candidates":  {},
+            "recently_dropped": {},
         }
+    # Backfill missing bucket for older history files
+    history[league_id].setdefault("recently_dropped", {})
     return history[league_id]
 
 
@@ -87,6 +96,7 @@ def update_and_annotate(result: dict, history: dict,
     Mutate result['actions'] in-place:
       - adds '_days' tag to each waiver/streaming/drop item
       - records today's recommendations in history
+      - promotes repeat "cut" drops to recently_dropped bucket
 
     Call this BEFORE _print_decisions so the tags are available.
     """
@@ -113,12 +123,20 @@ def update_and_annotate(result: dict, history: dict,
                 rec["_days"] = _days_label(entry, today)
 
         elif atype == "drop_candidates":
-            bucket = league_hist["drop_candidates"]
+            bucket    = league_hist["drop_candidates"]
+            rd_bucket = league_hist["recently_dropped"]
             for drop in action.get("drops", []):
                 name  = drop.get("player", "")
                 sev   = drop.get("severity", "")
                 entry = _record(bucket, name, today, sev=sev)
                 drop["_days"] = _days_label(entry, today)
+                # After 2+ consecutive "cut" appearances, suppress from waiver adds
+                if sev == "cut" and entry.get("n", 0) >= 2:
+                    if name not in rd_bucket:
+                        rd_bucket[name] = {"flagged": today}
+                        logger.info(
+                            "recently_dropped: added %s (cut x%d)", name, entry["n"]
+                        )
 
 
 # ---- Pruning -----------------------------------------------------------
@@ -127,11 +145,16 @@ def prune_history(history: dict, today: str = None) -> None:
     """Remove entries not seen in PRUNE_AFTER_DAYS days."""
     if today is None:
         today = date.today().isoformat()
-    cutoff = (date.fromisoformat(today) - timedelta(days=PRUNE_AFTER_DAYS)).isoformat()
+    cutoff    = (date.fromisoformat(today) - timedelta(days=PRUNE_AFTER_DAYS)).isoformat()
+    rd_cutoff = (date.fromisoformat(today) - timedelta(days=RECENTLY_DROPPED_DAYS)).isoformat()
 
     for league_id, buckets in history.items():
         for bucket_name, bucket in buckets.items():
-            stale = [k for k, v in bucket.items()
-                     if v.get("last", "0000-00-00") < cutoff]
+            if bucket_name == "recently_dropped":
+                stale = [k for k, v in bucket.items()
+                         if v.get("flagged", "0000-00-00") < rd_cutoff]
+            else:
+                stale = [k for k, v in bucket.items()
+                         if v.get("last", "0000-00-00") < cutoff]
             for k in stale:
                 del bucket[k]
