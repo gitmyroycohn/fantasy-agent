@@ -36,6 +36,9 @@ _fp_client  = FantasyProsClient(FANTASYPROS_API_KEY) if FANTASYPROS_API_KEY else
 _cm_client  = CloserMonkeyClient()
 _sav_client = SavantClient()
 
+# IL status keywords -- skip waiver players flagged with any of these
+_IL_KEYWORDS = frozenset({"il", "dl", "injured", "10-day", "15-day", "60-day"})
+
 
 def _fp_enrich(players, label=""):
     if not _fp_client or not players:
@@ -325,7 +328,7 @@ def _add_closer_news(actions):
 def get_filtered_waiver_adds(
     auth, league_id, league_cfg, sport="baseball",
     position_filter: str | None = None,
-    playing_on=None,          # date object — only players whose team plays that day
+    playing_on=None,          # date object -- only players whose team plays that day
     min_batters: int = 2,
     limit: int = 10,
     week_offset: int = 0,     # 0 = current scoring week, 1 = next week, etc.
@@ -345,7 +348,7 @@ def get_filtered_waiver_adds(
     from sports.baseball.categories import analyze_matchup, priority_categories
     _norm = _norm_name
 
-    # Fetch the full free-agent pool (no limit here — CBS returns ~8400 players
+    # Fetch the full free-agent pool (no limit here -- CBS returns ~8400 players
     # in one call; filtering + enrichment happen below on the relevant subset).
     waivers = fetch_waiver_wire(auth, league_id, sport, position="all", limit=0)
     try:
@@ -355,7 +358,7 @@ def get_filtered_waiver_adds(
     _fp_enrich(waivers, "wire")
     _sav_enrich(waivers, "wire")
 
-    # Enrich with recent form (last 14 days) — hot streak component for scorer
+    # Enrich with recent form (last 14 days) -- hot streak component for scorer
     try:
         recent_data = _fetch_recent_form(14)
         for wp in waivers:
@@ -369,8 +372,42 @@ def get_filtered_waiver_adds(
     except Exception as e:
         logger.warning("Recent-form enrichment failed: %s", e)
 
+    # IL filter (Bug 2) -- skip players currently on the 10/15/60-day IL.
+    # CBS player.status contains strings like "IL10", "IL15", "IL60", or "DL".
+    pre_il = len(waivers)
+    waivers = [
+        wp for wp in waivers
+        if not any(
+            kw in (getattr(wp.player, "status", None) or "").lower()
+            for kw in _IL_KEYWORDS
+        )
+    ]
+    il_removed = pre_il - len(waivers)
+    if il_removed:
+        logger.info("IL filter: removed %d injured players from waiver pool", il_removed)
+
+    # Recently-dropped filter (Bug 4) -- suppress players flagged "cut" 2+ times.
+    # Reads logs/history.json so no extra API calls are needed.
+    try:
+        from agent.history import load_history
+        _hist = load_history()
+        _rd = _hist.get(str(league_id), {}).get("recently_dropped", {})
+        if _rd:
+            _rd_norm = {_norm(k) for k in _rd}
+            pre_rd = len(waivers)
+            waivers = [wp for wp in waivers
+                       if _norm(wp.player.name) not in _rd_norm]
+            rd_removed = pre_rd - len(waivers)
+            if rd_removed:
+                logger.info(
+                    "recently_dropped filter: suppressed %d previously-dropped players",
+                    rd_removed,
+                )
+    except Exception as e:
+        logger.warning("recently_dropped filter failed: %s", e)
+
     # Position filter
-    # CBS stores outfielders as LF/CF/RF, not OF — expand the alias so
+    # CBS stores outfielders as LF/CF/RF, not OF -- expand the alias so
     # position="OF" matches all three CBS outfield tags.
     if position_filter:
         pos_up = position_filter.upper()
@@ -381,14 +418,14 @@ def get_filtered_waiver_adds(
         waivers = [wp for wp in waivers
                    if pos_set & set(wp.player.positions or [])]
 
-    # NL-only filter — drop AL players from NL-only leagues (Casey Stengel)
+    # NL-only filter -- drop AL players from NL-only leagues (Casey Stengel)
     if league_cfg.get("nl_only") or league_cfg.get("roster_type") == "nl_only":
         try:
             waivers = filter_nl_waiver_pool(waivers, league_cfg)
         except Exception as e:
             logger.warning("NL filter failed: %s", e)
 
-    # Game-day filter (only applies when explicitly requested via `date=`)
+    # Game-day filter (only applies when explicitly requested via date=)
     if playing_on is not None:
         try:
             playing_teams = teams_playing_today(playing_on)
@@ -409,7 +446,7 @@ def get_filtered_waiver_adds(
                   list(scoring.get("pitching", [])))
 
     # Two-start map for the target week
-    # week_offset=0 → this week's 2-starters, week_offset=1 → next week's, etc.
+    # week_offset=0 -> this week's 2-starters, week_offset=1 -> next week's, etc.
     two_starters: dict[str, int] = {}
     bb_two_starters: set[str] = set()
     try:
@@ -452,9 +489,6 @@ def _waiver_adds_for_cats(
       3. FP ROS proj      -- rest-of-season projections override YTD rates when available
       4. Quality signals  -- OPS for batters, K9 for pitchers, Savant xwOBA/xERA/barrel%
     """
-    # CBS stores outfielders as LF/CF/RF, never the bare "OF" token.
-    # Include all three tags (plus "OF" as a belt-and-suspenders catch)
-    # so outfielders aren't silently excluded from all hitting categories.
     CAT_POSITIONS = {
         "SB":  ["LF", "CF", "RF", "OF", "SS", "2B"],
         "HR":  ["1B", "LF", "CF", "RF", "OF", "3B"],
@@ -473,7 +507,6 @@ def _waiver_adds_for_cats(
     PITCHER_POS = {"SP", "RP", "P"}
 
     def _rate(stats, count_key, opp_key, scale, min_opp=10):
-        """count_key / opp_key * scale, or 0 if sample too small."""
         count = float(stats.get(count_key) or 0)
         opp   = float(stats.get(opp_key) or 0)
         if opp < min_opp:
@@ -481,7 +514,6 @@ def _waiver_adds_for_cats(
         return (count / opp) * scale
 
     def _fp(stats, key):
-        """Return FP ROS projection value, or None if not available."""
         v = stats.get(f"fp_{key.lower()}")
         return float(v) if v is not None else None
 
@@ -501,12 +533,8 @@ def _waiver_adds_for_cats(
         ip  = float(stats.get("IP") or 0)
         own = float(wp.ownership_pct or 0)
 
-        # --- COMPONENT 1: Ownership signal (strongest single predictor) ---
-        # 50% owned → +1000;  5% owned → +100
         score = own * 20.0
 
-        # --- COMPONENT 2+3: YTD rate stats, overridden by FP ROS if available ---
-        # Hitting
         if "SB" in helps:
             fp_v = _fp(stats, "SB")
             score += fp_v * 4.0 if fp_v is not None else _rate(stats, "SB", "G", 300)
@@ -522,8 +550,7 @@ def _waiver_adds_for_cats(
         if "AVG" in helps:
             fp_v = _fp(stats, "AVG")
             avg  = fp_v if fp_v is not None else float(stats.get("AVG") or 0)
-            score += avg * 200  # .300 avg → +60
-        # Pitching
+            score += avg * 200
         if "K" in helps:
             fp_v = _fp(stats, "K")
             score += fp_v * 0.8 if fp_v is not None else _rate(stats, "K", "IP", 72, min_opp=10)
@@ -540,70 +567,56 @@ def _waiver_adds_for_cats(
             fp_v = _fp(stats, "ERA")
             era  = fp_v if fp_v is not None else float(stats.get("ERA") or 0)
             if era > 0:
-                score -= era * 15  # 4.00 ERA → -60 penalty
+                score -= era * 15
         if "WHIP" in helps:
             fp_v = _fp(stats, "WHIP")
             whip = fp_v if fp_v is not None else float(stats.get("WHIP") or 0)
             if whip > 0:
-                score -= whip * 40  # 1.20 WHIP → -48 penalty
+                score -= whip * 40
 
-        # --- COMPONENT 4: Quality signals (minimum sample required) ---
-        # OPS as overall offensive quality — require 20+ games to avoid tiny-sample inflation
         if is_batter and g >= 20:
             ops = float(stats.get("OPS") or 0)
             if ops > 0.600:
-                score += (ops - 0.600) * 100  # .850 OPS → +25 bonus
+                score += (ops - 0.600) * 100
 
-        # K9 as pitcher stuff quality — require 10+ IP
         if is_pitcher and ip >= 10:
             k9 = float(stats.get("K9") or 0)
-            score += k9 * 2  # 10.0 K9 → +20 bonus
+            score += k9 * 2
 
-        # Savant: require 20+ PA/IP to trust the numbers
         if g >= 20 or ip >= 10:
             barrel = stats.get("sv_barrel_pct")
             if barrel is not None and any(c in helps for c in ("HR", "RBI", "SB")):
                 score += max(0.0, barrel - 8.0) * 5.0
-
             xwoba = stats.get("sv_xwoba")
             if xwoba is not None:
-                score += xwoba * 80.0   # .380 xwOBA → +30
-
+                score += xwoba * 80.0
             xera = stats.get("sv_xera")
             if xera is not None and any(c in helps for c in ("K", "ERA", "WHIP", "W")):
                 score -= xera * 5.0
 
-        # --- COMPONENT 4b: Hot streak (last 14 days) ---
-        # A batter on a tear gets a meaningful boost even if YTD is modest.
-        # Use recent_ops and recent_hr from mlb.splits.fetch_recent_form().
         if is_batter:
             recent_games = int(stats.get("recent_games") or 0)
             if recent_games >= 5:
                 recent_ops = float(stats.get("recent_ops") or 0)
                 recent_hr  = int(stats.get("recent_hr") or 0)
-                # OPS above .750 in last 14 days is hot — scale bonus
                 if recent_ops > 0.600:
-                    score += (recent_ops - 0.700) * 30.0  # .900 → +6, .750 → +1.5
-                score += recent_hr * 3.0  # 3 HR in last 14 days → +9 bonus
+                    score += (recent_ops - 0.700) * 30.0
+                score += recent_hr * 3.0
 
-        # Category breadth: bonus for helping multiple losing categories
         score += len(helps) * 3
 
-        # Two-start boost: SPs/RPs with 2+ starts in the target week get a
-        # significant lift so they surface over equivalent one-starters.
         is_two_starter = False
         is_bb_two_starter = False
         if two_starters or bb_two_starters:
             _n = _norm_name(wp.player.name)
             if two_starters and _n in two_starters:
                 n_starts = two_starters[_n]
-                score += 20.0 * n_starts   # 2 starts → +40, 3 → +60
+                score += 20.0 * n_starts
                 is_two_starter = True
             if bb_two_starters and _n in bb_two_starters:
-                score += 10.0              # back-to-back weeks bonus
+                score += 10.0
                 is_bb_two_starter = True
 
-        # Build a human-readable stat line for display
         stat_parts = []
         if own > 0:
             stat_parts.append(f"own={own:.0f}%")
@@ -617,7 +630,6 @@ def _waiver_adds_for_cats(
                         stat_parts.append(f"{k}={float(v):.3f}")
                     else:
                         stat_parts.append(f"{k}={int(v)}")
-            # Hot streak indicator
             rg = int(stats.get("recent_games") or 0)
             if rg >= 5:
                 r_ops = stats.get("recent_ops")
@@ -648,7 +660,6 @@ def _waiver_adds_for_cats(
             "back_to_back": is_bb_two_starter,
         }
 
-        # Closer Monkey annotation for SV picks
         if "SV" in helps:
             try:
                 cm = _cm_client.find_player(wp.player.name)
@@ -663,10 +674,6 @@ def _waiver_adds_for_cats(
 
     recs.sort(key=lambda r: r["_score"], reverse=True)
 
-    # Guarantee min_batters batter recommendations so pitcher category gaps
-    # don't crowd out all hitter suggestions. Only pin batters that have
-    # meaningful scores (> 0) so 0-stat minor leaguers don't crowd out
-    # pitchers who actually have MLB numbers.
     if min_batters > 0:
         def _is_batter(r):
             return any(p in BATTER_POS for p in (r.get("positions") or []))
@@ -675,7 +682,6 @@ def _waiver_adds_for_cats(
         guaranteed     = scored_batters[:min_batters]
         remaining      = [r for r in recs if id(r) not in pinned_ids]
         final = guaranteed + remaining[:limit - len(guaranteed)]
-        # re-sort so output order still reflects relative quality
         final.sort(key=lambda r: r["_score"], reverse=True)
     else:
         final = recs[:limit]
@@ -687,22 +693,19 @@ def _waiver_adds_for_cats(
 
 def _add_trade_signals(actions: list, team, auth=None, league_id=None,
                        my_tid=None, sport="baseball") -> None:
-    """Analyze roster for buy-low / sell-high opportunities.
+    """Analyze roster for sell-high opportunities; scan opponent rosters for buy-low targets.
 
-    SELL HIGH: your players outpacing ROS projections -- shop them while hot.
-    BUY LOW:   players on OTHER teams underperforming projections -- target
-               them in trades; their owner may sell cheap.
+    SELL HIGH: own players whose stats lag projections (slump due to luck, not skill).
+    BUY LOW:   opponent players whose stats lag projections -- targets to acquire cheap.
 
-    Scans all other team rosters when auth/league_id are provided.
+    Enriches rosters with FP ROS projections + Savant xStats before analysis.
     """
     try:
-        # --- SELL HIGH: analyze your own roster ---
         _fp_enrich(team.roster, "roster")
         _sav_enrich(team.roster, "roster")
         my_signals = [s for s in analyze_roster_value(team.roster)
                       if s["signal"] == "sell_high"]
 
-        # --- BUY LOW: scan every OTHER team's roster ---
         buy_targets = []
         if auth and league_id:
             try:
@@ -759,14 +762,12 @@ def _add_trade_leads(actions: list, auth, league_id: str, cfg: dict,
         logger.warning("Trade leads analysis failed: %s", e)
 
 
-
 def _add_injury_report(actions: list, team) -> None:
     """Fetch recent IL transactions and cross-reference against roster."""
     try:
         roster_norms = {_norm_name(s.player.name) for s in team.roster}
 
         txns = fetch_il_transactions(lookback_days=7)
-        # Cross-reference transactions against your roster
         roster_txns = [t for t in txns if t["norm"] in roster_norms]
 
         if txns or roster_txns:
@@ -783,7 +784,6 @@ def _add_injury_report(actions: list, team) -> None:
 def _current_week():
     from datetime import date
     today = date.today()
-    # MLB seasons open late March; approximate as March 28 of the current year
     opening_day = date(today.year, 3, 28)
     delta = (today - opening_day).days
     return max(1, delta // 7 + 1)
