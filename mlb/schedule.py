@@ -152,9 +152,9 @@ def teams_playing_today(d: date = None) -> set[str]:
             if abbr:
                 cbs_abbr = mlb_to_cbs(abbr)
                 if abbr != cbs_abbr:
-                    logger.debug("Team abbrev mapped: %s → %s", abbr, cbs_abbr)
+                    logger.debug("Team abbrev mapped: %s \u2192 %s", abbr, cbs_abbr)
                 teams.add(cbs_abbr)
-    logger.info("teams_playing_today %s: %d teams — %s",
+    logger.info("teams_playing_today %s: %d teams \u2014 %s",
                 d.isoformat(), len(teams), sorted(teams))
     return teams
 
@@ -242,9 +242,13 @@ def todays_matchups(d: date = None) -> list[dict]:
     return result
 
 
-@lru_cache(maxsize=7)
 def _fetch_today_games(date_str: str) -> list:
-    """Fetch all games for a single date. Returns list of game dicts."""
+    """Fetch all games for a single date from the MLB Stats API.
+
+    Not cached intentionally: probable pitchers are announced throughout
+    the morning and the lineup optimizer must always reflect the latest
+    data within a session.
+    """
     url = f"{MLB_API}/schedule"
     params = {
         "sportId":  1,
@@ -290,7 +294,7 @@ def _fetch_start_counts(start_date: str, end_date: str) -> dict[str, int]:
         r.raise_for_status()
         data = r.json()
     except Exception as e:
-        logger.error("MLB schedule API error (%s – %s): %s", start_date, end_date, e)
+        logger.error("MLB schedule API error (%s \u2013 %s): %s", start_date, end_date, e)
         return {}
 
     counts: dict[str, int] = defaultdict(int)
@@ -306,7 +310,7 @@ def _fetch_start_counts(start_date: str, end_date: str) -> dict[str, int]:
                         counts[_norm(full_name)] += 1
 
     total_games = sum(len(d.get("games", [])) for d in data.get("dates", []))
-    logger.info("Schedule %s–%s: %d games, %d probable starters",
+    logger.info("Schedule %s\u2013%s: %d games, %d probable starters",
                 start_date, end_date, total_games, len(counts))
     return dict(counts)
 
@@ -316,5 +320,5 @@ def _fetch_start_counts(start_date: str, end_date: str) -> dict[str, int]:
 # ---------------------------------------------------------------------------
 
 def _norm(name: str) -> str:
-    """Canonical player-name normalizer — delegates to mlb.teams.norm_name."""
+    """Canonical player-name normalizer \u2014 delegates to mlb.teams.norm_name."""
     return norm_name(name)
