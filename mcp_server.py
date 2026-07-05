@@ -629,33 +629,44 @@ def hitting_matchups(
                 except Exception:
                     game_weather[ht] = {}
 
+        # BUG 2 fix: use defensive .get() throughout so malformed matchup rows
+        # (doubleheaders, rescheduled games, holiday slates) are skipped rather
+        # than crashing with KeyError: 'home_team' / 'away_team'.
         team_to_matchup: dict[str, dict] = {}
         for m in matchups:
-            wx = game_weather.get(m.get("home_team", ""), {})
-            # Batter on home team faces the AWAY starter
-            if m["home_team"]:
-                team_to_matchup[m["home_team"]] = {
-                    "opp_starter_hand": m["away_starter_hand"],
-                    "opp_starter_name": m["away_starter_name"],
-                    "home_team":        m["home_team"],
-                    "away_team":        m["away_team"],
-                    "is_home":          True,
-                    "park_factor":      m["park_factor"],
-                    "park_factor_hr":   m["park_factor_hr"],
-                    "weather":          wx,
-                }
-            # Batter on away team faces the HOME starter
-            if m["away_team"]:
-                team_to_matchup[m["away_team"]] = {
-                    "opp_starter_hand": m["home_starter_hand"],
-                    "opp_starter_name": m["home_starter_name"],
-                    "home_team":        m["home_team"],
-                    "away_team":        m["away_team"],
-                    "is_home":          False,
-                    "park_factor":      m["park_factor"],
-                    "park_factor_hr":   m["park_factor_hr"],
-                    "weather":          wx,
-                }
+            try:
+                ht = m.get("home_team") or ""
+                at = m.get("away_team") or ""
+                wx = game_weather.get(ht, {})
+                # Batter on home team faces the AWAY starter
+                if ht:
+                    team_to_matchup[ht] = {
+                        "opp_starter_hand": m.get("away_starter_hand"),
+                        "opp_starter_name": m.get("away_starter_name"),
+                        "home_team": ht,
+                        "away_team": at,
+                        "is_home": True,
+                        "park_factor": m.get("park_factor", 100),
+                        "park_factor_hr": m.get("park_factor_hr", 100),
+                        "weather": wx,
+                    }
+                # Batter on away team faces the HOME starter
+                if at:
+                    team_to_matchup[at] = {
+                        "opp_starter_hand": m.get("home_starter_hand"),
+                        "opp_starter_name": m.get("home_starter_name"),
+                        "home_team": ht,
+                        "away_team": at,
+                        "is_home": False,
+                        "park_factor": m.get("park_factor", 100),
+                        "park_factor_hr": m.get("park_factor_hr", 100),
+                        "weather": wx,
+                    }
+            except Exception as _m_exc:
+                logger.warning(
+                    "hitting_matchups: skipping malformed matchup row: %s", _m_exc
+                )
+                continue
 
         # --- fetch split and recent-form data ---
         splits = fetch_batter_splits()
