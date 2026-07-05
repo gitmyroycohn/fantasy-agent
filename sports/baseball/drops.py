@@ -6,8 +6,14 @@ replacement threshold. Scarce positions (C, SS) require a confirmed wire
 replacement before flagging as CUT.
 
 Savant xStats are used to soften recommendations for unlucky players:
-  - Batter with low AVG but xBA above floor -> MONITOR not CUT
-  - Pitcher with high ERA but xERA below floor -> MONITOR not CUT
+- Batter with low AVG but xBA above floor -> MONITOR not CUT
+- Pitcher with high ERA but xERA below floor -> MONITOR not CUT
+
+BUG 3 fix: recency gate added to _evaluate_batter. If a player has been
+hot over the trailing ~15 days (recent_games >= 10 and recent_ops >= 0.800),
+they are skipped entirely regardless of where their season-to-date counting
+stats stand. This prevents mislabeling rookies or slump-rebounders as drop
+candidates when their recent form is excellent.
 """
 import logging
 from data.models import RosterSlot, WaiverPlayer
@@ -15,12 +21,12 @@ from data.models import RosterSlot, WaiverPlayer
 logger = logging.getLogger(__name__)
 
 _BAT_FLOOR = {
-    "AVG":  0.225,
-    "HR":   5,
-    "R":    25,
-    "RBI":  20,
-    "SB":   4,
-    "OPS":  0.650,
+    "AVG": 0.225,
+    "HR":  5,
+    "R":   25,
+    "RBI": 20,
+    "SB":  4,
+    "OPS": 0.650,
 }
 
 _PITCH_FLOOR = {
@@ -30,13 +36,16 @@ _PITCH_FLOOR = {
     "IP":   20.0,
 }
 
-_SP_MIN_IP           = 15.0
-_BAT_FAIL_THRESHOLD  = 3
+_SP_MIN_IP          = 15.0
+_BAT_FAIL_THRESHOLD = 3
 _PITCH_FAIL_THRESHOLD = 2
-_PITCHER_POS         = {"SP", "RP", "P"}
-_IL_STATUS           = {"DL", "IL", "DTD", "SUSP", "NA"}
-_SCARCE_POS          = {"C", "SS"}
+_PITCHER_POS = {"SP", "RP", "P"}
+_IL_STATUS   = {"DL", "IL", "DTD", "SUSP", "NA"}
+_SCARCE_POS  = {"C", "SS"}
 
+# Recency-gate thresholds (BUG 3)
+_HOT_MIN_GAMES = 10    # need at least this many recent games to override season stats
+_HOT_OPS_FLOOR = 0.800 # recent OPS at or above this -> not a drop candidate
 
 def find_drop_candidates(roster, waiver_wire, nl_only=False, stash_names=None):
     """
@@ -76,16 +85,16 @@ def find_drop_candidates(roster, waiver_wire, nl_only=False, stash_names=None):
 
         if severity == "cut" and set(p.positions) & _SCARCE_POS and not replacement:
             severity = "monitor"
-            reason   = f"[scarce pos] {reason}"
+            reason = f"[scarce pos] {reason}"
 
         drops.append({
-            "player":       p.name,
-            "team":         p.team,
-            "positions":    p.positions,
-            "slot":         rs.slot,
-            "is_starting":  rs.is_starting,
-            "severity":     severity,
-            "reason":       reason,
+            "player":      p.name,
+            "team":        p.team,
+            "positions":   p.positions,
+            "slot":        rs.slot,
+            "is_starting": rs.is_starting,
+            "severity":    severity,
+            "reason":      reason,
             "replace_with": replacement,
         })
 
@@ -93,11 +102,24 @@ def find_drop_candidates(roster, waiver_wire, nl_only=False, stash_names=None):
                                0 if d["is_starting"] else 1))
     return drops
 
-
 def _evaluate_batter(player):
-    s   = player.stats
-    h   = s.get("H", 0) or 0
+    s = player.stats
+    h = s.get("H", 0) or 0
     if h < 10:
+        return None
+
+    # -- Recency gate (BUG 3): hot bats are never drop candidates ---------
+    # recent_games / recent_ops are written into player.stats by the
+    # recent-form enrichment step in get_filtered_waiver_adds / decisions.py
+    # (via mlb.splits.fetch_recent_form).  If missing (stats not enriched),
+    # the gate is skipped and we fall through to the season-stat evaluation.
+    recent_games = int(s.get("recent_games") or 0)
+    recent_ops   = float(s.get("recent_ops")   or 0.0)
+    if recent_games >= _HOT_MIN_GAMES and recent_ops >= _HOT_OPS_FLOOR:
+        logger.debug(
+            "_evaluate_batter: %s hot recently (%dG OPS %.3f) -- skipping drop eval",
+            player.name, recent_games, recent_ops,
+        )
         return None
 
     avg = s.get("AVG") or 0.0
@@ -109,7 +131,7 @@ def _evaluate_batter(player):
 
     sv_xba = s.get("sv_xba")
 
-    fails    = []
+    fails   = []
     xba_pass = False
 
     if avg < _BAT_FLOOR["AVG"]:
@@ -119,34 +141,33 @@ def _evaluate_batter(player):
             xba_pass = True
         else:
             fails.append(f"AVG {avg:.3f}")
-    if hr  < _BAT_FLOOR["HR"]:   fails.append(f"HR {hr}")
-    if r   < _BAT_FLOOR["R"]:    fails.append(f"R {r}")
-    if rbi < _BAT_FLOOR["RBI"]:  fails.append(f"RBI {rbi}")
-    if sb  < _BAT_FLOOR["SB"]:   fails.append(f"SB {sb}")
-    if ops < _BAT_FLOOR["OPS"]:  fails.append(f"OPS {ops:.3f}")
+    if hr  < _BAT_FLOOR["HR"]:  fails.append(f"HR {hr}")
+    if r   < _BAT_FLOOR["R"]:   fails.append(f"R {r}")
+    if rbi < _BAT_FLOOR["RBI"]: fails.append(f"RBI {rbi}")
+    if sb  < _BAT_FLOOR["SB"]:  fails.append(f"SB {sb}")
+    if ops < _BAT_FLOOR["OPS"]: fails.append(f"OPS {ops:.3f}")
 
     n = len(fails)
     if xba_pass and n >= _BAT_FAIL_THRESHOLD + 1:
         return ("monitor", f"Unlucky (xBA OK): {', '.join(fails[:3])}")
     if n >= _BAT_FAIL_THRESHOLD + 1:
-        return ("cut", f"Below replacement: {', '.join(fails[:4])}")
+        return ("cut",     f"Below replacement: {', '.join(fails[:4])}")
     if n >= _BAT_FAIL_THRESHOLD:
         return ("monitor", f"Borderline: {', '.join(fails[:3])}")
     return None
 
-
 def _evaluate_pitcher(player):
-    s    = player.stats
-    ip   = s.get("IP")   or 0.0
-    era  = s.get("ERA")  or 0.0
+    s   = player.stats
+    ip  = s.get("IP")   or 0.0
+    era = s.get("ERA")  or 0.0
     whip = s.get("WHIP") or 0.0
-    k    = s.get("K")    or 0
+    k   = s.get("K")    or 0
 
     if ip < 5:
         return None
 
     sv_xera     = s.get("sv_xera")
-    sv_era_diff = s.get("sv_era_diff")  # positive = ERA worse than xERA = unlucky
+    sv_era_diff = s.get("sv_era_diff")   # positive = ERA worse than xERA = unlucky
 
     fails     = []
     xera_pass = False
@@ -158,8 +179,8 @@ def _evaluate_pitcher(player):
             xera_pass = True
         else:
             fails.append(f"ERA {era:.2f}")
-    if whip > _PITCH_FLOOR["WHIP"]:  fails.append(f"WHIP {whip:.2f}")
-    if ip   < _PITCH_FLOOR["IP"]:    fails.append(f"only {ip:.1f} IP")
+    if whip > _PITCH_FLOOR["WHIP"]: fails.append(f"WHIP {whip:.2f}")
+    if ip   < _PITCH_FLOOR["IP"]:   fails.append(f"only {ip:.1f} IP")
     if k    < _PITCH_FLOOR["K"] and ip >= _SP_MIN_IP:
         fails.append(f"K {k}")
 
@@ -167,11 +188,10 @@ def _evaluate_pitcher(player):
     if xera_pass and n >= _PITCH_FAIL_THRESHOLD + 1:
         return ("monitor", f"Unlucky (xERA OK): {', '.join(fails[:2])}")
     if n >= _PITCH_FAIL_THRESHOLD + 1:
-        return ("cut", f"Below replacement: {', '.join(fails[:3])}")
+        return ("cut",     f"Below replacement: {', '.join(fails[:3])}")
     if n >= _PITCH_FAIL_THRESHOLD:
         return ("monitor", f"Borderline: {', '.join(fails[:2])}")
     return None
-
 
 def _find_replacement(player, waiver_wire, is_pitcher):
     pos_set    = set(player.positions)
