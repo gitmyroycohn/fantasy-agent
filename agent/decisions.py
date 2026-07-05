@@ -271,6 +271,9 @@ def _add_drop_candidates(actions, team, waiver_wire, nl_only=False, stash_names=
         logger.warning("Drop candidate analysis failed: %s", e)
 
 
+_MUST_START_OPS = 0.850   # ENH 3: batters at or above this OPS are always active
+_LINEUP_PITCHER_POS = {"SP", "RP", "P"}
+
 def _add_lineup_advice(actions, team, no_bench=False):
     try:
         teams_today    = teams_playing_today()
@@ -290,6 +293,24 @@ def _add_lineup_advice(actions, team, no_bench=False):
         ]
 
         advice = optimize_daily_lineup(lineup_slots, teams_today, starters_today)
+
+        # ENH 3: Must-start floor -- elite batters (season OPS >= .850) should
+        # always be active regardless of park factor, L/R matchup, or schedule
+        # ambiguity.  Override "bench" -> "ok" for these players so we never
+        # accidentally tell the user to sit a stud on a "questionable" off day.
+        ops_by_norm = {
+            _norm_name(rs.player.name): float((rs.player.stats or {}).get("OPS") or 0)
+            for rs in team.roster
+        }
+        for a in advice:
+            if (a.advice == "bench"
+                    and not any(p in _LINEUP_PITCHER_POS for p in a.positions)
+                    and ops_by_norm.get(_norm_name(a.player_name), 0) >= _MUST_START_OPS):
+                a.advice = "ok"
+                a.reason = (
+                    f"Must-start floor (OPS >= .850 -- elite bat, always active): {a.reason}"
+                )
+
         if advice:
             actions.append({
                 "type":              "daily_lineup",
