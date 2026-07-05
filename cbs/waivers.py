@@ -17,6 +17,16 @@ from cbs.auth import CBSAuth, CBSAPIError
 
 logger = logging.getLogger(__name__)
 
+# BUG 4 fix: CBS tags outfielders as LF/CF/RF, not OF.  Normalize at the
+# point of position-filtering so that querying position="OF" actually returns
+# outfielders rather than an empty list.
+_CBS_OF_NORM: dict[str, str] = {"LF": "OF", "CF": "OF", "RF": "OF"}
+
+
+def _norm_pos(p: str) -> str:
+    """Normalize a single CBS position tag: LF/CF/RF → OF, everything else unchanged."""
+    return _CBS_OF_NORM.get(p.strip().upper(), p.strip().upper())
+
 
 def get_available_players(auth: CBSAuth, league_id: str,
                           sport: str = "baseball",
@@ -28,7 +38,6 @@ def get_available_players(auth: CBSAuth, league_id: str,
         logger.warning("JSON API free agents failed (%s) — trying HTML", e)
         return _available_from_html(auth, league_id, sport)
 
-
 # Alias used by agent/decisions.py
 def fetch_waiver_wire(auth: CBSAuth, league_id: str,
                       sport: str = "baseball",
@@ -37,7 +46,6 @@ def fetch_waiver_wire(auth: CBSAuth, league_id: str,
     """Alias for get_available_players with optional result cap."""
     players = get_available_players(auth, league_id, sport, position)
     return players[:limit] if limit else players
-
 
 def _available_from_api(auth: CBSAuth, league_id: str, sport: str,
                         position: str) -> list[WaiverPlayer]:
@@ -67,14 +75,19 @@ def _available_from_api(auth: CBSAuth, league_id: str, sport: str,
                     pass
         return 0.0
 
+    # Normalize the requested position once (OF, LF, CF, RF all → OF)
+    req_norm = _norm_pos(position) if position not in ("all", "", "ALL") else None
+
     results = []
     for i, p in enumerate(raw):
         if p.get("owned_by_team_id"):
             continue
         pos = p.get("position", "")
-        if position not in ("all", "", "ALL"):
-            pos_list = [x.strip() for x in pos.split("/") if x.strip()]
-            if position not in pos_list:
+        if req_norm is not None:
+            # BUG 4: normalize each CBS position tag (LF/CF/RF → OF) before
+            # comparing to the requested position so OF queries actually work.
+            pos_list = [_norm_pos(x) for x in pos.split("/") if x.strip()]
+            if req_norm not in pos_list:
                 continue
         on_w = bool(p.get("on_waivers"))
         player = Player(
@@ -100,7 +113,6 @@ def _available_from_api(auth: CBSAuth, league_id: str, sport: str,
                 results[0].ownership_pct if results else 0.0)
     return results
 
-
 def _available_from_html(auth: CBSAuth, league_id: str,
                          sport: str) -> list[WaiverPlayer]:
     # UNVALIDATED page path — common CBS layout. tr.playerRow selector is
@@ -123,7 +135,6 @@ def _available_from_html(auth: CBSAuth, league_id: str,
         ))
     logger.info("HTML free agents: %d players in %s", len(results), league_id)
     return results
-
 
 def claim_player(auth: CBSAuth, league_id: str, team_id: str,
                  add_player_id: str, drop_player_id: str,
