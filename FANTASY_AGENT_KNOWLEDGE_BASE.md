@@ -139,3 +139,97 @@ Via GitHub: Actions tab → Fantasy Agent → Run workflow.
 - **Football leagues**: not yet added to `leagues.yaml`. Need league IDs and team IDs for 3 CBS football leagues.
 - **H2H category detail**: early-week matchups show 0-0-12 (all tied) until stats accumulate. This is correct behavior.
 - **Cookie expiry**: ~30–90 days. Refresh by copying new cookie from Chrome DevTools and updating the GitHub Actions secret `CBS_COOKIE`.
+
+---
+
+## Phase B Changes (feature/bugs-and-enhancements — Jul 2026)
+
+### BUG 1 — RP spot-starter detection (sports/baseball/lineup_optimizer.py)
+
+**Problem:** `is_probable_starter` was always `None` for RP-designated players.
+`format_lineup_advice` checked `"SP" in positions and is_probable_starter`, so any
+reliever called up as a spot starter was invisible to the lineup advisor.
+
+**Fix:** Both SP and RP blocks now check `norm_name in probable_starters` (the set
+returned by `mlb.schedule.probable_starters_today()`). An RP match sets
+`is_probable_starter=True`. `format_lineup_advice` now uses
+`a.is_probable_starter is True` with no position filter, so spot starters surface
+regardless of CBS eligibility tag.
+
+---
+
+### BUG 2 — hitting_matchups KeyError on doubleheader/holiday slates (mcp_server.py)
+
+**Problem:** `hitting_matchups` crashed with `KeyError: 'home_team'` or
+`'away_team'` when the matchup API returned malformed rows (e.g. doubleheaders,
+rescheduled games, or short holiday slates where some fields are absent).
+
+**Fix:** The `team_to_matchup` loop now wraps each row in a `try/except`, uses
+`m.get("home_team") or ""` / `m.get("away_team") or ""`, and calls `m.get()`
+for all field access. Malformed rows are logged at WARNING and skipped via
+`continue`. `park_factor` / `park_factor_hr` default to 100 if absent.
+
+---
+
+### BUG 3 — Drop evaluator mislabels hot bats (sports/baseball/drops.py)
+
+**Problem:** A player slashing .487/.1.472 OPS over 14 trailing days was flagged
+as a "borderline drop" candidate because his season counting stats (early slump)
+tripped the fail-threshold check.
+
+**Fix:** Added a recency gate at the top of `_evaluate_batter`. If
+`recent_games >= 10` AND `recent_ops >= 0.800` (thresholds:
+`_HOT_MIN_GAMES = 10`, `_HOT_OPS_FLOOR = 0.800`), the function returns `None`
+immediately. `recent_games` / `recent_ops` are populated by
+`mlb.splits.fetch_recent_form(14)` in the waiver enrichment path; if absent the
+gate is silently skipped.
+
+---
+
+### BUG 4 + ENH 2 — OF eligibility / multi-position normalization
+
+#### data/models.py
+Added module-level constant:
+```python
+_CBS_OF_MAP = {"LF": "OF", "CF": "OF", "RF": "OF"}
+```
+Added `eligible_positions` property to `Player` dataclass: iterates
+`self.positions`, maps each through `_CBS_OF_MAP`, and deduplicates. Consumers
+that need slot-matching (CBS uses LF/CF/RF tags, slots say OF) should use
+`eligible_positions` instead of `positions`.
+
+#### cbs/waivers.py
+Added `_CBS_OF_NORM` dict and `_norm_pos(p)` helper (same LF/CF/RF -> OF mapping).
+The `_available_from_api` position filter now normalizes both the query position
+and each player's CBS position tags before comparing, so
+`get_available_players(position="OF")` returns LF/CF/RF-tagged players correctly.
+
+---
+
+### ENH 3 — Must-start floor for elite batters (agent/decisions.py)
+
+Added two module-level constants:
+- `_MUST_START_OPS = 0.850`
+- `_LINEUP_PITCHER_POS = {"SP", "RP", "P"}`
+
+After `optimize_daily_lineup` returns, `_add_lineup_advice` now iterates the
+advice list and overrides any `advice == "bench"` entry for a non-pitcher whose
+season OPS >= .850 to `advice = "ok"` with a "Must-start floor" prefix on the
+reason string. This prevents the agent from ever recommending the user sit an
+elite bat due to schedule ambiguity or park-factor nudges.
+
+OPS is looked up from `rs.player.stats` via `_norm_name` key for fuzzy matching.
+
+---
+
+### ENH 5 — FantasyPros API key wiring (.env.example)
+
+Added placeholder to `.env.example`:
+```
+FANTASYPROS_API_KEY=your_fantasypros_api_key_here
+```
+The key is already consumed by `fantasypros/client.py` via
+`_fp_client = FantasyProsClient(FANTASYPROS_API_KEY) if FANTASYPROS_API_KEY else None`
+(graceful degradation when absent) and is already present as a secret in
+`.github/workflows/daily.yml`. This commit just adds the documentation entry so
+local developers know to set it.
