@@ -1,16 +1,13 @@
 ================================================
-  FANTASY AGENT  --  Mon Jul 6, 2026  8:00 AM ET
+  FANTASY AGENT  --  Mon Jul 6, 2026  11:32 AM ET
 ================================================
 
 
 [ PINS & PILLS  |  H2H Categories ]
-  Matchup : Week 15 vs Dig Dug: 7-5-0
-  Target  : WHIP, SB, ERA, HR +1 more
+  Matchup : Week 15 vs #MISSYOUB.I.G.: 0-0-12
   Stream SP: Andrew Alvarez (WAS)  ERA 3.05  K/9 10.45
   ** Submit adds before Monday scoring period lock. **
   Also    : Mick Abel, Mason Barnett
-  Top Add  : Willy Adames (SF) [SS]  helps SB, R
-  Also     : Luisangel Acuna (2B), Blaze Alexander (3B)
 
 [ CASEY STENGEL  |  NL-Only Roto ]
   Top Add  : Jose Alvarado (PHI) [RP]  helps K, SV
@@ -25,60 +22,51 @@
 CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
 
 === Pins and Pills (baseball) ===
-  Roster: 34 players
+  Roster: 33 players
      C William Contreras (MIL)
     1B Bryce Harper (PHI)
-    2B Sal Stewart (CIN)
+    2B Bo Bichette (NYM)
     3B Kevin McGonigle (DET)
-    SS Bo Bichette (NYM)
-  ... and 29 more
-  Stats enriched: 30/34 roster players
-  Lineup: 18/34 starting
-  Free agents visible: 8125
+    SS JJ Wetherholt (STL)
+  ... and 28 more
+  Stats enriched: 29/33 roster players
+  Lineup: 18/33 starting
+  Free agents visible: 8124
 
   FP projections (SP wire): 20/100 matched
   Schedule (3wk): Wk1:0x2 | Wk2:0x2 | Wk3:0x2
-  FP projections (all wire): 32/200 matched
+  FP projections (roster): 32/33 matched
   Savant batter xStats: 588 players
   Savant EV/Barrel: 413 players
   Savant pitcher xStats: 729 players
-  Savant xStats (all wire): 25/200 matched
-  FP projections (roster): 33/34 matched
-  Savant xStats (roster): 30/34 matched
+  Savant xStats (roster): 29/33 matched
   Format: H2H Categories
-
-  ⚠ CHURN GUARD: 5 moves recommended -- showing top 3 per section. Prioritize ruthlessly; avoid making all moves at once.
-  Matchup: Week 15 vs Dig Dug: 7-5-0
-  Priority categories (losing, easiest first): WHIP, SB, ERA, HR, R
+  Matchup: Week 15 vs #MISSYOUB.I.G.: 0-0-12
   Streaming SP (Submit adds before Monday scoring period lock.):
-   + Andrew Alvarez (WAS) [day 17] score=2.02 ERA 3.05, K/9 10.45, WHIP 1.38 | helps: ERA, WHIP
-   + Mick Abel (MIN) [day 8] score=0.69 ERA 3.98, K/9 10.18, WHIP 1.57 | helps: ERA, WHIP
-   + Mason Barnett (ATH) [day 14] score=0.69 ERA 3.72, K/9 9.78, WHIP 1.19 | helps: ERA, WHIP
-  Waiver adds (5 suggestions) (top 3 shown -- 2 more suppressed):
-   + Willy Adames (SF) [SS] [day 11] helps: SB, R [Brl%=9.1 | xwOBA=0.288]
-   + Luisangel Acuna (CHW) [2B] [day 13] helps: SB, R [Brl%=4.3 | xwOBA=0.278]
-   + Blaze Alexander (BAL) [3B] [day 13] helps: HR [Brl%=6.5 | xwOBA=0.346]
+   + Andrew Alvarez (WAS) [day 17] score=8.21 ERA 3.05, K/9 10.45, WHIP 1.38 | helps: ERA, K, S, W, WHIP
+   + Mick Abel (MIN) [day 8] score=6.76 ERA 3.98, K/9 10.18, WHIP 1.57 | helps: ERA, K, S, W, WHIP
+   + Mason Barnett (ATH) [day 14] score=6.6 ERA 3.72, K/9 9.78, WHIP 1.19 | helps: ERA, K, S, W, WHIP
 
   --- Closer Monkey News ---
-  [LEDGER] Closer Monkey’s Leverage Ledger | 7.5.2026
+  [LEDGER] Closer Monkey’s Leverage Ledger | 7.6.2026
     Closer Monkey - Instant emails for every closer change. Closer depth charts to keep you ahead.
-    Saturday’s slate featured three wins, eight saves, three losses, and one blown save by relievers. Here are the saves in condensed form: There have been 678 saves this season by 190 different pitchers.&#160; Here are the vulture options:&#160; Vulture Save Options for 7.5.2026 Vulture Save Stashes for 7.6
-    https://closermonkey.com/2026/07/05/closer-monkeys-leverage-ledger-7-5-2026/
+    Sunday’s slate featured six wins, 11 saves, three losses, and three blown saves by relievers. Here are the saves in condensed form: There have been 689 saves this season by 190 different pitchers.&#160; Here are the vulture options:&#160; Vulture Save Options for 7.6.2026 Vulture Save Stashes for 7.7.202
+    https://closermonkey.com/2026/07/06/closer-monkeys-leverage-ledger-7-6-2026/
 
   --- Injury Report (last 7 days) ---
   🚑 Placed (32): Tyler Soderstrom (Athletics), Mitchell Parker (Washington Nationals), Ethan Roberts (Chicago Cubs), Keegan Akin (Baltimore Orioles), Matt Shaw (Chicago Cubs), Jacob Wilson (Athletics), David Morgan (San Diego Padres), Rob Refsnyder (Seattle Mariners)
-  ✅ Activated (22): Nick Allen (Houston Astros), Jake Cronenworth (San Diego Padres), Teoscar Hernández (Los Angeles Dodgers), Liam Hicks (Miami Marlins), Ryan Fernandez (St. Louis Cardinals), Tanner Gordon (Colorado Rockies), Emilio Pagán (Cincinnati Reds), Noah Schultz (Chicago White Sox)
+  ✅ Activated (22): Nick Allen (Houston Astros), Jake Cronenworth (San Diego Padres), Teoscar Hernández (Los Angeles Dodgers), Liam Hicks (Miami Marlins), Ryan Fernandez (St. Louis Cardinals), Tanner Gordon (Colorado Rockies), Emilio Pagán (Cincinnati Reds), Jovani Morán (Boston Red Sox)
 
   --- Trade Value Signals ---
-  SELL HIGH (27) -- outpacing projections:
-   ~ Owen Caissie (MIA) [RF] [strong]
-      SB 4 vs proj 2; RBI 49 vs proj 25; HR 11 vs proj 7
+  SELL HIGH (26) -- outpacing projections:
    ~ Sal Stewart (CIN) [1B] [strong]
       SB 11 vs proj 6; RBI 61 vs proj 41; HR 17 vs proj 12
    ~ Jordan Walker (STL) [RF] [strong]
       HR 20 vs proj 11; RBI 67 vs proj 39; SB 11 vs proj 7
    ~ Yordan Alvarez (HOU) [DH] [strong]
       HR 29 vs proj 17; RBI 67 vs proj 45; R 62 vs proj 43
+   ~ Daylen Lile (WAS) [RF] [strong]
+      HR 10 vs proj 6; R 48 vs proj 31; RBI 43 vs proj 29
 
   --- Trade Board (8 teams scanned) ---
   My surplus (can sell): none
@@ -87,24 +75,23 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   --- Daily Lineup (Mon Jul 6, 16 MLB teams playing) ---
   SPs starting today (3):
     [                  active] Kyle Harrison (MIL)
-    [                  active] Yoshinobu Yamamoto (LAD)
-    [ BENCH - move to active!] Landen Roupp (SF)
+    [                  active] Landen Roupp (SF)
+    [ BENCH - move to active!] Yoshinobu Yamamoto (LAD)
   SPs NOT starting today (6):
-    [     ACTIVE - bench!] Nick Martinez (TB) TB has no game today per MLB schedule
     [     ACTIVE - bench!] Sandy Alcantara (MIA) MIA has no game today per MLB schedule
     [     ACTIVE - bench!] Jose Soriano (LAA) LAA has no game today per MLB schedule
     [     ACTIVE - bench!] Logan Webb (SF) SF has no game today per MLB schedule
+    [     already benched] Nick Martinez (TB) TB has no game today per MLB schedule
     [     already benched] J.T. Ginn (ATH) ATH has no game today per MLB schedule
     [     already benched] Joe Musgrove (SD) SD has no game today per MLB schedule
-  Batters with off days - bench these (9):
-    [     ACTIVE - bench!] Sal Stewart (CIN) [1B]
+  Batters with off days - bench these (8):
     [     ACTIVE - bench!] Kevin McGonigle (DET) [SS]
-    [     ACTIVE - bench!] Wilyer Abreu (BOS) [RF]
+    [     ACTIVE - bench!] Daylen Lile (WAS) [RF]
+    [     already benched] Sal Stewart (CIN) [1B]
     [     already benched] J.J. Bleday (CIN) [CF]
-    [     already benched] Daylen Lile (WAS) [RF]
+    [     already benched] Wilyer Abreu (BOS) [RF]
     [     already benched] Maikel Garcia (KC) [3B]
     [     already benched] Luke Keaschall (MIN) [2B]
-    [     already benched] Owen Caissie (MIA) [RF]
     [     already benched] Leo De Vries (ATH) [SS]
   Batters with games today: 12
 
@@ -138,14 +125,14 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   Weakest categories: ERA, SB, S
 
   --- Closer Monkey News ---
-  [LEDGER] Closer Monkey’s Leverage Ledger | 7.5.2026
+  [LEDGER] Closer Monkey’s Leverage Ledger | 7.6.2026
     Closer Monkey - Instant emails for every closer change. Closer depth charts to keep you ahead.
-    Saturday’s slate featured three wins, eight saves, three losses, and one blown save by relievers. Here are the saves in condensed form: There have been 678 saves this season by 190 different pitchers.&#160; Here are the vulture options:&#160; Vulture Save Options for 7.5.2026 Vulture Save Stashes for 7.6
-    https://closermonkey.com/2026/07/05/closer-monkeys-leverage-ledger-7-5-2026/
+    Sunday’s slate featured six wins, 11 saves, three losses, and three blown saves by relievers. Here are the saves in condensed form: There have been 689 saves this season by 190 different pitchers.&#160; Here are the vulture options:&#160; Vulture Save Options for 7.6.2026 Vulture Save Stashes for 7.7.202
+    https://closermonkey.com/2026/07/06/closer-monkeys-leverage-ledger-7-6-2026/
 
   --- Injury Report (last 7 days) ---
   🚑 Placed (32): Tyler Soderstrom (Athletics), Mitchell Parker (Washington Nationals), Ethan Roberts (Chicago Cubs), Keegan Akin (Baltimore Orioles), Matt Shaw (Chicago Cubs), Jacob Wilson (Athletics), David Morgan (San Diego Padres), Rob Refsnyder (Seattle Mariners)
-  ✅ Activated (22): Nick Allen (Houston Astros), Jake Cronenworth (San Diego Padres), Teoscar Hernández (Los Angeles Dodgers), Liam Hicks (Miami Marlins), Ryan Fernandez (St. Louis Cardinals), Tanner Gordon (Colorado Rockies), Emilio Pagán (Cincinnati Reds), Noah Schultz (Chicago White Sox)
+  ✅ Activated (22): Nick Allen (Houston Astros), Jake Cronenworth (San Diego Padres), Teoscar Hernández (Los Angeles Dodgers), Liam Hicks (Miami Marlins), Ryan Fernandez (St. Louis Cardinals), Tanner Gordon (Colorado Rockies), Emilio Pagán (Cincinnati Reds), Jovani Morán (Boston Red Sox)
 
   --- Trade Value Signals ---
   SELL HIGH (22) -- outpacing projections:
