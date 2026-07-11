@@ -13,6 +13,15 @@ Previously, is_probable_starter was always None for RP regardless of whether
 they appeared as a confirmed starter. format_lineup_advice now checks
 is_probable_starter is True for ALL pitchers, not just those tagged "SP".
 
+BUG 5 fix: players currently on the MLB injured list are now cross-checked
+via il_players (norm names from mlb.injuries.fetch_active_il()) BEFORE any
+other advice logic runs. Previously a player who was placed on IL could still
+be flagged "BENCH -> move to active!" if MLB's probable-starter feed had a
+data lag or CBS hadn't moved them to an IL roster slot yet (e.g. Kyle
+Harrison, placed on the 15-day IL 7/9, was recommended for activation on
+7/11 because he still showed up in the probable-starters set). IL status now
+short-circuits all other advice for that player.
+
 DRY_RUN=True: output only, no CBS submissions.
 """
 import logging
@@ -33,7 +42,7 @@ class LineupAdvice:
     positions: list[str]
     slot: str           # current CBS slot (C, SP, BN, etc.)
     is_starting: bool   # currently active in lineup
-    advice: str         # "start", "bench", "ok", "bench_pitcher"
+    advice: str         # "start", "bench", "ok", "bench_pitcher", "on_il"
     reason: str
     # pitcher-specific
     is_probable_starter: Optional[bool] = None  # None = unknown (RP/batter)
@@ -47,6 +56,7 @@ def optimize_daily_lineup(
     lineup_slots: list[dict],
     teams_playing: set[str],
     probable_starters: set[str],  # norm names from mlb.schedule
+    il_players: set[str] | None = None,  # norm names currently on MLB IL
 ) -> list[LineupAdvice]:
     """
     Cross-reference current lineup against today's schedule.
@@ -54,11 +64,19 @@ def optimize_daily_lineup(
     lineup_slots: list of {slot, player_id, player_name, team, positions, is_starting}
     teams_playing: set of CBS team abbreviations with games today
     probable_starters: set of norm-names for pitchers starting today
+    il_players: set of norm-names currently on the MLB injured list, from
+        mlb.injuries.fetch_active_il(). This is the authoritative "hurt right
+        now" source -- independent of CBS roster slot and independent of the
+        probable-starters feed, both of which can lag a real-world IL move.
 
     Returns a list of LineupAdvice objects.
 
     BUG 1: RP appearing in probable_starters (spot starters) are now flagged
     is_probable_starter=True exactly like SP probable starters.
+
+    BUG 5: any player found in il_players is short-circuited to advice="on_il"
+    before the pitcher/batter branches run, so a probable-starter or
+    teams-playing match can never override a real injured-list placement.
 
     IMPORTANT: schedule data may be incomplete (API lag, team abbrev mismatches,
     UTC/ET boundary issues). The rule is: only assert positively confirmed facts.
@@ -71,9 +89,10 @@ def optimize_daily_lineup(
     # is likely incomplete (API error, off-season, or wrong date). Suppress all
     # negative schedule inferences in that case.
     schedule_reliable = len(teams_playing) >= 10
+    il_players = il_players or set()
 
-    logger.info("optimize_daily_lineup: %d teams playing (reliable=%s), %d probable starters",
-                len(teams_playing), schedule_reliable, len(probable_starters))
+    logger.info("optimize_daily_lineup: %d teams playing (reliable=%s), %d probable starters, %d IL",
+                len(teams_playing), schedule_reliable, len(probable_starters), len(il_players))
 
     advice_list: list[LineupAdvice] = []
 
@@ -90,6 +109,19 @@ def optimize_daily_lineup(
         is_pitcher        = ("SP" in positions or "RP" in positions)
         confirmed_playing = team.upper() in teams_playing
         norm_name         = _norm(name)
+
+        # BUG 5 fix: a confirmed current IL placement overrides everything
+        # else. Never recommend starting/activating a player who is hurt,
+        # even if they still appear in the probable-starters feed (data lag)
+        # or CBS hasn't moved them to an IL slot yet.
+        if norm_name in il_players:
+            advice_list.append(LineupAdvice(
+                player_name=name, team=team, positions=positions,
+                slot=slot, is_starting=active, advice="on_il",
+                reason="Currently on the MLB injured list -- ignore any start/activate recommendation",
+                is_probable_starter=False,
+            ))
+            continue
 
         if is_pitcher:
             # BUG 1 fix: check ALL pitchers (SP and RP) against probable_starters.
@@ -159,6 +191,8 @@ def format_lineup_advice(advice_list: list[LineupAdvice], today_str: str = "") -
     # BUG 1 fix: starters_today now includes RP spot starters (is_probable_starter is True
     # for any pitcher -- SP or RP -- confirmed in the MLB probable-pitcher list).
     # Previously this check required "SP" in positions, silently dropping RP spot starters.
+    # BUG 5 fix: players on il_players have is_probable_starter forced to False, so an
+    # IL placement can never surface here as a "move to active" recommendation.
     starters_today = [a for a in advice_list if a.is_probable_starter is True]
     not_starting   = [a for a in advice_list
                       if a.is_pitcher and a.advice == "bench_pitcher"]
@@ -166,6 +200,7 @@ def format_lineup_advice(advice_list: list[LineupAdvice], today_str: str = "") -
                       if not a.is_pitcher and a.advice == "bench"]
     active_batters = [a for a in advice_list
                       if not a.is_pitcher and a.advice in ("start", "ok")]
+    on_il          = [a for a in advice_list if a.advice == "on_il"]
 
     if starters_today:
         lines.append(f"  SPs starting today ({len(starters_today)}):")
@@ -187,6 +222,11 @@ def format_lineup_advice(advice_list: list[LineupAdvice], today_str: str = "") -
         for a in off_batters:
             mark = "[ACTIVE - bench!]" if a.is_starting else "[already benched]"
             lines.append(f"    {mark} {a.player_name} ({a.team})")
+
+    if on_il:
+        lines.append(f"  On injured list - do not activate ({len(on_il)}):")
+        for a in on_il:
+            lines.append(f"    🚑 {a.player_name} ({a.team}) {a.reason}")
 
     # Active batters summary (brief)
     playing_count = len([a for a in active_batters if a.advice in ("start", "ok")])
