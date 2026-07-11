@@ -27,7 +27,7 @@ from savant.client import SavantClient, enrich_with_savant
 from agent.tradevalue import analyze_roster_value
 from cbs.standings import fetch_all_teams_stats
 from agent.surplusmap import build_surplus_map, trade_leads_from_map, my_category_profile
-from mlb.injuries import fetch_il_transactions, annotate_roster_injuries, format_transactions
+from mlb.injuries import fetch_il_transactions, annotate_roster_injuries, format_transactions, fetch_active_il
 from mlb.splits import fetch_recent_form as _fetch_recent_form
 
 logger = logging.getLogger(__name__)
@@ -281,6 +281,17 @@ def _add_lineup_advice(actions, team, no_bench=False):
         _d = _today_et()
         today_str = f"{_d.strftime('%a %b')} {_d.day}"
 
+        # BUG 5 fix: cross-reference the live MLB injured list so the lineup
+        # optimizer never tells you to activate a player who is actually hurt.
+        # Independent of the probable-starters feed (can lag a real IL move)
+        # and independent of CBS's own roster slot (only moves to IL when the
+        # commissioner/manager does it manually there).
+        try:
+            il_norms = set(fetch_active_il().keys())
+        except Exception as e:
+            logger.warning("fetch_active_il failed, IL cross-check skipped: %s", e)
+            il_norms = set()
+
         lineup_slots = [
             {
                 "player_name": rs.player.name,
@@ -292,7 +303,7 @@ def _add_lineup_advice(actions, team, no_bench=False):
             for rs in team.roster
         ]
 
-        advice = optimize_daily_lineup(lineup_slots, teams_today, starters_today)
+        advice = optimize_daily_lineup(lineup_slots, teams_today, starters_today, il_players=il_norms)
 
         # ENH 3: Must-start floor -- elite batters (season OPS >= .850) should
         # always be active regardless of park factor, L/R matchup, or schedule
