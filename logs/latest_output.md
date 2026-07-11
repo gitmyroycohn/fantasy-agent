@@ -1,22 +1,22 @@
 ================================================
-  FANTASY AGENT  --  Fri Jul 10, 2026  10:26 AM ET
+  FANTASY AGENT  --  Sat Jul 11, 2026  9:18 AM ET
 ================================================
 
 
 [ PINS & PILLS  |  H2H Categories ]
-  Matchup : Week 15 vs #MISSYOUB.I.G.: 3-8-1
-  Target  : OPS, WHIP, ERA, H +4 more
-  Stream SP: Mick Abel (MIN)  ERA 3.98  K/9 10.18
+  Matchup : Week 16 vs #MISSYOUB.I.G.: 3-8-1
+  Target  : OPS, WHIP, ERA, W +4 more
+  Stream SP: Walker Buehler (SD) [2-START]  ERA ?  K/9 ?
   ** Submit adds before Monday scoring period lock. **
-  Also    : Andrew Alvarez, Mason Barnett
-  Top Add  : Willy Adames (SF) [SS]  helps R
-  Also     : Blaze Alexander (3B), Luisangel Acuna (2B)
+  Also    : Kyle Freeland, Reynaldo Lopez
+  Top Add  : Blaze Alexander (BAL) [3B]  helps HR, RBI
+  Also     : Willy Adames (SS), Luisangel Acuna (2B)
 
 [ CASEY STENGEL  |  NL-Only Roto ]
   Top Add  : Jose Alvarado (PHI) [RP]  helps K, SV
   Also     : Tyler Alexander (RP), Philip Abner (RP)
-  Standings: Period 15: 48 roto pts - winning 6 cats, losing 4
-  Weakest  : HR, ERA, SB, S
+  Standings: Period 16: 47 roto pts - winning 5 cats, losing 5
+  Weakest  : RBI, HR, SB, ERA
 
 ================================================
   Full details below
@@ -30,77 +30,77 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
     1B Bryce Harper (PHI)
     2B Sal Stewart (CIN)
     3B Kevin McGonigle (DET)
-    SS Bo Bichette (NYM)
+    SS JJ Wetherholt (STL)
   ... and 28 more
   Stats enriched: 29/33 roster players
   Lineup: 18/33 starting
   Free agents visible: 8126
 
   FP projections (SP wire): 21/100 matched
-  Schedule (3wk): Wk1:32x2 | Wk2:0x2 | Wk3:0x2
+  Schedule (3wk): Wk1:35x2 | Wk2:0x2 | Wk3:0x2
   FP projections (all wire): 33/200 matched
-  Savant batter xStats: 593 players
-  Savant EV/Barrel: 416 players
-  Savant pitcher xStats: 742 players
+  Savant batter xStats: 594 players
+  Savant EV/Barrel: 417 players
+  Savant pitcher xStats: 743 players
   Savant xStats (all wire): 25/200 matched
   FP projections (roster): 31/33 matched
   Savant xStats (roster): 29/33 matched
   Format: H2H Categories
 
   ⚠ CHURN GUARD: 6 moves recommended -- showing top 3 per section. Prioritize ruthlessly; avoid making all moves at once.
-  Matchup: Week 15 vs #MISSYOUB.I.G.: 3-8-1
-  Priority categories (losing, easiest first): OPS, WHIP, ERA, H, W, RBI, R, K
+  Matchup: Week 16 vs #MISSYOUB.I.G.: 3-8-1
+  Priority categories (losing, easiest first): OPS, WHIP, ERA, W, HR, H, RBI, R
   Streaming SP (Submit adds before Monday scoring period lock.):
-   + Mick Abel (MIN) [day 12] score=6.76 ERA 3.98, K/9 10.18, WHIP 1.57 | helps: ERA, K, W, WHIP
-   + Andrew Alvarez (WAS) [day 21] score=6.62 ERA 3.64, K/9 9.77, WHIP 1.4 | helps: ERA, K, W, WHIP
-   + Mason Barnett (ATH) [day 18] score=6.37 ERA 3.54, K/9 9.3, WHIP 1.23 | helps: ERA, K, W, WHIP
-   + Walker Buehler (SD) [2-START] [day 2] score=4.0 *** 2-START WEEK *** | helps: ERA, K, W, WHIP
-   + Kyle Freeland (COL) [2-START] [day 2] score=4.0 *** 2-START WEEK *** | helps: ERA, K, W, WHIP
+   + Walker Buehler (SD) [2-START] [day 3] score=4.0 *** 2-START WEEK *** | helps: ERA, W, WHIP
+   + Kyle Freeland (COL) [2-START] [day 3] score=4.0 *** 2-START WEEK *** | helps: ERA, W, WHIP
+   + Reynaldo Lopez (ATL) [2-START] [NEW] score=4.0 *** 2-START WEEK *** | helps: ERA, W, WHIP
+   + Michael Lorenzen (COL) [2-START] [NEW] score=4.0 *** 2-START WEEK *** | helps: ERA, W, WHIP
+   + German Marquez (SD) [2-START] [NEW] score=4.0 *** 2-START WEEK *** | helps: ERA, W, WHIP
   Waiver adds (5 suggestions) (top 3 shown -- 2 more suppressed):
-   + Willy Adames (SF) [SS] [day 15] helps: R [Brl%=9.2 | xwOBA=0.292]
-   + Blaze Alexander (BAL) [3B] [day 15] helps: RBI [Brl%=6.7 | xwOBA=0.346]
-   + Luisangel Acuna (CHW) [2B] [day 17] helps: R [Brl%=4.1 | xwOBA=0.279]
+   + Blaze Alexander (BAL) [3B] [day 16] helps: HR, RBI [Brl%=7.1 | xwOBA=0.353]
+   + Willy Adames (SF) [SS] [day 16] helps: R [Brl%=9.0 | xwOBA=0.292]
+   + Luisangel Acuna (CHW) [2B] [day 18] helps: R [Brl%=4.1 | xwOBA=0.279]
 
   --- Drop Candidates ---
   MONITOR (1) -- borderline:
-   WATCH Esmerlyn Valdez (PIT) [RF] [day 4]
+   WATCH Esmerlyn Valdez (PIT) [RF] [day 5]
          Borderline: R 16, RBI 18, SB 0
 
   --- Closer Monkey News ---
-  [LEDGER] Closer Monkey’s Leverage Ledger | 7.10.2026
+  [LEDGER] Closer Monkey’s Leverage Ledger | 7.11.2026
     Closer Monkey - Instant emails for every closer change. Closer depth charts to keep you ahead.
-    Thursday’s 13-game slate featured five wins, six saves, four losses, and two blown saves by relievers. Here are the saves in condensed form: There have been 711 saves this season by 191 different pitchers.&#160; Here are the vulture save options:&#160; Vulture Save Options for 7.10.2026 Vulture Save Stas
-    https://closermonkey.com/2026/07/10/closer-monkeys-leverage-ledger-7-10-2026/
+    Friday’s slate featured six wins, six saves, eight losses, and six blown saves by relievers. Here are the saves in condensed form: There have been 717 saves this season by 191 different pitchers.&#160; Here are the vulture save options:&#160; Vulture Save Options for 7.11.2026 Doubleheader Options Vultur
+    https://closermonkey.com/2026/07/11/closer-monkeys-leverage-ledger-7-11-2026/
 
   --- Injury Report (last 7 days) ---
-  🚑 Placed (30): Ryan Helsley (Baltimore Orioles), Randy Vásquez (San Diego Padres), Julio Rodríguez (Seattle Mariners), Carlos Rodón (New York Yankees), Freddy Fermin (San Diego Padres), Ha-Seong Kim (Atlanta Braves), Jakob Junis (Texas Rangers), Seth Halvorsen (Colorado Rockies)
-  ✅ Activated (25): Ryan McMahon (New York Yankees), Cristian Javier (Houston Astros), Trent Grisham (New York Yankees), Danny Young (Atlanta Braves), Luis Campusano (San Diego Padres), Mark Leiter Jr. (Athletics), Kyle Farmer (Atlanta Braves), Hunter Greene (Cincinnati Reds)
+  🚑 Placed (30): Tomoyuki Sugano (Colorado Rockies), Matt Gage (San Francisco Giants), Ha-Seong Kim (Atlanta Braves), Jakob Junis (Texas Rangers), Seth Halvorsen (Colorado Rockies), Evan Sisk (Pittsburgh Pirates), Brandon Woodruff (Milwaukee Brewers), Martín Pérez (Atlanta Braves)
+  ✅ Activated (26): Kyle Farmer (Atlanta Braves), Zack Gelof (Athletics), Hunter Greene (Cincinnati Reds), LaMonte Wade Jr. (Houston Astros), Chris Martin (Texas Rangers), James McCann (Arizona Diamondbacks), Patrick Sandoval (Boston Red Sox), Evan Phillips (Los Angeles Dodgers)
 
   --- Trade Value Signals ---
   SELL HIGH (26) -- outpacing projections:
-   ~ Jordan Walker (STL) [RF] [strong]
-      SB 12 vs proj 6; HR 22 vs proj 11; RBI 73 vs proj 37
-   ~ J.J. Bleday (CIN) [CF] [strong]
-      SB 4 vs proj 2; HR 14 vs proj 11; RBI 39 vs proj 32
    ~ Sal Stewart (CIN) [1B] [strong]
-      SB 11 vs proj 6; RBI 64 vs proj 38; HR 19 vs proj 12
-   ~ Kevin McGonigle (DET) [SS] [strong]
-      SB 11 vs proj 6; R 57 vs proj 40
+      SB 11 vs proj 5; RBI 65 vs proj 38; HR 19 vs proj 12
+   ~ Jordan Walker (STL) [RF] [strong]
+      RBI 74 vs proj 36; SB 12 vs proj 6; HR 22 vs proj 11
+   ~ J.J. Bleday (CIN) [CF] [strong]
+      SB 4 vs proj 2; HR 15 vs proj 11; RBI 41 vs proj 31
+   ~ Bryan Baker (TB) [RP] [strong]
+      SV 25 vs proj 13; ERA 1.73 vs proj 3.68; WHIP 0.83 vs proj 1.23
 
   --- Trade Board (8 teams scanned) ---
   My surplus (can sell): none
   My deficit (need buy): none
 
-  --- Daily Lineup (Fri Jul 10, 30 MLB teams playing) ---
-  SPs starting today (6):
-    [                  active] Nick Martinez (TB)
+  --- Daily Lineup (Sat Jul 11, 30 MLB teams playing) ---
+  SPs starting today (5):
     [                  active] Sandy Alcantara (MIA)
     [                  active] Jose Soriano (LAA)
-    [                  active] J.T. Ginn (ATH)
+    [                  active] Yoshinobu Yamamoto (LAD)
+    [ BENCH - move to active!] J.T. Ginn (ATH)
     [ BENCH - move to active!] Kyle Harrison (MIL)
-    [ BENCH - move to active!] Yoshinobu Yamamoto (LAD)
-  SPs NOT starting today (3):
+  SPs NOT starting today (4):
     [     ACTIVE - bench!] Logan Webb (SF) SF has no game today per MLB schedule
+    [     already benched] Nick Martinez (TB) TB has no game today per MLB schedule
     [     already benched] Landen Roupp (SF) SF has no game today per MLB schedule
     [     already benched] Joe Musgrove (SD) SD has no game today per MLB schedule
   Batters with off days - bench these (2):
@@ -120,7 +120,7 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   ... and 23 more
   Stats enriched: 27/28 roster players
   Lineup: 24/28 starting
-  Free agents visible: 8188
+  Free agents visible: 8187
 
   FP projections (roto wire): 34/200 matched
   Savant xStats (roto wire): 26/200 matched
@@ -129,36 +129,41 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   Savant xStats (roster): 27/28 matched
   Format: NL-Only Rotisserie
 
-  ⚠ CHURN GUARD: 5 moves recommended -- showing top 3 per section. Prioritize ruthlessly; avoid making all moves at once.
+  ⚠ CHURN GUARD: 6 moves recommended -- showing top 3 per section. Prioritize ruthlessly; avoid making all moves at once.
   Waiver adds (5 suggestions) (top 3 shown -- 2 more suppressed):
-   + Jose Alvarado (PHI) [RP] [day 24] helps: K, SV [xERA=3.86]
-   + Tyler Alexander (PHI) [RP] [day 24] helps: K, SV [CM: 2nd-in-line | Mostly Linear] [xERA=3.10]
-   + Philip Abner (ARI) [RP] [day 15] helps: K, SV [xERA=6.78]
-  Standings: Period 15: 48 roto pts - winning 6 cats, losing 4
-  Weakest categories: HR, ERA, SB, S
+   + Jose Alvarado (PHI) [RP] [day 25] helps: K, SV [xERA=3.85]
+   + Tyler Alexander (PHI) [RP] [day 25] helps: K, SV [CM: 2nd-in-line | Mostly Linear] [xERA=3.12]
+   + Philip Abner (ARI) [RP] [day 16] helps: K, SV [xERA=6.78]
+
+  --- Drop Candidates ---
+  MONITOR (1) -- borderline:
+   WATCH Esteury Ruiz (MIA) [LF] [NEW]
+         Borderline: HR 4, R 24, RBI 9
+  Standings: Period 16: 47 roto pts - winning 5 cats, losing 5
+  Weakest categories: RBI, HR, SB, ERA, S
 
   --- Closer Monkey News ---
-  [LEDGER] Closer Monkey’s Leverage Ledger | 7.10.2026
+  [LEDGER] Closer Monkey’s Leverage Ledger | 7.11.2026
     Closer Monkey - Instant emails for every closer change. Closer depth charts to keep you ahead.
-    Thursday’s 13-game slate featured five wins, six saves, four losses, and two blown saves by relievers. Here are the saves in condensed form: There have been 711 saves this season by 191 different pitchers.&#160; Here are the vulture save options:&#160; Vulture Save Options for 7.10.2026 Vulture Save Stas
-    https://closermonkey.com/2026/07/10/closer-monkeys-leverage-ledger-7-10-2026/
+    Friday’s slate featured six wins, six saves, eight losses, and six blown saves by relievers. Here are the saves in condensed form: There have been 717 saves this season by 191 different pitchers.&#160; Here are the vulture save options:&#160; Vulture Save Options for 7.11.2026 Doubleheader Options Vultur
+    https://closermonkey.com/2026/07/11/closer-monkeys-leverage-ledger-7-11-2026/
 
   --- Injury Report (last 7 days) ---
   ★ YOUR ROSTER PLAYERS:
     ✅ Logan Henderson (Milwaukee Brewers) — Activated from 15-Day IL [7/9]
-    🚑 John King (Miami Marlins) — Placed on 15-Day IL [7/8]
     🚑 Brad Lord (Washington Nationals) — Placed on 15-Day IL [7/6]
-  🚑 Placed (28): Ryan Helsley (Baltimore Orioles), Randy Vásquez (San Diego Padres), Julio Rodríguez (Seattle Mariners), Carlos Rodón (New York Yankees), Freddy Fermin (San Diego Padres), Ha-Seong Kim (Atlanta Braves), Jakob Junis (Texas Rangers), Seth Halvorsen (Colorado Rockies)
-  ✅ Activated (24): Ryan McMahon (New York Yankees), Cristian Javier (Houston Astros), Trent Grisham (New York Yankees), Danny Young (Atlanta Braves), Luis Campusano (San Diego Padres), Mark Leiter Jr. (Athletics), Kyle Farmer (Atlanta Braves), Hunter Greene (Cincinnati Reds)
+    🚑 John King (Miami Marlins) — Placed on 15-Day IL [7/8]
+  🚑 Placed (28): Tomoyuki Sugano (Colorado Rockies), Matt Gage (San Francisco Giants), Ha-Seong Kim (Atlanta Braves), Jakob Junis (Texas Rangers), Seth Halvorsen (Colorado Rockies), Evan Sisk (Pittsburgh Pirates), Brandon Woodruff (Milwaukee Brewers), Martín Pérez (Atlanta Braves)
+  ✅ Activated (25): Kyle Farmer (Atlanta Braves), Zack Gelof (Athletics), Hunter Greene (Cincinnati Reds), LaMonte Wade Jr. (Houston Astros), Chris Martin (Texas Rangers), James McCann (Arizona Diamondbacks), Patrick Sandoval (Boston Red Sox), Evan Phillips (Los Angeles Dodgers)
 
   --- Trade Value Signals ---
-  SELL HIGH (22) -- outpacing projections:
+  SELL HIGH (24) -- outpacing projections:
    ~ Max Muncy (LAD) [3B] [strong]
-      HR 17 vs proj 4; R 54 vs proj 15; RBI 40 vs proj 15
-   ~ Jacob Young (WAS) [CF] [strong]
-      HR 8 vs proj 3; RBI 31 vs proj 18; R 34 vs proj 24
+      HR 17 vs proj 2; R 54 vs proj 8; RBI 40 vs proj 8
+   ~ Brad Lord (WAS) [RP] [strong]
+      K 52 vs proj 19
    ~ Nathan Church (STL) [CF] [strong]
-      HR 8 vs proj 3; R 30 vs proj 17; RBI 28 vs proj 16
+      HR 8 vs proj 3; R 30 vs proj 16; RBI 28 vs proj 15
    ~ Casey Schmitt (SF) [2B] [strong]
       SB 7 vs proj 3; HR 18 vs proj 9; RBI 47 vs proj 31
 
@@ -170,23 +175,21 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
       They have: —
       They need: W
 
-  --- Daily Lineup (Fri Jul 10, 30 MLB teams playing) ---
-  SPs pitching today (6):
+  --- Daily Lineup (Sat Jul 11, 30 MLB teams playing) ---
+  SPs pitching today (5):
     Antonio Senzatela (COL)
     Kyle Harrison (MIL)
     Andre Pallante (STL)
-    Shota Imanaga (CHC)
     Logan Henderson (MIL)
-    Hurston Waldrep (ATL)
+    Shota Imanaga (CHC)
   SPs NOT pitching today (1) [no bench -- FYI only]:
     Logan Webb (SF) SF has no game today per MLB schedule
-  Batters with no game today (5) [no bench -- FYI only]:
+  Batters with no game today (4) [no bench -- FYI only]:
     Ketel Marte (ARI) [2B] -- 0 stats today
     Casey Schmitt (SF) [2B] -- 0 stats today
     Corbin Carroll (ARI) [RF] -- 0 stats today
     Daylen Lile (WAS) [RF] -- 0 stats today
-    Jacob Young (WAS) [CF] -- 0 stats today
-  Batters with games today: 11
+  Batters with games today: 12
 
   DRY_RUN=True -- no submissions made.
 
