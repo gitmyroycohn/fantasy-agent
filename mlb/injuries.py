@@ -172,8 +172,15 @@ def fetch_active_il() -> dict[str, dict]:
 
     Returns {norm_name: {"name", "team", "il_type", "date"}}
 
-    Uses /api/v1/teams + /api/v1/teams/{id}/roster?rosterType=injuries
+    Uses /api/v1/teams + /api/v1/teams/{id}/roster?rosterType=injuredList
     per team. Caches results for the session.
+
+    BUG 8 fix: this previously used rosterType="injuries", which is not a
+    recognized MLB Stats API roster type. The API silently ignored it and
+    fell back to the default "active" roster -- so this function was
+    inverted, returning every healthy active player and (by construction)
+    excluding anyone actually on the IL. The correct value is
+    "injuredList".
     """
     # Get all MLB team IDs
     try:
@@ -194,7 +201,7 @@ def fetch_active_il() -> dict[str, dict]:
         try:
             r = requests.get(
                 f"{MLB_API}/teams/{team_id}/roster",
-                params={"rosterType": "injuries", "season": _today_et().year},
+                params={"rosterType": "injuredList", "season": _today_et().year},
                 timeout=TIMEOUT,
             )
             if r.status_code == 404:
