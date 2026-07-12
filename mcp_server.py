@@ -810,6 +810,7 @@ def hitting_matchups(
                     "opp_starter":  m["opp_starter_name"],
                     "is_home":      m["is_home"],
                     "home_team":    m["home_team"],
+                    "away_team":    m["away_team"],
                     "pf":           pf,
                     "pf_label":     pf_label,
                     "split_label":  split_label,
