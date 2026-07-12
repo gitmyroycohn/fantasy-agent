@@ -295,6 +295,16 @@ def _print_decisions(result, dry_run):
 
             print(f"\n  --- Daily Lineup ({today_str}, {teams_ct} MLB teams playing) ---")
 
+            # BUG 5 fix: players on the MLB injured list are cross-checked
+            # (mlb.injuries.fetch_active_il() via agent/decisions.py) BEFORE
+            # any other advice logic runs, so a probable-starter feed lag can
+            # never surface as a "move to active" recommendation. Filter them
+            # out of every other bucket and show them in their own section --
+            # previously this renderer had no "on_il" case at all, so an IL
+            # player either fell through silently or (if still tagged
+            # start/ok upstream) could still show up as "move to active!".
+            on_il = [a for a in advice if a["advice"] == "on_il"]
+
             if no_bench:
                 sp_on  = [a for a in advice if "SP" in a["positions"]
                            and a["advice"] in ("start", "ok")]
@@ -320,6 +330,10 @@ def _print_decisions(result, dry_run):
                     for a in bat_off:
                         pos = "/".join(a["positions"])
                         print(f"    {a['player']} ({a['team']}) [{pos}] -- 0 stats today")
+                if on_il:
+                    print(f"  On injured list - do not activate ({len(on_il)}):")
+                    for a in on_il:
+                        print(f"    🚑 {a['player']} ({a['team']}) {a['reason']}")
                 print(f"  Batters with games today: {len(bat_on)}")
 
             else:
@@ -350,6 +364,10 @@ def _print_decisions(result, dry_run):
                         mark = "ACTIVE - bench!" if a["is_starting"] else "already benched"
                         pos = "/".join(a["positions"])
                         print(f"    [{mark:>20}] {a['player']} ({a['team']}) [{pos}]")
+                if on_il:
+                    print(f"  On injured list - do not activate ({len(on_il)}):")
+                    for a in on_il:
+                        print(f"    🚑 {a['player']} ({a['team']}) {a['reason']}")
                 print(f"  Batters with games today: {len(bat_on)}")
 
         elif atype == "injury_report":
