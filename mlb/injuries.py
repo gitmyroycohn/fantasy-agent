@@ -172,15 +172,23 @@ def fetch_active_il() -> dict[str, dict]:
 
     Returns {norm_name: {"name", "team", "il_type", "date"}}
 
-    Uses /api/v1/teams + /api/v1/teams/{id}/roster?rosterType=injuredList
-    per team. Caches results for the session.
+    Uses /api/v1/teams + /api/v1/teams/{id}/roster?rosterType=fullRoster
+    per team, filtered by status code. Caches results for the session.
 
-    BUG 8 fix: this previously used rosterType="injuries", which is not a
-    recognized MLB Stats API roster type. The API silently ignored it and
-    fell back to the default "active" roster -- so this function was
-    inverted, returning every healthy active player and (by construction)
-    excluding anyone actually on the IL. The correct value is
-    "injuredList".
+    BUG 8 fix: there is no "injuries"/"injuredList" rosterType in the MLB
+    Stats API -- the documented values are 40Man, fullSeason, fullRoster,
+    nonRosterInvitees, active, allTime, depthChart, gameday, coach (default
+    is "active"). Both prior attempts silently fell back to "active", which
+    by definition EXCLUDES IL players -- so this function returned the
+    healthy roster and called it the IL list, inverting the intended
+    behavior (confirmed live: 28 of 34 healthy roster players flagged "on
+    IL" while Kyle Harrison, actually on the 15-day IL, was the one player
+    NOT flagged).
+
+    Fix: request rosterType=fullRoster (includes active AND IL players),
+    then filter down to entries whose status code indicates an injured-list
+    placement. MLB status codes: "A" = Active; "D7"/"D10"/"D15"/"D60" = the
+    7/10/15/60-day injured list. Only the "D*" codes belong in this dict.
     """
     # Get all MLB team IDs
     try:
@@ -201,7 +209,7 @@ def fetch_active_il() -> dict[str, dict]:
         try:
             r = requests.get(
                 f"{MLB_API}/teams/{team_id}/roster",
-                params={"rosterType": "injuredList", "season": _today_et().year},
+                params={"rosterType": "fullRoster", "season": _today_et().year},
                 timeout=TIMEOUT,
             )
             if r.status_code == 404:
@@ -213,11 +221,17 @@ def fetch_active_il() -> dict[str, dict]:
             continue
 
         for entry in roster:
+            status = entry.get("status", {})
+            status_code = (status.get("code") or "").upper()
+            # Only keep injured-list entries (D7/D10/D15/D60, etc.) --
+            # fullRoster includes every rostered player, active or not.
+            if not status_code.startswith("D"):
+                continue
+
             person = entry.get("person", {})
             name   = person.get("fullName", "")
             if not name:
                 continue
-            status = entry.get("status", {})
             il_type = status.get("description", "IL")
             # injuryDate or statusDate
             il_date = entry.get("statusDate", "")[:10] if entry.get("statusDate") else ""
