@@ -1,5 +1,5 @@
 ================================================
-  FANTASY AGENT  --  Mon Jul 13, 2026  10:33 AM ET
+  FANTASY AGENT  --  Tue Jul 14, 2026  9:42 AM ET
 ================================================
 
 
@@ -30,7 +30,7 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   ... and 29 more
   Stats enriched: 30/34 roster players
   Lineup: 18/34 starting
-  Free agents visible: 8126
+  Free agents visible: 8127
 
   FP projections (SP wire): 21/100 matched
   Schedule (3wk): Wk1:0x2 | Wk2:0x2 | Wk3:0x2
@@ -42,7 +42,7 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   Format: H2H Categories
   Matchup: Week 16 vs BigBallBuster: 0-0-12
   Streaming SP (Submit adds before Monday scoring period lock.):
-   + Mick Abel (MIN) [day 13] score=6.76 ERA 3.98, K/9 10.18, WHIP 1.57 | helps: ERA, K, S, W, WHIP
+   + Mick Abel (MIN) [day 14] score=6.76 ERA 3.98, K/9 10.18, WHIP 1.57 | helps: ERA, K, S, W, WHIP
 
   --- Closer Monkey News ---
   [LEDGER] Closer Monkey’s Leverage Ledger | 7.13.2026
@@ -53,25 +53,25 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   --- Injury Report (last 7 days) ---
   ★ YOUR ROSTER PLAYERS:
     🚑 Kyle Harrison (Milwaukee Brewers) — Placed on 15-Day IL [7/9]
-  🚑 Placed (29): Max Rajcic (St. Louis Cardinals), Martín Pérez (Atlanta Braves), Konnor Griffin (Pittsburgh Pirates), David Hamilton (Milwaukee Brewers), Byron Buxton (Minnesota Twins), Samad Taylor (San Diego Padres), Jonah Cox (San Francisco Giants), Marco Raya (Minnesota Twins)
-  ✅ Activated (30): Patrick Sandoval (Boston Red Sox), Evan Phillips (Los Angeles Dodgers), Braden Shewmake (Houston Astros), James McCann (Arizona Diamondbacks), Jacob Wilson (Athletics), Jorge Polanco (New York Mets), Jorge Polanco (New York Mets), Mike Trout (Los Angeles Angels)
+  🚑 Placed (28): Konnor Griffin (Pittsburgh Pirates), David Hamilton (Milwaukee Brewers), Byron Buxton (Minnesota Twins), Mike Burrows (Houston Astros), Samad Taylor (San Diego Padres), Marco Raya (Minnesota Twins), Austin Warren (New York Mets), Lou Trivino III (Philadelphia Phillies)
+  ✅ Activated (26): Jorge Polanco (New York Mets), Jacob Wilson (Athletics), Jorge Polanco (New York Mets), Brad Keller (Philadelphia Phillies), Tyler Soderstrom (Athletics), Mike Trout (Los Angeles Angels), Bailey Ober (Minnesota Twins), Logan Henderson (Milwaukee Brewers)
 
   --- Trade Value Signals ---
-  SELL HIGH (28) -- outpacing projections:
+  SELL HIGH (27) -- outpacing projections:
+   ~ Blaze Alexander (BAL) [3B] [strong]
+      SB 9 vs proj 4; RBI 29 vs proj 15; R 31 vs proj 17
    ~ Sal Stewart (CIN) [1B] [strong]
-      SB 11 vs proj 5; RBI 65 vs proj 37; HR 19 vs proj 12
+      SB 11 vs proj 5; RBI 65 vs proj 36; HR 19 vs proj 11
    ~ Jordan Walker (STL) [RF] [strong]
-      SB 13 vs proj 6; RBI 74 vs proj 36; HR 22 vs proj 11
-   ~ Esmerlyn Valdez (PIT) [RF] [strong]
-      HR 10 vs proj 5; RBI 27 vs proj 18; R 21 vs proj 16
+      HR 22 vs proj 10; SB 13 vs proj 6; RBI 74 vs proj 35
    ~ Daylen Lile (WAS) [RF] [strong]
-      HR 10 vs proj 5; R 49 vs proj 29; RBI 44 vs proj 27
+      HR 10 vs proj 5; R 49 vs proj 28; RBI 44 vs proj 26
 
   --- Trade Board (8 teams scanned) ---
   My surplus (can sell): none
   My deficit (need buy): none
 
-  --- Daily Lineup (Mon Jul 13, 0 MLB teams playing) ---
+  --- Daily Lineup (Tue Jul 14, 0 MLB teams playing) ---
   SPs starting today (7):
     [                  active] Jose Soriano (LAA)
     [                  active] J.T. Ginn (ATH)
@@ -110,13 +110,13 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
 
   ⚠ CHURN GUARD: 6 moves recommended -- showing top 3 per section. Prioritize ruthlessly; avoid making all moves at once.
   Waiver adds (5 suggestions) (top 3 shown -- 2 more suppressed):
-   + Jose Alvarado (PHI) [RP] [day 27] helps: K, SV [xERA=3.71]
-   + Tyler Alexander (PHI) [RP] [day 27] helps: K, SV [CM: 2nd-in-line | Mostly Linear] [xERA=3.07]
-   + Philip Abner (ARI) [RP] [day 18] helps: K, SV [xERA=6.52]
+   + Jose Alvarado (PHI) [RP] [day 28] helps: K, SV [xERA=3.71]
+   + Tyler Alexander (PHI) [RP] [day 28] helps: K, SV [CM: 2nd-in-line | Mostly Linear] [xERA=3.07]
+   + Philip Abner (ARI) [RP] [day 19] helps: K, SV [xERA=6.52]
 
   --- Drop Candidates ---
   MONITOR (1) -- borderline:
-   WATCH Esteury Ruiz (MIA) [LF] [day 3]
+   WATCH Esteury Ruiz (MIA) [LF] [day 4]
          Borderline: HR 4, R 24, RBI 9
   Standings: Period 16: 45 roto pts - winning 5 cats, losing 5
   Weakest categories: RBI, HR, ERA, SB, S
@@ -129,23 +129,23 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
 
   --- Injury Report (last 7 days) ---
   ★ YOUR ROSTER PLAYERS:
+    ✅ Logan Henderson (Milwaukee Brewers) — Activated from 15-Day IL [7/9]
     🚑 John King (Miami Marlins) — Placed on 15-Day IL [7/8]
     🚑 Brad Lord (Washington Nationals) — Placed on 15-Day IL [7/6]
-    ✅ Logan Henderson (Milwaukee Brewers) — Activated from 15-Day IL [7/9]
     🚑 Kyle Harrison (Milwaukee Brewers) — Placed on 15-Day IL [7/9]
-  🚑 Placed (27): Max Rajcic (St. Louis Cardinals), Martín Pérez (Atlanta Braves), Konnor Griffin (Pittsburgh Pirates), David Hamilton (Milwaukee Brewers), Byron Buxton (Minnesota Twins), Samad Taylor (San Diego Padres), Jonah Cox (San Francisco Giants), Marco Raya (Minnesota Twins)
-  ✅ Activated (29): Patrick Sandoval (Boston Red Sox), Evan Phillips (Los Angeles Dodgers), Braden Shewmake (Houston Astros), James McCann (Arizona Diamondbacks), Jacob Wilson (Athletics), Jorge Polanco (New York Mets), Jorge Polanco (New York Mets), Mike Trout (Los Angeles Angels)
+  🚑 Placed (26): Konnor Griffin (Pittsburgh Pirates), David Hamilton (Milwaukee Brewers), Byron Buxton (Minnesota Twins), Mike Burrows (Houston Astros), Samad Taylor (San Diego Padres), Marco Raya (Minnesota Twins), Austin Warren (New York Mets), Lou Trivino III (Philadelphia Phillies)
+  ✅ Activated (25): Jorge Polanco (New York Mets), Jacob Wilson (Athletics), Jorge Polanco (New York Mets), Brad Keller (Philadelphia Phillies), Tyler Soderstrom (Athletics), Mike Trout (Los Angeles Angels), Bailey Ober (Minnesota Twins), Janson Junk (Miami Marlins)
 
   --- Trade Value Signals ---
   SELL HIGH (25) -- outpacing projections:
    ~ Max Muncy (LAD) [3B] [strong]
-      HR 17 vs proj 2; R 54 vs proj 7; RBI 40 vs proj 7
+      HR 17 vs proj 1; R 54 vs proj 6; RBI 40 vs proj 6
    ~ Brad Lord (WAS) [RP] [strong]
       K 52 vs proj 19
    ~ Nathan Church (STL) [CF] [strong]
       HR 8 vs proj 3; R 30 vs proj 16; RBI 28 vs proj 15
-   ~ Casey Schmitt (SF) [2B] [strong]
-      SB 7 vs proj 3; HR 19 vs proj 9; RBI 50 vs proj 30
+   ~ Esteury Ruiz (MIA) [LF] [strong]
+      SB 20 vs proj 8; R 24 vs proj 12; HR 4 vs proj 2
 
   --- Trade Board (8 teams scanned) ---
   My surplus (can sell): W
@@ -161,7 +161,7 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
       They have: —
       They need: W
 
-  --- Daily Lineup (Mon Jul 13, 0 MLB teams playing) ---
+  --- Daily Lineup (Tue Jul 14, 0 MLB teams playing) ---
   SPs pitching today (5):
     Antonio Senzatela (COL)
     Logan Webb (SF)
