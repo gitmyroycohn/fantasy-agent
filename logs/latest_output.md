@@ -1,9 +1,6 @@
 ================================================
-  FANTASY AGENT  --  Sat Jul 18, 2026  1:05 AM ET
+  FANTASY AGENT  --  Sat Jul 18, 2026  1:11 AM ET
 ================================================
-
-![Frank Leslie's Illustrated Newspaper (New York, N.Y.) 1855-1891](https://tile.loc.gov/image-services/iiif/public:gdc:00519798591:0003/full/pct:6.25/0/default.jpg)
-*Frank Leslie's Illustrated Newspaper (New York, N.Y.) 1855-1891 (1855) — Library of Congress*
 
 
 [ PINS & PILLS  |  H2H Categories ]
