@@ -95,18 +95,13 @@
       },
       "Mick Abel": {
         "first": "2026-06-25",
-        "last": "2026-07-17",
-        "n": 17
+        "last": "2026-07-18",
+        "n": 18
       },
       "Aaron Civale": {
         "first": "2026-06-26",
         "last": "2026-06-28",
         "n": 3
-      },
-      "Mitch Keller": {
-        "first": "2026-06-26",
-        "last": "2026-06-26",
-        "n": 1
       },
       "Ryan Feltner": {
         "first": "2026-06-27",
@@ -182,6 +177,11 @@
         "first": "2026-07-11",
         "last": "2026-07-11",
         "n": 1
+      },
+      "Jared Jones": {
+        "first": "2026-07-18",
+        "last": "2026-07-18",
+        "n": 1
       }
     },
     "drop_candidates": {
@@ -198,47 +198,36 @@
     "waiver_adds": {
       "Jose Alvarado": {
         "first": "2026-06-17",
-        "last": "2026-07-17",
-        "n": 31
+        "last": "2026-07-18",
+        "n": 32
       },
       "Tyler Alexander": {
         "first": "2026-06-17",
-        "last": "2026-07-17",
-        "n": 31
-      },
-      "Luisangel Acuna": {
-        "first": "2026-06-25",
-        "last": "2026-06-26",
-        "n": 2
+        "last": "2026-07-18",
+        "n": 32
       },
       "Philip Abner": {
         "first": "2026-06-26",
-        "last": "2026-07-17",
-        "n": 22
+        "last": "2026-07-18",
+        "n": 23
       },
       "Kevin Alcantara": {
         "first": "2026-06-26",
-        "last": "2026-07-17",
-        "n": 22
+        "last": "2026-07-18",
+        "n": 23
       },
       "Pablo Abreu": {
         "first": "2026-06-27",
-        "last": "2026-07-17",
-        "n": 21
+        "last": "2026-07-18",
+        "n": 22
       }
     },
     "streaming_sp": {},
     "drop_candidates": {
-      "Andrew Vaughn": {
-        "first": "2026-06-17",
-        "last": "2026-06-26",
-        "n": 10,
-        "sev": "monitor"
-      },
       "Esteury Ruiz": {
         "first": "2026-07-11",
-        "last": "2026-07-17",
-        "n": 7,
+        "last": "2026-07-18",
+        "n": 8,
         "sev": "monitor"
       }
     },
