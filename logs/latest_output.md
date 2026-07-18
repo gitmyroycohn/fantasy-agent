@@ -1,13 +1,13 @@
 ================================================
-  FANTASY AGENT  --  Sat Jul 18, 2026  1:17 AM ET
+  FANTASY AGENT  --  Sat Jul 18, 2026  9:14 AM ET
 ================================================
 
-![The Rickwood Classic baseball game is played once a year at Rickwood Ballpark located in Birmingham, Alabama](https://www.loc.gov/resource/highsm.09219/full/pct:25/0/default.jpg)
-*The Rickwood Classic baseball game is played once a year at Rickwood Ballpark located in Birmingham, Alabama (2010-01-01) — Library of Congress*
+![[Libe Washburn with Rube Marquard, New York, NL (baseball)]](https://www.loc.gov/resource/ggbain.09450/full/pct:25/0/default.jpg)
+*[Libe Washburn with Rube Marquard, New York, NL (baseball)] (1911-01-01) — Library of Congress*
 
 
 [ PINS & PILLS  |  H2H Categories ]
-  Matchup : Week 16 vs BigBallBuster: 9-1-2
+  Matchup : Week 16 vs BigBallBuster: 10-1-1
   Target  : S
   Stream SP: Jared Jones (PIT) [2-START]  ERA ?  K/9 ?
   ** Submit adds before Monday scoring period lock. **
@@ -41,10 +41,10 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
 
   FP projections (SP wire): 20/100 matched
   Schedule (3 periods): P16(14d):2x2+ | P17(7d):0x2+ | P18(7d):0x2+
-  FP projections (all wire): 33/200 matched
-  Savant batter xStats: 596 players
+  FP projections (all wire): 34/200 matched
+  Savant batter xStats: 600 players
   Savant EV/Barrel: 425 players
-  Savant pitcher xStats: 744 players
+  Savant pitcher xStats: 748 players
   Savant xStats (all wire): 25/200 matched
   CM depth chart: 30 teams loaded
   FP projections (roster): 32/34 matched
@@ -52,8 +52,8 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   Format: H2H Categories
 
   ⚠ CHURN GUARD: 5 moves recommended -- showing top 3 per section. Prioritize ruthlessly; avoid making all moves at once.
-  Matchup: Week 16 vs BigBallBuster: 9-1-2
-  All categories (12): H W (17.0-11.0) | HR W (4.0-1.0) | OPS W (1.2527-0.8737) | R W (7.0-6.0) | RBI W (12.0-7.0) | SB T (0.0-0.0) | ERA W (0.474-2.7) | INNdGS T (0.0-0.0) | K W (12.0-7.0) | S L (0.0-1.0) | W W (2.0-0.0) | WHIP W (0.7368-1.2)
+  Matchup: Week 16 vs BigBallBuster: 10-1-1
+  All categories (12): H W (17.0-11.0) | HR W (4.0-1.0) | OPS W (1.2527-0.8737) | R W (7.0-6.0) | RBI W (12.0-7.0) | SB T (0.0-0.0) | ERA W (0.474-2.7) | INNdGS W (19.0-5.67) | K W (12.0-7.0) | S L (0.0-1.0) | W W (2.0-0.0) | WHIP W (0.7368-1.2)
   Priority categories (losing, easiest first): S
   Streaming SP (Submit adds before Monday scoring period lock.):
    + Jared Jones (PIT) [2-START] [NEW] score=4.0 *** 2-START PERIOD *** | helps: S
@@ -63,11 +63,17 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
    + Travis Adams (MIN) [RP] [day 4] helps: S [xERA=4.42]
    + Bryan Abreu (HOU) [RP] [day 2] helps: S [xERA=5.03]
 
+  --- Closer Monkey News ---
+  [LEDGER] Closer Monkey’s Leverage Ledger | 7.18.2026
+    Closer Monkey - Instant emails for every closer change. Closer depth charts to keep you ahead.
+    Friday’s slate featured seven wins, six saves, five losses, and six blown saves by relievers. Here are the saves in condensed form: There have been 742 saves this season by 196 different pitchers. Here are the vulture save options:&#160; Vulture Save Options for 7.18.2026 Doubleheader Options Vulture Sav
+    https://closermonkey.com/2026/07/18/closer-monkeys-leverage-ledger-7-18-2026/
+
   --- Injury Report (last 7 days) ---
   ★ YOUR ROSTER PLAYERS:
     🚑 Kyle Harrison (Milwaukee Brewers) — Placed on 15-Day IL [7/9]
-  🚑 Placed (12): Mike Yastrzemski (Atlanta Braves), Nick Kurtz (Athletics), Chris Martin (Texas Rangers), William Kempner (Miami Marlins), Nick Lodolo (Cincinnati Reds), Zac Gallen (Arizona Diamondbacks), Drew Millas (Washington Nationals), Rob Zastryzny (Milwaukee Brewers)
-  ✅ Activated (16): Matt Waldron (San Diego Padres), Landon Knack (Los Angeles Dodgers), Phil Maton (Chicago Cubs), Yaramil Hiraldo (Baltimore Orioles), Jason Foley (San Francisco Giants), Carlos Rodriguez (Milwaukee Brewers), Nick Sogard (Boston Red Sox), Coleman Crow (Milwaukee Brewers)
+  🚑 Placed (12): Nick Kurtz (Athletics), Mike Yastrzemski (Atlanta Braves), Chris Martin (Texas Rangers), Zac Gallen (Arizona Diamondbacks), Nick Lodolo (Cincinnati Reds), William Kempner (Miami Marlins), Tommy Troy (Arizona Diamondbacks), Drew Millas (Washington Nationals)
+  ✅ Activated (16): Landon Knack (Los Angeles Dodgers), Matt Waldron (San Diego Padres), Phil Maton (Chicago Cubs), Yaramil Hiraldo (Baltimore Orioles), Carlos Rodriguez (Milwaukee Brewers), Coleman Crow (Milwaukee Brewers), Nick Sogard (Boston Red Sox), Jason Foley (San Francisco Giants)
 
   --- Trade Value Signals ---
   SELL HIGH (26) -- outpacing projections:
@@ -78,7 +84,7 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
    ~ JJ Wetherholt (STL) [SS] [strong]
       HR 14 vs proj 7; SB 9 vs proj 5; R 59 vs proj 34
    ~ J.J. Bleday (CIN) [CF] [strong]
-      SB 4 vs proj 2; HR 16 vs proj 10; RBI 43 vs proj 31
+      SB 4 vs proj 2; HR 16 vs proj 11; RBI 43 vs proj 31
 
   --- Trade Board (8 teams scanned) ---
   My surplus (can sell): none
@@ -116,7 +122,7 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   Lineup: 24/29 starting
   Free agents visible: 8185
 
-  FP projections (roto wire): 34/200 matched
+  FP projections (roto wire): 35/200 matched
   Savant xStats (roto wire): 26/200 matched
   FP projections (roster): 29/29 matched
   Savant xStats (roster): 28/29 matched
@@ -136,14 +142,20 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   All categories (10): BA rank=1 | HR rank=5 | R rank=4 | RBI rank=5 | SB rank=7 | ERA rank=6 | K rank=4 | S rank=8 | W rank=1 | WHIP rank=3
   Weakest categories: HR, RBI, ERA, SB, S
 
+  --- Closer Monkey News ---
+  [LEDGER] Closer Monkey’s Leverage Ledger | 7.18.2026
+    Closer Monkey - Instant emails for every closer change. Closer depth charts to keep you ahead.
+    Friday’s slate featured seven wins, six saves, five losses, and six blown saves by relievers. Here are the saves in condensed form: There have been 742 saves this season by 196 different pitchers. Here are the vulture save options:&#160; Vulture Save Options for 7.18.2026 Doubleheader Options Vulture Sav
+    https://closermonkey.com/2026/07/18/closer-monkeys-leverage-ledger-7-18-2026/
+
   --- Injury Report (last 7 days) ---
   ★ YOUR ROSTER PLAYERS:
     🚑 Kyle Harrison (Milwaukee Brewers) — Placed on 15-Day IL [7/9]
-  🚑 Placed (12): Mike Yastrzemski (Atlanta Braves), Nick Kurtz (Athletics), Chris Martin (Texas Rangers), William Kempner (Miami Marlins), Nick Lodolo (Cincinnati Reds), Zac Gallen (Arizona Diamondbacks), Drew Millas (Washington Nationals), Rob Zastryzny (Milwaukee Brewers)
-  ✅ Activated (16): Matt Waldron (San Diego Padres), Landon Knack (Los Angeles Dodgers), Phil Maton (Chicago Cubs), Yaramil Hiraldo (Baltimore Orioles), Jason Foley (San Francisco Giants), Carlos Rodriguez (Milwaukee Brewers), Nick Sogard (Boston Red Sox), Coleman Crow (Milwaukee Brewers)
+  🚑 Placed (12): Nick Kurtz (Athletics), Mike Yastrzemski (Atlanta Braves), Chris Martin (Texas Rangers), Zac Gallen (Arizona Diamondbacks), Nick Lodolo (Cincinnati Reds), William Kempner (Miami Marlins), Tommy Troy (Arizona Diamondbacks), Drew Millas (Washington Nationals)
+  ✅ Activated (16): Landon Knack (Los Angeles Dodgers), Matt Waldron (San Diego Padres), Phil Maton (Chicago Cubs), Yaramil Hiraldo (Baltimore Orioles), Carlos Rodriguez (Milwaukee Brewers), Coleman Crow (Milwaukee Brewers), Nick Sogard (Boston Red Sox), Jason Foley (San Francisco Giants)
 
   --- Trade Value Signals ---
-  SELL HIGH (26) -- outpacing projections:
+  SELL HIGH (27) -- outpacing projections:
    ~ Max Muncy (LAD) [3B] [strong]
       HR 18 vs proj 1; R 55 vs proj 6; RBI 42 vs proj 6
    ~ Brad Lord (WAS) [RP] [strong]
