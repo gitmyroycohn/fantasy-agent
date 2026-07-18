@@ -35,6 +35,7 @@ MLB_TO_CBS: dict[str, str] = {
     # Athletics — moved to Sacramento 2025; MLB API now uses "ATH"
     # CBS also adopted "ATH". Map old "OAK" as a safety catch.
     "OAK": "ATH",
+    "AZ":  "ARI",
 }
 
 # CBS → MLB API (reverse mapping, for completeness)
@@ -77,6 +78,8 @@ _TEAM_ALIASES: dict[str, str] = {
     "CHW": "CWS",
     "WSN": "WSH",
     "OAK": "ATH",
+    "AZ":  "ARI",
+    "WAS": "WSH",
 }
 
 
