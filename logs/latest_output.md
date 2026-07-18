@@ -1,9 +1,9 @@
 ================================================
-  FANTASY AGENT  --  Sat Jul 18, 2026  12:17 AM ET
+  FANTASY AGENT  --  Sat Jul 18, 2026  1:05 AM ET
 ================================================
 
-![Frank Leslie's Illustrated Newspaper (New York, N.Y.) 1855-1891](https://tile.loc.gov/image-services/iiif/public:gdc:00519798633:0003/full/pct:6.25/0/default.jpg)
-*Frank Leslie's Illustrated Newspaper (New York, N.Y.) 1855-1891 (1861) — Library of Congress*
+![Frank Leslie's Illustrated Newspaper (New York, N.Y.) 1855-1891](https://tile.loc.gov/image-services/iiif/public:gdc:00519798591:0003/full/pct:6.25/0/default.jpg)
+*Frank Leslie's Illustrated Newspaper (New York, N.Y.) 1855-1891 (1855) — Library of Congress*
 
 
 [ PINS & PILLS  |  H2H Categories ]
@@ -12,45 +12,25 @@
   Stream SP: Jared Jones (PIT) [2-START]  ERA ?  K/9 ?
   ** Submit adds before Monday scoring period lock. **
   Also    : Mick Abel
+  Top Add  : Elvis Alvarado (ATH) [RP]  helps S
+  Also     : Travis Adams (RP), Bryan Abreu (RP)
 
 [ CASEY STENGEL  |  NL-Only Roto ]
-  Top Add  : Jose Alvarado (PHI) [RP]  helps K, SV
+  Top Add  : Jose Alvarado (PHI) [RP]  helps K, S
   Also     : Tyler Alexander (RP), Philip Abner (RP)
-  Standings: Period 17: 45 roto pts - winning 5 cats, losing 5
-  Weakest  : RBI, HR, ERA, SB
+  Standings: Period 17: 46 roto pts - winning 5 cats, losing 5
+  Weakest  : HR, RBI, ERA, SB
 
 ================================================
   Full details below
 ================================================
 
 CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
-  ERROR in ?: 'cbs_league_id'
-  ERROR in ?: 'cbs_league_id'
-  ERROR in ?: 'cbs_league_id'
-  ERROR in ?: 'cbs_league_id'
-  ERROR in ?: 'cbs_league_id'
-  ERROR in ?: 'cbs_league_id'
-  ERROR in ?: 'cbs_league_id'
-  ERROR in ?: 'cbs_league_id'
-  ERROR in ?: 'cbs_league_id'
-  ERROR in ?: 'cbs_league_id'
-  ERROR in ?: 'cbs_league_id'
-  ERROR in ?: 'cbs_league_id'
-  ERROR in ?: 'cbs_league_id'
-  ERROR in ?: 'cbs_league_id'
-  ERROR in ?: 'cbs_league_id'
-  ERROR in ?: 'cbs_league_id'
-  ERROR in ?: 'cbs_league_id'
-  ERROR in ?: 'cbs_league_id'
-  ERROR in ?: 'cbs_league_id'
-  ERROR in ?: 'cbs_league_id'
-  ERROR in ?: 'cbs_league_id'
-  ERROR in ?: 'cbs_league_id'
 
 === Pins and Pills (baseball) ===
   Roster: 34 players
      C Drake Baldwin (ATL)
-    1B Christian Walker (HOU)
+    1B Bryce Harper (PHI)
     2B Sal Stewart (CIN)
     3B Kevin McGonigle (DET)
     SS JJ Wetherholt (STL)
@@ -66,21 +46,28 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   Savant EV/Barrel: 425 players
   Savant pitcher xStats: 744 players
   Savant xStats (all wire): 25/200 matched
+  CM depth chart: 30 teams loaded
   FP projections (roster): 32/34 matched
   Savant xStats (roster): 30/34 matched
   Format: H2H Categories
+
+  ⚠ CHURN GUARD: 5 moves recommended -- showing top 3 per section. Prioritize ruthlessly; avoid making all moves at once.
   Matchup: Week 16 vs BigBallBuster: 9-1-2
-  All categories (12): H W (17.0-11.0) | HR W (4.0-1.0) | OPS W (1.2787-0.8737) | R W (7.0-6.0) | RBI W (12.0-7.0) | SB T (0.0-0.0) | ERA W (0.474-2.7) | INNdGS T (0.0-0.0) | K W (12.0-7.0) | S L (0.0-1.0) | W W (1.0-0.0) | WHIP W (0.7368-1.2)
+  All categories (12): H W (17.0-11.0) | HR W (4.0-1.0) | OPS W (1.2527-0.8737) | R W (7.0-6.0) | RBI W (12.0-7.0) | SB T (0.0-0.0) | ERA W (0.474-2.7) | INNdGS T (0.0-0.0) | K W (12.0-7.0) | S L (0.0-1.0) | W W (2.0-0.0) | WHIP W (0.7368-1.2)
   Priority categories (losing, easiest first): S
   Streaming SP (Submit adds before Monday scoring period lock.):
    + Jared Jones (PIT) [2-START] [NEW] score=4.0 *** 2-START PERIOD *** | helps: S
    + Mick Abel (MIN) [day 18] score=0.69 ERA 3.98, K/9 10.18, WHIP 1.57 | helps: S
+  Waiver adds (5 suggestions) (top 3 shown -- 2 more suppressed):
+   + Elvis Alvarado (ATH) [RP] [day 6] helps: S [CM: 2nd-in-line [committee] | Fluid] [xERA=4.30]
+   + Travis Adams (MIN) [RP] [day 4] helps: S [xERA=4.42]
+   + Bryan Abreu (HOU) [RP] [day 2] helps: S [xERA=5.03]
 
   --- Injury Report (last 7 days) ---
   ★ YOUR ROSTER PLAYERS:
     🚑 Kyle Harrison (Milwaukee Brewers) — Placed on 15-Day IL [7/9]
-  🚑 Placed (12): Nick Kurtz (Athletics), Mike Yastrzemski (Atlanta Braves), Chris Martin (Texas Rangers), Zac Gallen (Arizona Diamondbacks), Nick Lodolo (Cincinnati Reds), William Kempner (Miami Marlins), Drew Millas (Washington Nationals), Rob Zastryzny (Milwaukee Brewers)
-  ✅ Activated (16): Landon Knack (Los Angeles Dodgers), Matt Waldron (San Diego Padres), Phil Maton (Chicago Cubs), Yaramil Hiraldo (Baltimore Orioles), Carlos Rodriguez (Milwaukee Brewers), Coleman Crow (Milwaukee Brewers), Nick Sogard (Boston Red Sox), Jason Foley (San Francisco Giants)
+  🚑 Placed (12): Mike Yastrzemski (Atlanta Braves), Nick Kurtz (Athletics), Chris Martin (Texas Rangers), William Kempner (Miami Marlins), Nick Lodolo (Cincinnati Reds), Zac Gallen (Arizona Diamondbacks), Drew Millas (Washington Nationals), Rob Zastryzny (Milwaukee Brewers)
+  ✅ Activated (16): Matt Waldron (San Diego Padres), Landon Knack (Los Angeles Dodgers), Phil Maton (Chicago Cubs), Yaramil Hiraldo (Baltimore Orioles), Jason Foley (San Francisco Giants), Carlos Rodriguez (Milwaukee Brewers), Nick Sogard (Boston Red Sox), Coleman Crow (Milwaukee Brewers)
 
   --- Trade Value Signals ---
   SELL HIGH (26) -- outpacing projections:
@@ -98,17 +85,16 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   My deficit (need buy): none
 
   --- Daily Lineup (Sat Jul 18, 30 MLB teams playing) ---
-  SPs starting today (7):
+  SPs starting today (9):
     [                  active] Sandy Alcantara (MIA)
+    [                  active] J.T. Ginn (ATH)
     [                  active] Logan Webb (SF)
-    [                  active] Jake Bennett (BOS)
+    [                  active] Brandon Pfaadt (ARI)
     [                  active] Yoshinobu Yamamoto (LAD)
+    [ BENCH - move to active!] Nick Martinez (TB)
     [ BENCH - move to active!] Jose Soriano (LAA)
-    [ BENCH - move to active!] J.T. Ginn (ATH)
-    [ BENCH - move to active!] Brandon Pfaadt (ARI)
-  SPs NOT starting today (2):
-    [     ACTIVE - bench!] Landen Roupp (SF) SF has no game today per MLB schedule
-    [     already benched] Nick Martinez (TB) TB has no game today per MLB schedule
+    [ BENCH - move to active!] Jake Bennett (BOS)
+    [ BENCH - move to active!] Landen Roupp (SF)
   On injured list - do not activate (4):
     🚑 Maikel Garcia (KC) Currently on the MLB injured list -- ignore any start/activate recommendation
     🚑 Joe Musgrove (SD) Currently on the MLB injured list -- ignore any start/activate recommendation
@@ -132,30 +118,29 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
 
   FP projections (roto wire): 34/200 matched
   Savant xStats (roto wire): 26/200 matched
-  CM depth chart: 30 teams loaded
   FP projections (roster): 29/29 matched
   Savant xStats (roster): 28/29 matched
   Format: NL-Only Rotisserie
 
   ⚠ CHURN GUARD: 6 moves recommended -- showing top 3 per section. Prioritize ruthlessly; avoid making all moves at once.
   Waiver adds (5 suggestions) (top 3 shown -- 2 more suppressed):
-   + Jose Alvarado (PHI) [RP] [day 32] helps: K, SV [xERA=3.71]
-   + Tyler Alexander (PHI) [RP] [day 32] helps: K, SV [CM: 2nd-in-line | Mostly Linear] [xERA=3.07]
-   + Philip Abner (ARI) [RP] [day 23] helps: K, SV [xERA=6.52]
+   + Jose Alvarado (PHI) [RP] [day 32] helps: K, S [xERA=3.71]
+   + Tyler Alexander (PHI) [RP] [day 32] helps: K, S [CM: 2nd-in-line | Mostly Linear] [xERA=3.07]
+   + Philip Abner (ARI) [RP] [day 23] helps: K, S [xERA=6.52]
 
   --- Drop Candidates ---
   MONITOR (1) -- borderline:
    WATCH Esteury Ruiz (MIA) [LF] [day 8]
          Borderline: HR 4, R 24, RBI 9
-  Standings: Period 17: 45 roto pts - winning 5 cats, losing 5
+  Standings: Period 17: 46 roto pts - winning 5 cats, losing 5
   All categories (10): BA rank=1 | HR rank=5 | R rank=4 | RBI rank=5 | SB rank=7 | ERA rank=6 | K rank=4 | S rank=8 | W rank=1 | WHIP rank=3
-  Weakest categories: RBI, HR, ERA, SB, S
+  Weakest categories: HR, RBI, ERA, SB, S
 
   --- Injury Report (last 7 days) ---
   ★ YOUR ROSTER PLAYERS:
     🚑 Kyle Harrison (Milwaukee Brewers) — Placed on 15-Day IL [7/9]
-  🚑 Placed (12): Nick Kurtz (Athletics), Mike Yastrzemski (Atlanta Braves), Chris Martin (Texas Rangers), Zac Gallen (Arizona Diamondbacks), Nick Lodolo (Cincinnati Reds), William Kempner (Miami Marlins), Drew Millas (Washington Nationals), Rob Zastryzny (Milwaukee Brewers)
-  ✅ Activated (16): Landon Knack (Los Angeles Dodgers), Matt Waldron (San Diego Padres), Phil Maton (Chicago Cubs), Yaramil Hiraldo (Baltimore Orioles), Carlos Rodriguez (Milwaukee Brewers), Coleman Crow (Milwaukee Brewers), Nick Sogard (Boston Red Sox), Jason Foley (San Francisco Giants)
+  🚑 Placed (12): Mike Yastrzemski (Atlanta Braves), Nick Kurtz (Athletics), Chris Martin (Texas Rangers), William Kempner (Miami Marlins), Nick Lodolo (Cincinnati Reds), Zac Gallen (Arizona Diamondbacks), Drew Millas (Washington Nationals), Rob Zastryzny (Milwaukee Brewers)
+  ✅ Activated (16): Matt Waldron (San Diego Padres), Landon Knack (Los Angeles Dodgers), Phil Maton (Chicago Cubs), Yaramil Hiraldo (Baltimore Orioles), Jason Foley (San Francisco Giants), Carlos Rodriguez (Milwaukee Brewers), Nick Sogard (Boston Red Sox), Coleman Crow (Milwaukee Brewers)
 
   --- Trade Value Signals ---
   SELL HIGH (26) -- outpacing projections:
@@ -169,18 +154,21 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
       HR 8 vs proj 3; R 30 vs proj 16; RBI 28 vs proj 15
 
   --- Trade Board (8 teams scanned) ---
-  My surplus (can sell): W
-  My deficit (need buy): SB
+  My surplus (can sell): BA, W
+  My deficit (need buy): SB, S
   Top trade targets:
-   >> Varsity Chili Dawgs [alignment=2]
+   >> Varsity Chili Dawgs [alignment=3]
       They have: SB
-      They need: W
+      They need: BA, W
+   >> Men of Steal [alignment=2]
+      They have: S
+      They need: BA
    >> AYBA Eagles [alignment=1]
       They have: SB
       They need: —
-   >> Tony C's Midnight Riders [alignment=1]
-      They have: —
-      They need: W
+   >> GasHouse Gang's Dice Baseball [alignment=1]
+      They have: S
+      They need: —
 
   --- Daily Lineup (Sat Jul 18, 30 MLB teams playing) ---
   SPs pitching today (5):
@@ -189,9 +177,8 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
     Andre Pallante (STL)
     Logan Henderson (MIL)
     Shota Imanaga (CHC)
-  Batters with no game today (4) [no bench -- FYI only]:
+  Batters with no game today (3) [no bench -- FYI only]:
     Ketel Marte (ARI) [2B] -- 0 stats today
-    Casey Schmitt (SF) [2B] -- 0 stats today
     Corbin Carroll (ARI) [RF] -- 0 stats today
     Daylen Lile (WAS) [RF] -- 0 stats today
   On injured list - do not activate (4):
@@ -199,7 +186,7 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
     🚑 John King (MIA) Currently on the MLB injured list -- ignore any start/activate recommendation
     🚑 Kyle Harrison (MIL) Currently on the MLB injured list -- ignore any start/activate recommendation
     🚑 Brad Lord (WAS) Currently on the MLB injured list -- ignore any start/activate recommendation
-  Batters with games today: 11 (0 confirmed in posted lineup)
+  Batters with games today: 12 (0 confirmed in posted lineup)
 
   DRY_RUN=True -- no submissions made.
 
