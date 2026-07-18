@@ -53,6 +53,7 @@ from agent.trade_eval import evaluate_trade, format_trade_result
 from agent.tradevalue import analyze_roster_value
 from agent.decisions import run_decisions, get_filtered_waiver_adds
 from data.models import Team
+from mlb.clock import now_et, today_et
 
 logging.basicConfig(level=logging.WARNING,
                     format="%(levelname)s %(name)s: %(message)s")
@@ -349,8 +350,6 @@ def waiver_recommendations(
     Returns ranked waiver adds with category fit, Savant xStats, and CM closer tags.
     """
     from datetime import date as _date, timedelta
-    from zoneinfo import ZoneInfo
-    _ET = ZoneInfo("America/New_York")
 
     try:
         auth    = _get_auth()
@@ -362,9 +361,7 @@ def waiver_recommendations(
         playing_on = None
         if date:
             d_lower = date.strip().lower()
-            today = _date.fromisoformat(
-                __import__("datetime").datetime.now(_ET).date().isoformat()
-            )
+            today = today_et()
             if d_lower == "today":
                 playing_on = today
             elif d_lower == "tomorrow":
@@ -375,10 +372,7 @@ def waiver_recommendations(
                 except ValueError:
                     return f"Invalid date '{date}'. Use 'today', 'tomorrow', or 'YYYY-MM-DD'."
 
-        from datetime import datetime as _dtnow
-        from zoneinfo import ZoneInfo as _ZI
-        _et_now   = _dtnow.now(_ZI("America/New_York"))
-        _weekday  = _et_now.weekday()   # 0=Mon … 6=Sun
+        _weekday  = now_et().weekday()   # 0=Mon … 6=Sun
 
         out = []
         for league_cfg, sport in leagues:
@@ -599,18 +593,15 @@ def hitting_matchups(
         league_id: League id from config, or "all" for all leagues.
         date:      Date to evaluate. "today" (default), "tomorrow", or "YYYY-MM-DD".
     """
-    from datetime import date as _date, datetime as _dt, timedelta
-    from zoneinfo import ZoneInfo
+    from datetime import date as _date, timedelta
     from mlb.schedule import todays_matchups
     from mlb.splits  import fetch_batter_splits, fetch_recent_form
     from mlb.parks   import park_label, park_factor as _pf
     from mlb.teams   import norm_name as _norm
 
-    _ET = ZoneInfo("America/New_York")
-
     try:
         # --- resolve date ---
-        today = _dt.now(_ET).date()
+        today = today_et()
         if not date or date.strip().lower() == "today":
             eval_date = today
         elif date.strip().lower() == "tomorrow":

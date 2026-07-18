@@ -20,17 +20,16 @@ annotate_roster_injuries(roster_slots, active_il)
 
 import logging
 from datetime import date, datetime, timedelta
-from zoneinfo import ZoneInfo
 
 import requests
 
 import re
 
 from mlb.teams import norm_name as _norm_teams
+from mlb.clock import today_et as _today_et  # noqa: F401 -- re-exported; see mlb/clock.py
 
 logger = logging.getLogger(__name__)
 
-_ET      = ZoneInfo("America/New_York")
 MLB_API  = "https://statsapi.mlb.com/api/v1"
 TIMEOUT  = 20
 
@@ -47,10 +46,6 @@ _TRANSFER_TYPES = {"IL transfer"}
 
 # Roster types that represent IL in the MLB API
 _IL_ROSTER_TYPES = ["injuries"]
-
-
-def _today_et() -> date:
-    return datetime.now(_ET).date()
 
 
 def _norm(name: str) -> str:

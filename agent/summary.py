@@ -1,10 +1,7 @@
 """
 Phone-friendly TL;DR summary block — prepended to latest_output.md.
 """
-from datetime import datetime
-from zoneinfo import ZoneInfo
-
-_ET = ZoneInfo("America/New_York")
+from mlb.clock import now_et
 
 
 def _random_image_block() -> str:
@@ -35,7 +32,7 @@ def format_tldr(results: list[dict]) -> str:
 
     Each dict has keys: league, format, actions, and optionally matchup.
     """
-    _n  = datetime.now(_ET)
+    _n  = now_et()
     now = f"{_n.strftime('%a %b')} {_n.day}, {_n.year}  {_n.hour % 12 or 12}:{_n.strftime('%M')} {_n.strftime('%p')} ET"
     lines = [
         "=" * 48,

@@ -11,21 +11,14 @@ Usage:
 """
 
 import logging
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from collections import defaultdict
 from functools import lru_cache
-from zoneinfo import ZoneInfo
 
 import requests
 
 from mlb.teams import mlb_to_cbs, norm_name
-
-_ET = ZoneInfo("America/New_York")
-
-
-def _today_et() -> date:
-    """Today's date in US Eastern time (handles UTC offset on GitHub Actions)."""
-    return datetime.now(_ET).date()
+from mlb.clock import today_et as _today_et  # noqa: F401 -- re-exported; see mlb/clock.py
 
 logger = logging.getLogger(__name__)
 
