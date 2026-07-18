@@ -24,6 +24,11 @@ def test_canonical_team_passthrough_for_unaffected_teams():
     assert canonical_team("bos") == "BOS"
 
 
+def test_canonical_team_unifies_az_ari_and_was_wsh():
+    assert canonical_team("AZ") == canonical_team("ARI") == "ARI"
+    assert canonical_team("WAS") == canonical_team("WSH") == "WSH"
+
+
 def test_sf_pitcher_not_confirmed_starter_is_recognized_as_teams_playing():
     """The exact live-run scenario: a bench SP (not today's probable
     starter) on a team CBS tags "SF" must be recognized as "team has a
@@ -71,3 +76,26 @@ def test_nl_waiver_pool_includes_short_form_sd_sf():
     result = filter_nl_waiver_pool(waivers, {"roster_type": "nl_only"})
     names = {wp.player.name for wp in result}
     assert names == {"Giants Guy", "Padres Guy"}
+
+
+def test_az_and_was_batters_recognized_as_teams_playing():
+    lineup_slots = [
+        {"player_name": "Ketel Marte", "team": "ARI", "positions": ["2B"],
+         "eligible_positions": ["2B"], "slot": "2B", "is_starting": True, "stats": {}},
+        {"player_name": "Daylen Lile", "team": "WAS", "positions": ["OF"],
+         "eligible_positions": ["OF"], "slot": "OF", "is_starting": True, "stats": {}},
+    ]
+    teams_playing = {"AZ", "WSH"} | {f"T{i}" for i in range(10)}
+    advice = optimize_daily_lineup(lineup_slots, teams_playing, probable_starters=set())
+    by_name = {a.player_name: a for a in advice}
+    assert by_name["Ketel Marte"].advice != "bench"
+    assert by_name["Daylen Lile"].advice != "bench"
+
+
+def test_nl_eligibility_recognizes_az_and_was():
+    players = [
+        Player(id="1", name="Dbacks Guy", position="SS", team="AZ"),
+        Player(id="2", name="Nats Guy", position="OF", team="WAS"),
+    ]
+    warnings = check_nl_eligibility(players)
+    assert warnings == []
