@@ -601,7 +601,10 @@ def load_all_leagues() -> list[dict]:
             if not isinstance(entries, list):
                 continue
             for e in entries or []:
-                if not isinstance(e, dict):
+                # A real league entry always has cbs_league_id -- filters
+                # out non-league list entries under a reserved key
+                # (leagues.yaml's `periods:` table is itself a list).
+                if not isinstance(e, dict) or "cbs_league_id" not in e:
                     continue
                 leagues.append({
                     "name": e.get("name", e.get("id", "?")),

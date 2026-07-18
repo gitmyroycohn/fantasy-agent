@@ -85,8 +85,13 @@ baseball:
     roster_type: "nl_only"
     no_bench: true
     scoring:
-      hitting: [R, HR, RBI, SB, AVG]
-      pitching: [W, SV, K, ERA, WHIP]
+      # BA/S (not AVG/SV) confirmed against CBS's live league/scoring/live
+      # categories on 2026-07-18 by validate_scoring_config()'s drift check
+      # -- CBS's own field names for this league are BA (batting average)
+      # and S (saves), matching the label CBS also uses for Pins and Pills'
+      # saves category.
+      hitting: [R, HR, RBI, SB, BA]
+      pitching: [W, S, K, ERA, WHIP]
     eligibility:
       games_last_season: 20
       games_this_season_min: 20

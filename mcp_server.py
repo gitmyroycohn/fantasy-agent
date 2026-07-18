@@ -113,7 +113,10 @@ def _resolve_leagues(league_id: str) -> list[tuple[dict, str]]:
         if not isinstance(leagues, list):
             continue
         for league in (leagues or []):
-            if not isinstance(league, dict):
+            # A real league entry always has cbs_league_id -- filters out
+            # non-league list entries under a reserved key (leagues.yaml's
+            # `periods:` table is itself a list of {n,start,end} dicts).
+            if not isinstance(league, dict) or "cbs_league_id" not in league:
                 continue
             lid = league.get("id", league.get("cbs_league_id", ""))
             if league_id in ("all", lid):

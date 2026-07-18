@@ -11,6 +11,7 @@ Roto: winning = in the top half of the league by roto rank.
 import logging
 
 from data.models import CategoryStanding, Matchup, Player  # noqa: F401
+from mlb.teams import canonical_team
 
 logger = logging.getLogger(__name__)
 
@@ -182,7 +183,12 @@ def check_nl_eligibility(players: list[Player]) -> list[dict]:
     """Flag any player on an AL team — ineligible for Casey Stengel."""
     warnings = []
     for p in players:
-        if p.team.upper() in _AL_TEAMS:
+        # BUG (found in 2026-07-18 live run): canonicalize before the
+        # membership check. CBS's own player.team field returns the short
+        # MLB-native form ("SD", "SF") for some teams, not the longer form
+        # these sets use ("SDP", "SFG") -- an uncanonicalized check would
+        # silently miss/misclassify Padres and Giants players.
+        if canonical_team(p.team) in _AL_TEAMS:
             warnings.append({
                 "player":  p.name,
                 "team":    p.team,
@@ -200,7 +206,7 @@ def filter_nl_waiver_pool(players: list, league_config: dict) -> list:
     """
     if not league_config.get("nl_only") and league_config.get("roster_type") != "nl_only":
         return players
-    return [wp for wp in players if (wp.player.team or "").upper() in _NL_TEAMS]
+    return [wp for wp in players if canonical_team(wp.player.team or "") in _NL_TEAMS]
 
 
 # ---------------------------------------------------------------------------

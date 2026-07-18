@@ -38,7 +38,7 @@ import logging
 from dataclasses import dataclass, field
 from typing import Optional
 
-from mlb.teams import norm_name as _norm
+from mlb.teams import norm_name as _norm, canonical_team as _canon_team
 from config.settings import PLATOON_OPS_GAP, PLATOON_FLOOR_OPS
 
 logger = logging.getLogger(__name__)
@@ -136,6 +136,18 @@ def optimize_daily_lineup(
     schedule_reliable = len(teams_playing) >= 10
     il_players = il_players or set()
 
+    # BUG (found in 2026-07-18 live run): canonicalize both sides of every
+    # team comparison. CBS's own player.team field returns the short,
+    # MLB-native abbreviation for SF/TB/KC/SD, while teams_playing/
+    # opp_hand_by_team here are built from the MLB schedule feed's
+    # mlb_to_cbs()-mapped (longer) form -- "SF" vs "SFG" never compared
+    # equal, so e.g. Landen Roupp (SF) was wrongly flagged "no game today"
+    # on a day the Giants played, while probable-starter teammate Logan Webb
+    # (also SF) looked fine only because that check doesn't compare teams at
+    # all. canonical_team() maps every known alias to one code.
+    teams_playing = {_canon_team(t) for t in (teams_playing or set())}
+    opp_hand_by_team = {_canon_team(k): v for k, v in (opp_hand_by_team or {}).items()}
+
     logger.info("optimize_daily_lineup: %d teams playing (reliable=%s), %d probable starters, %d IL",
                 len(teams_playing), schedule_reliable, len(probable_starters), len(il_players))
 
@@ -144,6 +156,7 @@ def optimize_daily_lineup(
     for slot_info in lineup_slots:
         name      = slot_info.get("player_name") or slot_info.get("name", "")
         team      = slot_info.get("team", "")
+        team_canon = _canon_team(team)
         positions = slot_info.get("positions") or []
         slot      = slot_info.get("slot", "")
         active    = slot_info.get("is_starting", True)
@@ -152,7 +165,7 @@ def optimize_daily_lineup(
             continue
 
         is_pitcher        = ("SP" in positions or "RP" in positions)
-        confirmed_playing = team.upper() in teams_playing
+        confirmed_playing = team_canon in teams_playing
         norm_name         = _norm(name)
 
         # BUG 5 fix: a confirmed current IL placement overrides everything
@@ -241,7 +254,7 @@ def optimize_daily_lineup(
                 # the must-start floor (agent/decisions.py, OPS >= .850)
                 # overrides this back to "ok" for elite bats afterward, the
                 # same way it already overrides an off-day "bench".
-                hand = (opp_hand_by_team or {}).get(team.upper())
+                hand = opp_hand_by_team.get(team_canon)
                 stats = slot_info.get("stats") or {}
                 vs_l = stats.get("split_vs_l_ops")
                 vs_r = stats.get("split_vs_r_ops")

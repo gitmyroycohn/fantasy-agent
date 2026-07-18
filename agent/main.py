@@ -510,7 +510,11 @@ def main():
             if args.sport not in ("all", sport):
                 continue
             for league in leagues or []:
-                if not isinstance(league, dict):
+                # A real league entry always has cbs_league_id -- this also
+                # filters out non-league list entries under a reserved key
+                # (e.g. leagues.yaml's `periods:` table, which is itself a
+                # list of {n,start,end} dicts, not league dicts).
+                if not isinstance(league, dict) or "cbs_league_id" not in league:
                     continue
                 if args.league not in ("all", league.get("id")):
                     continue

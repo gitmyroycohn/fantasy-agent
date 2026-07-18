@@ -237,8 +237,11 @@ def _roto_decisions(auth, league_id, cfg, team, sport):
                   and not all(p in _FAKE for p in wp.player.positions)]
 
     if nl_waivers:
+        # "S" (not "SV") is CBS's real saves category key for this league
+        # too, confirmed live 2026-07-18 -- _waiver_adds_for_cats's
+        # CAT_POSITIONS accepts both as aliases either way.
         waiver_recs = _waiver_adds_for_cats(
-            nl_waivers, ["SB", "HR", "RBI", "K", "SV", "ERA"])
+            nl_waivers, ["SB", "HR", "RBI", "K", "S", "ERA"])
         if not waiver_recs:
             waiver_recs = [
                 {"player": wp.player.name, "team": wp.player.team,
@@ -615,14 +618,25 @@ def _waiver_adds_for_cats(
       3. FP ROS proj      -- rest-of-season projections override YTD rates when available
       4. Quality signals  -- OPS for batters, K9 for pitchers, Savant xwOBA/xERA/barrel%
     """
+    # BUG (found in 2026-07-18 live run): CBS's REAL category keys for both
+    # leagues are "S" (saves) and "BA" (batting average) -- confirmed by
+    # validate_scoring_config()'s drift check, which caught casey_stengel
+    # still configured with "AVG"/"SV" while CBS's live_scoring actually
+    # returns "BA"/"S" (leagues.yaml corrected to match). losing_cats here
+    # comes straight from those real CBS category names, so this dict (and
+    # every score-boost check below) must recognize them. Both the CBS name
+    # and the old assumed name are listed as aliases so this is robust
+    # either way.
     CAT_POSITIONS = {
         "SB":  ["LF", "CF", "RF", "OF", "SS", "2B"],
         "HR":  ["1B", "LF", "CF", "RF", "OF", "3B"],
         "R":   ["LF", "CF", "RF", "OF", "SS", "2B"],
         "RBI": ["1B", "3B", "LF", "CF", "RF", "OF"],
         "AVG": ["LF", "CF", "RF", "OF", "1B", "2B", "SS", "3B", "C"],
+        "BA":  ["LF", "CF", "RF", "OF", "1B", "2B", "SS", "3B", "C"],
         "K":   ["SP", "RP"],
         "SV":  ["RP"],
+        "S":   ["RP"],
         "QS":  ["SP"],
         "W":   ["SP"],
         "ERA": ["SP"],
@@ -673,14 +687,14 @@ def _waiver_adds_for_cats(
         if "RBI" in helps:
             fp_v = _fp(stats, "RBI")
             score += fp_v * 1.0 if fp_v is not None else _rate(stats, "RBI", "G", 150)
-        if "AVG" in helps:
+        if "AVG" in helps or "BA" in helps:
             fp_v = _fp(stats, "AVG")
             avg  = fp_v if fp_v is not None else float(stats.get("AVG") or 0)
             score += avg * 200
         if "K" in helps:
             fp_v = _fp(stats, "K")
             score += fp_v * 0.8 if fp_v is not None else _rate(stats, "K", "IP", 72, min_opp=10)
-        if "SV" in helps:
+        if "SV" in helps or "S" in helps:
             fp_v = _fp(stats, "SV")
             score += fp_v * 4.0 if fp_v is not None else _rate(stats, "SV", "G", 300)
         if "W" in helps:
@@ -786,7 +800,7 @@ def _waiver_adds_for_cats(
             "back_to_back": is_bb_two_starter,
         }
 
-        if "SV" in helps:
+        if "SV" in helps or "S" in helps:
             try:
                 cm = _cm_client.find_player(wp.player.name)
                 if cm:
