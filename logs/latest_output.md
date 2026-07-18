@@ -1,6 +1,9 @@
 ================================================
-  FANTASY AGENT  --  Sat Jul 18, 2026  1:11 AM ET
+  FANTASY AGENT  --  Sat Jul 18, 2026  1:17 AM ET
 ================================================
+
+![The Rickwood Classic baseball game is played once a year at Rickwood Ballpark located in Birmingham, Alabama](https://www.loc.gov/resource/highsm.09219/full/pct:25/0/default.jpg)
+*The Rickwood Classic baseball game is played once a year at Rickwood Ballpark located in Birmingham, Alabama (2010-01-01) — Library of Congress*
 
 
 [ PINS & PILLS  |  H2H Categories ]
