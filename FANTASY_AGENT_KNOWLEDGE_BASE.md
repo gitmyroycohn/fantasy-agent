@@ -7,23 +7,44 @@
 
 This agent monitors, analyzes, and recommends actions for two CBS Sports fantasy baseball leagues. It is **read-only** (`DRY_RUN = True`) — it fetches data and makes recommendations but does not submit anything to CBS.
 
-**Run it:** GitHub Actions → `gitmyroycohn/fantasy-agent` → Actions → Fantasy Agent → Run workflow. Runs automatically daily at 8am ET.
+**Run it:** GitHub Actions → `gitmyroycohn/fantasy-agent` → Actions → Fantasy Agent → Run workflow. Configured 8am ET (`0 12 * * *`) but fires ~11am ET on this low-traffic public repo — expected GitHub scheduler behavior, not a malfunction. Don't flag an ~11am run timestamp as evidence something's broken.
 
 ---
 
 ## Leagues
 
 ### Pins and Pills (`hemp`)
-- Format: H2H 9-category
+- Format: H2H 12-category (corrected in Phase C — see BUG 6 below; the header
+  previously said "9-category" and listed 13 categories including a
+  nonexistent `QS`, which was itself wrong)
 - CBS league ID: `hemp`
 - My team ID: 7
-- Scoring: weekly head-to-head, 9 categories (H, HR, OPS, R, RBI, SB, ERA, K, W, S, WHIP, INNdGS, QS)
+- Scoring periods: NOT uniform 7-day Monday-Sunday weeks. Season starts
+  3/25/26 (a Wednesday); Period 1 is 12 days; Period 16 (7/13-7/26) is 14
+  days for the All-Star break. The real period calendar lives in
+  `config/leagues.yaml`'s `periods:` table (see BUG 5 below); CBS's own
+  `league/scoring/live` `period` field is always the runtime source of truth,
+  with the table used for future-period lookahead.
+- Scoring categories (exactly 12 — cross-checked at runtime against CBS's
+  `league/scoring/live` categories, which logs a WARNING on any drift):
+  - Hitting (6): `H`, `HR`, `OPS`, `R`, `RBI`, `SB`
+  - Pitching (6): `ERA`, `INNdGS`, `K`, `S`, `W`, `WHIP`
+  - NOT scored (despite being listed pre-Phase-C): `AVG`, `TB`, `XBH`, `QS`,
+    `HLD`, `K_BB`
+- Position eligibility: all players are DH-eligible in this league's settings;
+  a player qualifies at a position with 162 games last season OR 1 game this
+  season (see `config/leagues.yaml`'s `eligibility:` block).
 
 ### The Casey Stengel Amazin' Experience (`baberuthdivingclubformen`)
 - Format: NL-only Rotisserie
 - CBS league ID: `baberuthdivingclubformen`
 - My team ID: 2
 - Scoring: rotisserie, NL players only — AL players are ineligible
+- Scoring categories (10, unchanged/already correct):
+  - Hitting (5): `R`, `HR`, `RBI`, `SB`, `AVG`
+  - Pitching (5): `W`, `SV`, `K`, `ERA`, `WHIP`
+- Position eligibility: primary position + 20 games last season or 20 games
+  this season (not all-DH-eligible, unlike Pins and Pills).
 
 ---
 
@@ -233,3 +254,161 @@ The key is already consumed by `fantasypros/client.py` via
 (graceful degradation when absent) and is already present as a secret in
 `.github/workflows/daily.yml`. This commit just adds the documentation entry so
 local developers know to set it.
+
+---
+
+## Phase C Changes (phase-c/period-fix-categories-eligibility-platoon — Jul 2026)
+
+### BUG 5 (P0) — Scoring-period awareness was fabricated
+
+**Problem:** `agent/decisions.py`'s `_current_week()` computed the period
+arithmetically from a hardcoded `opening_day = date(today.year, 3, 28)`, which
+was wrong on 81/166 days of the season (49%) — every Saturday and Sunday,
+since the real season start (3/25/26) is a Wednesday, not a Monday, plus the
+formula assumed a flat 7-day cadence when Period 1 is 12 days and Period 16
+(the All-Star break) is 14 days.
+
+**Fix:**
+- `_current_week()` is deleted. `config/leagues.yaml` gained a `season_start`
+  and a `periods:` table (`n`/`start`/`end` per period, sourced from the
+  actual 2026 CBS schedule). `config/periods.py` is a new loader
+  (`period_for_date`, `period_offset`, `resolve_period`) that resolves a date
+  to its real period bounds.
+- `agent/decisions.py`'s three `analyze_matchup(raw_stats, week=...)` call
+  sites now pass `week=_resolve_week(raw_stats)`, which reads CBS's own
+  authoritative `period` field from `cbs.stats.fetch_matchup_stats` and only
+  falls back to the local table if CBS didn't return one. `config.periods`
+  logs a WARNING if the two disagree, but CBS always wins.
+- `mlb/schedule.py`'s `week_bounds()` / `schedule_weeks()` now resolve real
+  period boundaries from `config/periods.py` instead of `Monday + timedelta`.
+  `week_offset=N` now means "N real periods ahead" (`period_offset`), not
+  `N*7 days` — during the 14-day Period 16, the old code's `week_offset=1`
+  landed on 7/20-7/26, still inside Period 16.
+  `schedule_weeks()` also returns `period`, `period_days`, and a new
+  `multi_starters` (3+ start SPs) alongside the existing `two_starters` (2+),
+  so a 14-day period's 3-4-start arms are correctly surfaced instead of only
+  ever seeing a 7-day slice of the period.
+- `mlb/schedule.py::_today_et()` (already existed) is now also used by
+  `mlb/weather.py`, replacing a UTC `date.today()` call.
+
+### BUG 6 (P0) — Wrong scoring categories in config/leagues.yaml
+
+**Problem:** `pins_and_pills` declared 17 categories including `AVG`, `TB`,
+`XBH`, `QS`, `HLD`, `K_BB`, none of which the league actually scores, while
+`H` — a real scored category — was missing entirely.
+
+**Fix:** Corrected to the real 12: hitting `[H, HR, OPS, R, RBI, SB]` /
+pitching `[ERA, INNdGS, K, S, W, WHIP]`. Added
+`sports/baseball/categories.validate_scoring_config()`, called from both the
+H2H and roto decision paths right after `fetch_matchup_stats`, which
+cross-checks the configured category list against the categories CBS's
+`league/scoring/live` actually returns and logs a WARNING on any mismatch —
+so this class of drift can't silently recur. `casey_stengel`'s 10 categories
+were already correct.
+
+### ENH 2 (finish) — Multi-position eligibility
+
+**Problem:** Phase B only normalized LF/CF/RF → OF. `Player.eligible_positions`
+was still derived solely from the player's current roster slot tag, so a
+2B/SS-eligible player rostered at 2B today never showed as SS-eligible.
+
+**Fix:**
+- `data/models.py`'s `Player` gained `eligible_positions_override`;
+  `eligible_positions` uses it when set, else falls back to the old
+  slot-derived behavior (free agents unaffected).
+- New `cbs/players.py::fetch_position_eligibility_index()` builds a
+  `{player_id: [positions]}` index from `players/list` (the same validated
+  endpoint `cbs/waivers.py` already uses), and `cbs/roster.py` merges it into
+  every roster player's `eligible_positions_override`. **Not validated
+  against a live CBS response** (no `CBS_COOKIE` available while writing
+  this) — mirrors the already-validated `players/list` field usage in
+  `cbs/waivers.py`; extend `cbs_probe.py` to confirm on the next live run.
+- `cbs/players.py::apply_league_eligibility_rules()` applies
+  `config/leagues.yaml`'s new per-league `eligibility:` block — currently just
+  the pins_and_pills "all players DH-eligible" static rule. The games-played
+  thresholds documented there (162 last season OR 1 this season for
+  pins_and_pills; primary position + 20 games for casey_stengel) are CBS's
+  own configured settings, so `players/list`'s per-league eligibility is
+  already threshold-correct; the block exists as living documentation/
+  cross-check reference, not a games-log recomputation.
+- `sports/baseball/lineup_optimizer.py::find_legal_swaps()` is new: proposes
+  bench→active swaps using each player's full eligible-position list, and
+  only into slots they're actually eligible for (OF-normalized; utility
+  slots accept any batter). Wired into `agent/decisions.py::_add_lineup_advice`
+  and printed in `agent/main.py` under "Legal Lineup Swaps".
+
+### ENH 3 (finish) — Platoon weighting
+
+**Problem:** `mlb/splits.py` already fetched `split_vs_l_ops` / `split_vs_r_ops`,
+but nothing consumed them — `sports/baseball/lineup_optimizer.py` had no
+handedness logic at all.
+
+**Fix:** `agent/decisions.py::_add_lineup_advice` now enriches the roster with
+splits (`mlb.splits.enrich_with_splits`) and builds `opp_hand_by_team` from
+`mlb.schedule.todays_matchups()`'s probable-starter hand data.
+`optimize_daily_lineup()` takes `opp_hand_by_team` and down-ranks a batter to
+`advice="bench"` when their OPS split against today's hand is both
+meaningfully worse than their split against the other hand
+(`config.settings.PLATOON_OPS_GAP = 0.100`) and weak in absolute terms
+(`PLATOON_FLOOR_OPS = 0.700`), surfacing the reason. The existing must-start
+floor (season OPS >= .850) is now a standalone, testable
+`apply_must_start_floor()` in `lineup_optimizer.py` and continues to override
+platoon-driven benches for elite bats — but deliberately does NOT override
+ENH 4/7's `out_of_lineup` status, since that's a confirmed real-world absence
+rather than a heuristic guess.
+
+### ENH 6 — Emit the full category set
+
+**Problem:** Output only ever printed losing categories, obscuring what the
+league actually scores.
+
+**Fix:** `matchup_summary` / `roto_summary` actions in `agent/decisions.py`
+now include a `category_standings` list covering every category from
+`Matchup.category_standings` (W/L/T + values for H2H, rank/rotopts/dif for
+roto). `agent/main.py` prints an "All categories" line before the
+losing-categories summary. Sourced from the same `league/scoring/live` fetch
+already used for the matchup summary — no extra API call.
+
+### ENH 4 / ENH 7 — Posted-lineup awareness
+
+**Problem:** The agent assumed any rostered hitter on a team with a game
+today was actually starting; real lineups regularly platoon or rest players.
+
+**Fix:** New `mlb/lineups.py::fetch_posted_lineups()` uses the MLB Stats API
+schedule endpoint's `lineups` hydration (free, official, no scraping — the
+same host already used throughout this codebase) to get today's official
+starting lineups and batting order once posted (~1-2hr before first pitch).
+`lineup_status_for()` resolves each hitter to `confirmed` / `not_in_lineup`
+(lineup posted, player absent) / `unknown` (not posted yet). Wired into
+`optimize_daily_lineup()`: a `not_in_lineup` hitter gets its own
+`advice="out_of_lineup"` (distinct from the heuristic `"bench"`, so the
+must-start floor never overrides a confirmed real-world absence), and every
+`LineupAdvice` exposes a `.lineup_label` of `confirmed` / `expected` /
+`not-in-lineup` for display. **Not validated against a live response** in
+this environment (no network egress available while writing this) — the
+`lineups` hydration shape is documented community knowledge for this API,
+consistent with the `probablePitcher`/`team` hydrations already relied on in
+`mlb/schedule.py`. Considered and declined: the optional RotoWire
+early-projection layer (kept out of scope this pass — MLB's own feed already
+covers the "confirmed" case cleanly, and RotoWire scraping adds ToS/rate-limit
+surface for a "projected" layer that isn't strictly required by this phase's
+done-criteria) and a third-party "Big Balls Sports Data" API suggested during
+this work (its docs/OpenAPI spec have no lineup, starter, or probable-pitcher
+endpoint at all — it's a season batting/pitching stats + gamelog API, refreshed
+roughly a day after games finish, not a same-day lineup feed).
+
+### Validation
+
+No live CBS or MLB Stats API access was available while writing Phase C (no
+`CBS_COOKIE`, no network egress to `statsapi.mlb.com`/`api.cbssports.com` from
+the environment this was built in). Validated instead with a `tests/` pytest
+suite (`tests/test_periods.py`, `tests/test_schedule.py`,
+`tests/test_categories.py`, `tests/test_eligibility.py`,
+`tests/test_lineup_optimizer.py`, `tests/test_lineups.py`) covering every
+stated done-criterion against synthetic fixtures matching this codebase's
+documented CBS/MLB JSON shapes, plus an end-to-end smoke test of
+`agent.main._print_decisions` on synthetic action data. **Recommend running
+the GitHub Actions workflow once on this branch** (where `CBS_COOKIE` is a
+configured secret) to confirm the two live-data-dependent, unvalidated pieces
+before merging: `cbs/players.py`'s `players/list`-based eligibility index, and
+`mlb/lineups.py`'s `lineups` hydration shape.

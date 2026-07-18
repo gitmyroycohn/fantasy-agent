@@ -7,6 +7,7 @@ import logging
 from bs4 import BeautifulSoup
 from data.models import Player, RosterSlot
 from cbs.auth import CBSAuth, CBSAPIError
+from cbs.players import fetch_position_eligibility_index
 
 logger = logging.getLogger(__name__)
 
@@ -41,23 +42,19 @@ def _roster_from_api(auth: CBSAuth, league_id: str, team_id: str,
             f"team_id {team_id} not in rosters response "
             f"(got ids: {[t.get('id') for t in teams]})")
 
-    slots = []
-    for p in team.get("players", []) or []:
-        # roster_status: A=active lineup, RS=reserve/bench, I=injured list,
-        # ML=minor leagues (validated against live league data)
-        roster_status = str(p.get("roster_status", "")).upper()
-        player = Player(
-            id=str(p.get("id", "")),
-            name=p.get("fullname") or p.get("name", "Unknown"),
-            position=p.get("position", ""),
-            team=p.get("pro_team", ""),
-            status=roster_status or "A",
-        )
-        slots.append(RosterSlot(
-            player=player,
-            slot=p.get("roster_pos") or player.position,
-            is_starting=roster_status == "A",
-        ))
+    # ENH 2 fix: `position` on this payload is only the player's CURRENT
+    # roster slot, not their full CBS eligibility (a 2B/SS player rostered at
+    # 2B today would otherwise only ever show as 2B-eligible). Look up full
+    # eligibility from players/list (best-effort -- falls back silently to
+    # the slot tag if the index can't be fetched).
+    try:
+        pos_index = fetch_position_eligibility_index(auth, league_id, sport)
+    except Exception as e:
+        logger.warning("Position eligibility index unavailable (%s) -- "
+                       "roster players will use their current slot only", e)
+        pos_index = {}
+
+    slots = _slots_from_team_payload(team, pos_index)
     logger.info("API roster: %d players for team %s in %s",
                 len(slots), team_id, league_id)
     return slots
@@ -97,19 +94,28 @@ def _roster_from_html(auth: CBSAuth, league_id: str, team_id: str,
 # All teams (on-demand lookup of any team in the league, not just your own)
 # ---------------------------------------------------------------------------
 
-def _slots_from_team_payload(team: dict) -> list[RosterSlot]:
+def _slots_from_team_payload(team: dict, pos_index: dict | None = None) -> list[RosterSlot]:
     """Shared parser: CBS team dict -> list[RosterSlot]. Same logic as
     _roster_from_api's inner loop, factored out so get_all_team_rosters
-    can reuse it for every team in a single API response."""
+    can reuse it for every team in a single API response.
+
+    pos_index: optional {player_id: [eligible_positions]} from
+    cbs.players.fetch_position_eligibility_index (ENH 2). When a player's id
+    is present, their full CBS eligibility is used instead of just the
+    current roster slot tag.
+    """
+    pos_index = pos_index or {}
     slots = []
     for p in team.get("players", []) or []:
         roster_status = str(p.get("roster_status", "")).upper()
+        pid = str(p.get("id", ""))
         player = Player(
-            id=str(p.get("id", "")),
+            id=pid,
             name=p.get("fullname") or p.get("name", "Unknown"),
             position=p.get("position", ""),
             team=p.get("pro_team", ""),
             status=roster_status or "A",
+            eligible_positions_override=pos_index.get(pid),
         )
         slots.append(RosterSlot(
             player=player,
@@ -134,13 +140,22 @@ def get_all_team_rosters(auth: CBSAuth, league_id: str,
     data = auth.api_get("league/rosters", league_id, sport)
     teams = (data.get("body", {}) or {}).get("rosters", {}).get("teams", [])
 
+    # ENH 2: same full-eligibility lookup as get_roster(), shared across
+    # every team in this response (single players/list call, cached).
+    try:
+        pos_index = fetch_position_eligibility_index(auth, league_id, sport)
+    except Exception as e:
+        logger.warning("Position eligibility index unavailable (%s) -- "
+                       "all teams' players will use their current slot only", e)
+        pos_index = {}
+
     result = {}
     for t in teams:
         team_id   = str(t.get("id", ""))
         team_name = t.get("name") or t.get("nickname") or f"Team {team_id}"
         result[team_id] = {
             "name":   team_name,
-            "roster": _slots_from_team_payload(t),
+            "roster": _slots_from_team_payload(t, pos_index),
         }
     logger.info("get_all_team_rosters: %d teams fetched for %s",
                 len(result), league_id)

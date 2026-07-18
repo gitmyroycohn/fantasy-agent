@@ -14,6 +14,13 @@ class Player:
     team: str = ""
     status: str = "A"  # A=Active, DL=IL, etc.
     stats: dict = field(default_factory=dict)  # live/projected stats keyed by stat name
+    # ENH 2: full CBS position-eligibility list (e.g. a 2B/SS player), fetched
+    # from the CBS player profile / players/list (see cbs/players.py) rather
+    # than derived only from the player's current roster slot tag. When None,
+    # eligible_positions falls back to deriving from `position` (unchanged
+    # behavior for free agents, whose `position` from players/list is already
+    # the full eligibility string).
+    eligible_positions_override: Optional[list[str]] = None
 
     @property
     def positions(self) -> list[str]:
@@ -22,15 +29,22 @@ class Player:
 
     @property
     def eligible_positions(self) -> list[str]:
-        """Positions normalized for CBS slot-matching: LF/CF/RF → OF, deduped.
+        """Full position eligibility, normalized for CBS slot-matching:
+        LF/CF/RF → OF, deduped.
 
-        CBS tags outfielders as LF, CF, or RF rather than OF.  Any code that
+        ENH 2 fix: uses eligible_positions_override when set (the player's
+        FULL CBS eligibility, e.g. ["2B", "SS"]) rather than only the current
+        roster slot tag. Falls back to deriving from `position` when no
+        override is set (free agents; roster players before ENH 2 wiring).
+
+        CBS tags outfielders as LF, CF, or RF rather than OF. Any code that
         checks slot-legality (lineup optimizer, position filter, drop logic)
         should use this property so LF/CF/RF players appear as OF-eligible.
         """
+        source = self.eligible_positions_override if self.eligible_positions_override else self.positions
         seen: set[str] = set()
         result: list[str] = []
-        for p in self.positions:
+        for p in source:
             mapped = _CBS_OF_MAP.get(p, p)
             if mapped not in seen:
                 seen.add(mapped)

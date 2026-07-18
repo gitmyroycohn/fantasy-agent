@@ -108,7 +108,13 @@ def _resolve_leagues(league_id: str) -> list[tuple[dict, str]]:
     config = _load_leagues()
     results = []
     for sport, leagues in config.items():
+        # leagues.yaml also carries top-level season_start/periods keys
+        # (BUG 5 fix) that aren't sport -> [league, ...] entries.
+        if not isinstance(leagues, list):
+            continue
         for league in (leagues or []):
+            if not isinstance(league, dict):
+                continue
             lid = league.get("id", league.get("cbs_league_id", ""))
             if league_id in ("all", lid):
                 results.append((league, sport))

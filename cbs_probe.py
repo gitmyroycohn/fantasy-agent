@@ -596,7 +596,13 @@ def load_all_leagues() -> list[dict]:
             data = _yaml.safe_load(f)
         leagues = []
         for sport, entries in (data or {}).items():
+            # leagues.yaml also carries top-level season_start/periods keys
+            # (BUG 5 fix) that aren't sport -> [league, ...] entries.
+            if not isinstance(entries, list):
+                continue
             for e in entries or []:
+                if not isinstance(e, dict):
+                    continue
                 leagues.append({
                     "name": e.get("name", e.get("id", "?")),
                     "league_id": str(e.get("cbs_league_id", "")),

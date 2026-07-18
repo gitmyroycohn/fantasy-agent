@@ -7,7 +7,7 @@ from mlb.teams import norm_name as _norm_name
 from sports.baseball.streaming import rank_streaming_sps
 from sports.baseball.categories import (
     analyze_matchup, priority_categories, summary_line,
-    check_nl_eligibility, filter_nl_waiver_pool,
+    check_nl_eligibility, filter_nl_waiver_pool, validate_scoring_config,
 )
 from sports.baseball.drops import find_drop_candidates
 from cbs.waivers import fetch_waiver_wire
@@ -29,6 +29,7 @@ from cbs.standings import fetch_all_teams_stats
 from agent.surplusmap import build_surplus_map, trade_leads_from_map, my_category_profile
 from mlb.injuries import fetch_il_transactions, annotate_roster_injuries, format_transactions, fetch_active_il
 from mlb.splits import fetch_recent_form as _fetch_recent_form
+from config.periods import resolve_period
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +82,10 @@ def _h2h_decisions(auth, league_id, cfg, team, sport):
     actions = []
 
     raw_stats = fetch_matchup_stats(auth, league_id, sport)
-    matchup   = analyze_matchup(raw_stats, week=_current_week())
+    # BUG 6 fix: cross-check leagues.yaml's configured categories against
+    # what CBS actually scores -- logs a WARNING on drift.
+    validate_scoring_config(cfg.get("scoring", {}), raw_stats, cfg.get("name", league_id))
+    matchup   = analyze_matchup(raw_stats, week=_resolve_week(raw_stats))
     losing    = priority_categories(matchup)
 
     actions.append({
@@ -91,6 +95,18 @@ def _h2h_decisions(auth, league_id, cfg, team, sport):
         "cats_losing":   matchup.cats_losing,
         "cats_tied":     matchup.cats_tied,
         "priority_cats": losing,
+        # ENH 6: full category set (all scored categories, not just losing
+        # ones), so output never obscures what the league actually scores.
+        "category_standings": [
+            {
+                "category":  c.category,
+                "my_value":  c.my_value,
+                "opp_value": c.opp_value,
+                "winning":   c.winning,
+                "tied":      c.gap == 0,
+            }
+            for c in matchup.category_standings
+        ],
     })
 
     waivers = fetch_waiver_wire(auth, league_id, sport, position="SP")
@@ -108,11 +124,15 @@ def _h2h_decisions(auth, league_id, cfg, team, sport):
         sched_weeks     = schedule_weeks(n=3)
         two_start_now   = sched_weeks[0]["two_starters"] if sched_weeks else {}
         bb_two_starters = back_to_back_two_starters(sched_weeks, min_weeks=2)
+        # BUG 5 item 5: label with the real period number and days, and
+        # break out 3+ start SPs separately since extended periods (e.g. the
+        # 14-day Period 16) can produce them.
         week_labels = [
-            f"Wk{w['week_offset']+1}:{len(w['two_starters'])}x2"
+            f"P{w['period']}({w['period_days']}d):{len(w['two_starters'])}x2+"
+            + (f"/{len(w['multi_starters'])}x3+" if w.get("multi_starters") else "")
             for w in sched_weeks
         ]
-        print(f"  Schedule (3wk): {' | '.join(week_labels)}")
+        print(f"  Schedule (3 periods): {' | '.join(week_labels)}")
         if bb_two_starters:
             _norm = _norm_name
             bb_on_wire = [wp.player.name for wp in waivers
@@ -177,7 +197,7 @@ def _h2h_decisions(auth, league_id, cfg, team, sport):
     _add_trade_signals(actions, team, auth=auth, league_id=league_id,
                        my_tid=cfg.get("cbs_team_id"), sport=sport)
     _add_trade_leads(actions, auth, league_id, cfg, system="h2h")
-    _add_lineup_advice(actions, team, no_bench=cfg.get("no_bench", False))
+    _add_lineup_advice(actions, team, no_bench=cfg.get("no_bench", False), league_cfg=cfg)
 
     league_name = cfg.get("name") or league_id
     return {
@@ -233,12 +253,29 @@ def _roto_decisions(auth, league_id, cfg, team, sport):
 
     try:
         raw_stats = fetch_matchup_stats(auth, league_id, sport)
-        matchup   = analyze_matchup(raw_stats, week=_current_week())
+        # BUG 6 fix: cross-check leagues.yaml's configured categories against
+        # what CBS actually scores -- logs a WARNING on drift. casey_stengel's
+        # categories are already correct, but this keeps them from silently
+        # drifting in the future too.
+        validate_scoring_config(cfg.get("scoring", {}), raw_stats, cfg.get("name", league_id))
+        matchup   = analyze_matchup(raw_stats, week=_resolve_week(raw_stats))
         losing    = priority_categories(matchup)
         actions.append({
             "type":      "roto_summary",
             "summary":   summary_line(matchup, system="roto"),
             "weak_cats": losing[:5],
+            # ENH 6: full category set with roto rank for every category.
+            "category_standings": [
+                {
+                    "category": c.category,
+                    "my_value": c.my_value,
+                    "rank":     c.rank,
+                    "rotopts":  c.rotopts,
+                    "dif":      c.dif,
+                    "winning":  c.winning,
+                }
+                for c in matchup.category_standings
+            ],
         })
     except Exception as e:
         logger.warning("Roto scoring fetch failed: %s", e)
@@ -248,7 +285,7 @@ def _roto_decisions(auth, league_id, cfg, team, sport):
     _add_trade_signals(actions, team, auth=auth, league_id=league_id,
                        my_tid=cfg.get("cbs_team_id"), sport=sport)
     _add_trade_leads(actions, auth, league_id, cfg, system="roto")
-    _add_lineup_advice(actions, team, no_bench=cfg.get("no_bench", False))
+    _add_lineup_advice(actions, team, no_bench=cfg.get("no_bench", False), league_cfg=cfg)
 
     league_name = cfg.get("name") or league_id
     return {
@@ -274,7 +311,8 @@ def _add_drop_candidates(actions, team, waiver_wire, nl_only=False, stash_names=
 _MUST_START_OPS = 0.850   # ENH 3: batters at or above this OPS are always active
 _LINEUP_PITCHER_POS = {"SP", "RP", "P"}
 
-def _add_lineup_advice(actions, team, no_bench=False):
+def _add_lineup_advice(actions, team, no_bench=False, league_cfg=None):
+    league_cfg = league_cfg or {}
     try:
         teams_today    = teams_playing_today()
         starters_today = probable_starters_today()
@@ -292,35 +330,86 @@ def _add_lineup_advice(actions, team, no_bench=False):
             logger.warning("fetch_active_il failed, IL cross-check skipped: %s", e)
             il_norms = set()
 
+        # ENH 3: enrich roster batters with L/R platoon splits so the
+        # optimizer can weight today's start/sit advice by handedness.
+        try:
+            from mlb.splits import enrich_with_splits
+            enrich_with_splits(team.roster)
+        except Exception as e:
+            logger.warning("Splits enrichment failed, platoon weighting skipped: %s", e)
+
+        # ENH 3: map each CBS team abbrev to the hand of the opposing
+        # probable starter their batters face today.
+        opp_hand_by_team: dict[str, str] = {}
+        try:
+            from mlb.schedule import todays_matchups
+            for m in todays_matchups():
+                if m.get("home_team") and m.get("away_starter_hand"):
+                    opp_hand_by_team[m["home_team"].upper()] = m["away_starter_hand"]
+                if m.get("away_team") and m.get("home_starter_hand"):
+                    opp_hand_by_team[m["away_team"].upper()] = m["home_starter_hand"]
+        except Exception as e:
+            logger.warning("Today's matchups fetch failed, platoon weighting skipped: %s", e)
+
+        # ENH 2: full CBS position eligibility per roster player (2B/SS, etc.)
+        # plus any per-league static rule (pins_and_pills: all players
+        # DH-eligible), so the optimizer/swap-finder can propose every
+        # legal slot, not just the player's current slot tag.
+        from cbs.players import apply_league_eligibility_rules
+
+        # ENH 4/7: official posted lineups (confirmed/expected/not-in-lineup).
+        try:
+            from mlb.lineups import fetch_posted_lineups, lineup_status_for
+            posted = fetch_posted_lineups()
+        except Exception as e:
+            logger.warning("Posted-lineup fetch failed, falling back to schedule-only: %s", e)
+            posted = {"players": {}, "posted_teams": set()}
+            lineup_status_for = lambda name, team, posted: "unknown"  # noqa: E731
+
         lineup_slots = [
             {
-                "player_name": rs.player.name,
-                "team":        rs.player.team,
-                "positions":   rs.player.positions,
-                "slot":        rs.slot,
-                "is_starting": rs.is_starting,
+                "player_name":        rs.player.name,
+                "team":               rs.player.team,
+                "positions":          rs.player.positions,
+                "eligible_positions": apply_league_eligibility_rules(
+                                          rs.player.eligible_positions, league_cfg),
+                "slot":               rs.slot,
+                "is_starting":        rs.is_starting,
+                "stats":              rs.player.stats or {},
+                "lineup_status":      lineup_status_for(rs.player.name, rs.player.team, posted),
+                "batting_order":      posted.get("players", {})
+                                            .get(_norm_name(rs.player.name), {})
+                                            .get("batting_order"),
             }
             for rs in team.roster
         ]
 
-        advice = optimize_daily_lineup(lineup_slots, teams_today, starters_today, il_players=il_norms)
+        advice = optimize_daily_lineup(lineup_slots, teams_today, starters_today,
+                                       il_players=il_norms,
+                                       opp_hand_by_team=opp_hand_by_team)
 
         # ENH 3: Must-start floor -- elite batters (season OPS >= .850) should
         # always be active regardless of park factor, L/R matchup, or schedule
         # ambiguity.  Override "bench" -> "ok" for these players so we never
-        # accidentally tell the user to sit a stud on a "questionable" off day.
+        # accidentally tell the user to sit a stud on a "questionable" off day
+        # -- this also overrides a platoon-driven down-rank for the same bats
+        # (but never an ENH 4/7 "out_of_lineup" confirmed absence -- see
+        # sports/baseball/lineup_optimizer.apply_must_start_floor).
         ops_by_norm = {
             _norm_name(rs.player.name): float((rs.player.stats or {}).get("OPS") or 0)
             for rs in team.roster
         }
-        for a in advice:
-            if (a.advice == "bench"
-                    and not any(p in _LINEUP_PITCHER_POS for p in a.positions)
-                    and ops_by_norm.get(_norm_name(a.player_name), 0) >= _MUST_START_OPS):
-                a.advice = "ok"
-                a.reason = (
-                    f"Must-start floor (OPS >= .850 -- elite bat, always active): {a.reason}"
-                )
+        from sports.baseball.lineup_optimizer import apply_must_start_floor
+        apply_must_start_floor(advice, ops_by_norm, floor=_MUST_START_OPS)
+
+        # ENH 2: propose legal bench -> active swaps (every eligible slot
+        # considered; never an illegal swap) for anyone advised to sit.
+        swaps = []
+        try:
+            from sports.baseball.lineup_optimizer import find_legal_swaps
+            swaps = find_legal_swaps(lineup_slots, advice)
+        except Exception as e:
+            logger.warning("Legal swap search failed: %s", e)
 
         if advice:
             actions.append({
@@ -329,15 +418,20 @@ def _add_lineup_advice(actions, team, no_bench=False):
                 "teams_playing":     sorted(teams_today),
                 "probable_starters": sorted(starters_today),
                 "no_bench":          no_bench,
+                "swaps":             swaps,
                 "advice": [
                     {
-                        "player":      a.player_name,
-                        "team":        a.team,
-                        "positions":   a.positions,
-                        "slot":        a.slot,
-                        "is_starting": a.is_starting,
-                        "advice":      a.advice,
-                        "reason":      a.reason,
+                        "player":        a.player_name,
+                        "team":          a.team,
+                        "positions":     a.positions,
+                        "slot":          a.slot,
+                        "is_starting":   a.is_starting,
+                        "advice":        a.advice,
+                        "reason":        a.reason,
+                        # ENH 4/7: confirmed / expected / not-in-lineup label
+                        "lineup_status": a.lineup_status,
+                        "lineup_label":  a.lineup_label,
+                        "batting_order": a.batting_order,
                     }
                     for a in advice
                 ],
@@ -469,7 +563,7 @@ def get_filtered_waiver_adds(
     # Determine losing categories from current matchup
     try:
         raw_stats = fetch_matchup_stats(auth, league_id, sport)
-        matchup   = analyze_matchup(raw_stats, week=_current_week())
+        matchup   = analyze_matchup(raw_stats, week=_resolve_week(raw_stats))
         losing    = priority_categories(matchup)
     except Exception:
         # Fallback: treat all categories as targets
@@ -813,9 +907,28 @@ def _add_injury_report(actions: list, team) -> None:
         logger.warning("Injury report fetch failed: %s", e)
 
 
-def _current_week():
-    from datetime import date
-    today = date.today()
-    opening_day = date(today.year, 3, 28)
-    delta = (today - opening_day).days
-    return max(1, delta // 7 + 1)
+def _resolve_week(raw_stats: dict):
+    """BUG 5 fix: resolve the true scoring period for `week=` in analyze_matchup.
+
+    Previously _current_week() computed the period arithmetically from a
+    hardcoded opening day, which was wrong on 81/166 days of the season
+    (every Saturday/Sunday, since season_start isn't a Monday, plus the
+    non-uniform 12-day Period 1 and 14-day Period 16).
+
+    Now: raw_stats["period"] comes straight from CBS's authoritative
+    league/scoring/live response (see cbs/stats.py) -- CBS's own period field
+    is the single source of truth. config.periods.resolve_period cross-checks
+    it against the local leagues.yaml table purely to log a WARNING on drift;
+    CBS always wins.
+    """
+    cbs_period = raw_stats.get("period")
+    try:
+        resolved = resolve_period(_today_et(), cbs_period=cbs_period)
+        return resolved["n"]
+    except Exception as e:
+        logger.warning("_resolve_week: could not resolve a period (%s) -- "
+                       "using CBS's raw period value as-is", e)
+        try:
+            return int(str(cbs_period).strip())
+        except (TypeError, ValueError):
+            return cbs_period or "?"

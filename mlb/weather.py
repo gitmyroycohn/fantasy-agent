@@ -98,7 +98,12 @@ def fetch_game_weather(cbs_home_team: str,
         summary     str    one-line human-readable description
     """
     if game_date is None:
-        game_date = date.today()
+        # BUG 5 item 7: use ET-aware "today", not UTC date.today() --
+        # on GitHub Actions/Render, date.today() is UTC and rolls over
+        # ~8pm ET, which would fetch tomorrow's weather for a chunk of
+        # the evening.
+        from mlb.schedule import _today_et
+        game_date = _today_et()
 
     team = cbs_home_team.upper()
 
