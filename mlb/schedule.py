@@ -38,19 +38,44 @@ TIMEOUT  = 20
 # ---------------------------------------------------------------------------
 
 def week_bounds(d: date = None, next_week: bool = False):
-    """Return (monday, sunday) for the CBS scoring week containing d.
+    """Return (start, end) for the real CBS scoring PERIOD containing d.
 
-    CBS H2H weeks run Monday–Sunday.
-    If next_week=True, return the following week's bounds.
+    BUG 5 fix: CBS scoring periods are NOT uniform 7-day Monday-Sunday weeks
+    (Period 1 is 12 days, Period 16 is 14 days for the All-Star break, and
+    season_start is not a Monday). This now resolves the true period bounds
+    from config/leagues.yaml's periods table (see config/periods.py) instead
+    of computing a Monday + 7-day window arithmetically.
+
+    If next_week=True, return the bounds of the NEXT period (not d + 7 days --
+    during an extended period that would still be inside the current period).
     Defaults to today in US Eastern time.
     """
+    from config.periods import period_for_date, period_offset
+
     if d is None:
         d = _today_et()
-    monday = d - timedelta(days=d.weekday())   # most recent Monday
+
     if next_week:
-        monday += timedelta(weeks=1)
-    sunday = monday + timedelta(days=6)
-    return monday, sunday
+        p = period_offset(d, 1)
+    else:
+        p = period_for_date(d)
+
+    if p is None:
+        # Table doesn't cover this date (shouldn't happen in-season) --
+        # degrade to the old Mon-Sun approximation rather than crashing, but
+        # log loudly since this means leagues.yaml's periods table needs
+        # updating (e.g. a new season with no table entries yet).
+        logger.error(
+            "No period found in config/leagues.yaml's periods table for %s -- "
+            "falling back to Mon-Sun approximation. Update the periods table.",
+            d.isoformat(),
+        )
+        monday = d - timedelta(days=d.weekday())
+        if next_week:
+            monday += timedelta(weeks=1)
+        return monday, monday + timedelta(days=6)
+
+    return p["start"], p["end"]
 
 
 def two_start_pitchers(d: date = None, next_week: bool = False,
@@ -84,33 +109,61 @@ def is_two_starter(player_name: str, two_starters: dict[str, int]) -> bool:
 
 
 def schedule_weeks(n: int = 3, d: date = None) -> list[dict]:
-    """Return per-week start counts for the next n CBS scoring weeks.
+    """Return per-period start counts for the next n real CBS scoring periods.
 
-    Returns a list of n dicts:
+    Returns a list of up to n dicts:
       [
-        {"week_offset": 0, "monday": date, "sunday": date,
-         "two_starters": {norm_name: start_count}},
+        {"week_offset": 0, "period": 16, "monday": date, "sunday": date,
+         "period_days": 14, "two_starters": {norm_name: start_count},
+         "multi_starters": {norm_name: start_count}},
         ...
       ]
 
-    week_offset=0 is the current week, 1 is next week, etc.
-    Only SPs with 2+ starts in a week appear in two_starters.
+    BUG 5 fix: week_offset=N now means "N real periods ahead" (via
+    config.periods.period_offset), not "N*7 days ahead". Previously, during
+    the 14-day Period 16, week_offset=1 resolved to date+7 days -- still
+    inside Period 16 -- so "next period" streaming advice pointed at the
+    current period instead of the next one.
+
+    "monday"/"sunday" keys are kept for backward compatibility with existing
+    callers (agent/matchup_proj.py) -- they now hold the period's true start
+    /end dates, which are not always Monday/Sunday-aligned in principle
+    (though in this league's calendar they happen to be).
+
+    two_starters (2+ starts) is kept for backward-compat callers.
+    multi_starters (3+ starts) is new (BUG 5 item 5): in a 14-day period SPs
+    can make 3-4 starts, and the old hardcoded 7-day fetch window physically
+    could not see more than half of an extended period, so 3-start arms were
+    silently invisible. Since the fetch window below now spans the period's
+    *real* length, 3+ start pitchers are naturally included in two_starters
+    (their count is >= 2) and are additionally broken out in multi_starters
+    so callers can flag them distinctly.
     """
+    from config.periods import period_offset
+
     if d is None:
         d = _today_et()
     weeks = []
     for offset in range(n):
-        is_next = offset > 0
-        monday, sunday = week_bounds(d, next_week=False)
-        # Shift by offset weeks
-        monday += timedelta(weeks=offset)
-        sunday += timedelta(weeks=offset)
-        counts = _fetch_start_counts(monday.isoformat(), sunday.isoformat())
+        p = period_offset(d, offset)
+        if p is None:
+            logger.warning(
+                "schedule_weeks: no period at offset=%d from %s -- stopping "
+                "early (%d of %d requested periods returned)",
+                offset, d.isoformat(), len(weeks), n,
+            )
+            break
+        start, end = p["start"], p["end"]
+        period_days = (end - start).days + 1
+        counts = _fetch_start_counts(start.isoformat(), end.isoformat())
         weeks.append({
-            "week_offset": offset,
-            "monday":      monday,
-            "sunday":      sunday,
-            "two_starters": {name: n for name, n in counts.items() if n >= 2},
+            "week_offset":    offset,
+            "period":         p["n"],
+            "monday":         start,
+            "sunday":         end,
+            "period_days":    period_days,
+            "two_starters":   {name: c for name, c in counts.items() if c >= 2},
+            "multi_starters": {name: c for name, c in counts.items() if c >= 3},
         })
     return weeks
 

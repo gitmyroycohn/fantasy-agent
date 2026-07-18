@@ -52,6 +52,46 @@ def cbs_to_mlb(abbr: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Team-abbreviation canonicalization (bug found in the 2026-07-18 live run)
+#
+# CBS's OWN `pro_team` field on a rostered player returns the short,
+# MLB-native abbreviation for these 4 teams ("SF", "TB", "KC", "SD"), NOT the
+# longer form this module's docstring/MLB_TO_CBS table assumed CBS uses
+# ("SFG", "TBR", "KCR", "SDP"). Meanwhile mlb_to_cbs() maps the MLB schedule
+# feed's own "SF"/"TB"/etc into that longer form. The result: any code that
+# compares a CBS-sourced team string (player.team) against an MLB-schedule
+# -derived team string (via mlb_to_cbs()) for these 4 teams never matched --
+# confirmed live: Landen Roupp (SF) was flagged "SF has no game today" on a
+# day the Giants played, because "SF" (his CBS pro_team) was never in the
+# schedule's teams-playing set (which held "SFG").
+#
+# canonical_team() maps ANY known alias -- CBS's short form or the long form
+# -- to one single code, so a comparison is correct regardless of which
+# convention either side happens to use in a given API response.
+# ---------------------------------------------------------------------------
+_TEAM_ALIASES: dict[str, str] = {
+    "SF":  "SFG",
+    "TB":  "TBR",
+    "KC":  "KCR",
+    "SD":  "SDP",
+    "CHW": "CWS",
+    "WSN": "WSH",
+    "OAK": "ATH",
+}
+
+
+def canonical_team(abbr: str) -> str:
+    """Canonicalize any known CBS or MLB team-abbreviation variant to one
+    single code. Use this on BOTH sides of a team-string comparison (e.g.
+    "is this CBS-rostered player's team in today's MLB-schedule-derived
+    teams-playing set") rather than trusting either side's convention."""
+    if not abbr:
+        return abbr
+    a = abbr.strip().upper()
+    return _TEAM_ALIASES.get(a, a)
+
+
+# ---------------------------------------------------------------------------
 # Player name normalizer
 # ---------------------------------------------------------------------------
 

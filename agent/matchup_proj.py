@@ -69,10 +69,12 @@ _SEASON_END = (9, 27)   # (month, day) — September 27
 # ---------------------------------------------------------------------------
 
 def _remaining_weeks(today: date = None) -> int:
-    """Estimate remaining CBS scoring weeks from today.
+    """Estimate remaining CBS scoring periods from today.
 
-    Counts Monday-aligned weeks from the current CBS week through the final
-    week ending around September 27.  Returns at least 1.
+    BUG 5-adjacent fix: prefer counting real periods from config/leagues.yaml's
+    periods table (periods are not uniform 7-day weeks -- see config/periods.py)
+    over the old Monday-week approximation. Falls back to the approximation if
+    the table doesn't cover this date (e.g. a future season with no table yet).
     """
     from datetime import datetime
     from zoneinfo import ZoneInfo
@@ -80,12 +82,25 @@ def _remaining_weeks(today: date = None) -> int:
     if today is None:
         today = datetime.now(ZoneInfo("America/New_York")).date()
 
+    try:
+        from config.periods import period_for_date, load_periods
+        cur = period_for_date(today)
+        data = load_periods()
+        periods = data["periods"]
+        if cur and periods:
+            remaining = sum(1 for p in periods if p["n"] >= cur["n"])
+            if remaining:
+                return max(1, remaining)
+    except Exception as e:
+        logger.debug("Period-table remaining-weeks calc failed (%s) -- "
+                    "falling back to Mon-Sun approximation", e)
+
     mm, dd = _SEASON_END
     season_end    = date(today.year, mm, dd)
     cur_monday    = today      - timedelta(days=today.weekday())
     last_monday   = season_end - timedelta(days=season_end.weekday())
     weeks         = max(1, (last_monday - cur_monday).days // 7 + 1)
-    logger.debug("_remaining_weeks: cur=%s last=%s → %d weeks",
+    logger.debug("_remaining_weeks (fallback): cur=%s last=%s → %d weeks",
                  cur_monday, last_monday, weeks)
     return weeks
 

@@ -129,12 +129,26 @@ def _print_decisions(result, dry_run):
 
         if atype == "matchup_summary":
             print(f"  Matchup: {action.get('summary', '')}")
+            # ENH 6: print every scored category (not just the losing ones)
+            # so output never obscures what the league actually scores.
+            standings = action.get("category_standings", [])
+            if standings:
+                parts = []
+                for c in standings:
+                    mark = "T" if c.get("tied") else ("W" if c.get("winning") else "L")
+                    parts.append(f"{c['category']} {mark} ({c['my_value']}-{c['opp_value']})")
+                print(f"  All categories ({len(standings)}): {' | '.join(parts)}")
             pri = action.get("priority_cats", [])
             if pri:
                 print(f"  Priority categories (losing, easiest first): {', '.join(pri)}")
 
         elif atype == "roto_summary":
             print(f"  Standings: {action.get('summary', '')}")
+            # ENH 6: print every scored category with its roto rank.
+            standings = action.get("category_standings", [])
+            if standings:
+                parts = [f"{c['category']} rank={c['rank']}" for c in standings]
+                print(f"  All categories ({len(standings)}): {' | '.join(parts)}")
             weak = action.get("weak_cats", [])
             if weak:
                 print(f"  Weakest categories: {', '.join(weak)}")
@@ -153,7 +167,10 @@ def _print_decisions(result, dry_run):
             if recs:
                 print(f"{label} ({action.get('note', '')}):")
                 for r in recs:
-                    tag = " [2-START]" if r.get("starts", 1) >= 2 else ""
+                    # BUG 5 item 5: label the true start count (3+ in
+                    # extended periods) instead of a hardcoded "2-START".
+                    starts = r.get("starts", 1)
+                    tag = f" [{starts}-START]" if starts >= 2 else ""
                     bb = " [BB-2START ⚡ elite hold]" if r.get("back_to_back") else ""
                     dtag = f" [{r['_days']}]" if "_days" in r else ""
                     print(f"   + {r['player']} ({r['team']}){tag}{bb}{dtag} "
@@ -292,6 +309,7 @@ def _print_decisions(result, dry_run):
             advice = action.get("advice", [])
             teams_ct = len(action.get("teams_playing", []))
             no_bench = action.get("no_bench", False)
+            swaps = action.get("swaps", [])
 
             print(f"\n  --- Daily Lineup ({today_str}, {teams_ct} MLB teams playing) ---")
 
@@ -330,11 +348,20 @@ def _print_decisions(result, dry_run):
                     for a in bat_off:
                         pos = "/".join(a["positions"])
                         print(f"    {a['player']} ({a['team']}) [{pos}] -- 0 stats today")
+                # ENH 4/7: batters confirmed OUT of the official posted lineup
+                # (CBS still shows them active) -- more authoritative than a
+                # generic off-day guess.
+                not_in_lineup = [a for a in advice if a.get("advice") == "out_of_lineup"]
+                if not_in_lineup:
+                    print(f"  NOT in today's posted lineup ({len(not_in_lineup)}) [no bench -- FYI only]:")
+                    for a in not_in_lineup:
+                        print(f"    {a['player']} ({a['team']}) {a['reason']}")
                 if on_il:
                     print(f"  On injured list - do not activate ({len(on_il)}):")
                     for a in on_il:
                         print(f"    🚑 {a['player']} ({a['team']}) {a['reason']}")
-                print(f"  Batters with games today: {len(bat_on)}")
+                confirmed_ct = sum(1 for a in bat_on if a.get("lineup_label") == "confirmed")
+                print(f"  Batters with games today: {len(bat_on)} ({confirmed_ct} confirmed in posted lineup)")
 
             else:
                 sp_on  = [a for a in advice if "SP" in a["positions"]
@@ -364,11 +391,32 @@ def _print_decisions(result, dry_run):
                         mark = "ACTIVE - bench!" if a["is_starting"] else "already benched"
                         pos = "/".join(a["positions"])
                         print(f"    [{mark:>20}] {a['player']} ({a['team']}) [{pos}]")
+                # ENH 4/7: batters confirmed OUT of the official posted
+                # lineup (CBS still shows them active) -- distinct from a
+                # generic "off day" guess, and NOT overridden by the
+                # must-start floor (see sports/baseball/lineup_optimizer.py).
+                not_in_lineup = [a for a in advice if a.get("advice") == "out_of_lineup"]
+                if not_in_lineup:
+                    print(f"  NOT in today's posted lineup ({len(not_in_lineup)}):")
+                    for a in not_in_lineup:
+                        mark = "ACTIVE - bench!" if a["is_starting"] else "already benched"
+                        print(f"    [{mark:>20}] {a['player']} ({a['team']}) {a['reason']}")
                 if on_il:
                     print(f"  On injured list - do not activate ({len(on_il)}):")
                     for a in on_il:
                         print(f"    🚑 {a['player']} ({a['team']}) {a['reason']}")
-                print(f"  Batters with games today: {len(bat_on)}")
+                confirmed_ct = sum(1 for a in bat_on if a.get("lineup_label") == "confirmed")
+                expected_ct  = sum(1 for a in bat_on if a.get("lineup_label") == "expected")
+                print(f"  Batters with games today: {len(bat_on)} "
+                      f"({confirmed_ct} confirmed in posted lineup, {expected_ct} expected -- lineup not posted yet)")
+
+        if atype == "daily_lineup" and swaps:
+            print(f"\n  --- Legal Lineup Swaps ({len(swaps)}) [ENH 2: every eligible slot considered] ---")
+            for s in swaps:
+                in_pos = "/".join(s.get("in_positions", []))
+                print(f"    SWAP IN {s['in']} [{in_pos}] -> {s['out_slot']} "
+                      f"(bench {s['out']})")
+                print(f"      {s['reason']}")
 
         elif atype == "injury_report":
             txns = action.get("transactions", [])
@@ -453,9 +501,21 @@ def main():
         print(header_line)
 
         for sport, leagues in config.items():
+            # config/leagues.yaml now also carries top-level `season_start`/
+            # `periods` keys (BUG 5 fix, see config/periods.py) that aren't
+            # sport -> [league, ...] entries -- skip anything that isn't a
+            # list of league dicts.
+            if not isinstance(leagues, list):
+                continue
             if args.sport not in ("all", sport):
                 continue
             for league in leagues or []:
+                # A real league entry always has cbs_league_id -- this also
+                # filters out non-league list entries under a reserved key
+                # (e.g. leagues.yaml's `periods:` table, which is itself a
+                # list of {n,start,end} dicts, not league dicts).
+                if not isinstance(league, dict) or "cbs_league_id" not in league:
+                    continue
                 if args.league not in ("all", league.get("id")):
                     continue
                 try:

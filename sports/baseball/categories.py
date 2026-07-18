@@ -8,7 +8,12 @@ H2H: winning = my value beats opponent value (ERA/WHIP: lower is better).
 Roto: winning = in the top half of the league by roto rank.
 """
 
+import logging
+
 from data.models import CategoryStanding, Matchup, Player  # noqa: F401
+from mlb.teams import canonical_team
+
+logger = logging.getLogger(__name__)
 
 # Categories where lower value is better
 _LOWER_IS_BETTER = {"ERA", "WHIP", "L", "BB", "BBI"}
@@ -86,6 +91,51 @@ def analyze_matchup(raw_data: dict, week: int,
     )
 
 
+def validate_scoring_config(cfg_scoring: dict, raw_stats: dict,
+                           league_name: str = "") -> list[str]:
+    """BUG 6 fix: cross-check the configured hitting+pitching category list in
+    config/leagues.yaml against the categories CBS actually returns from
+    league/scoring/live (already fetched by cbs.stats.fetch_matchup_stats --
+    no extra API call needed). Logs a WARNING on any mismatch.
+
+    This is exactly the class of bug BUG 6 was: leagues.yaml declared 17
+    categories (AVG, TB, XBH, QS, HLD, K_BB do not exist in this league; H
+    was missing) while CBS actually scores 12. Category analysis and waiver
+    targeting were silently optimizing for stats that aren't scored. This
+    check makes that drift loud instead of silent.
+
+    Returns a list of human-readable mismatch descriptions (empty if none).
+    """
+    configured = set(cfg_scoring.get("hitting", []) or []) | \
+                 set(cfg_scoring.get("pitching", []) or [])
+    actual = set((raw_stats.get("categories") or {}).keys())
+
+    if not actual:
+        # Nothing to compare against (e.g. live_scoring returned empty) --
+        # don't false-positive a mismatch warning.
+        return []
+
+    extra_in_config = configured - actual     # configured but CBS doesn't score
+    extra_in_cbs    = actual - configured      # CBS scores but leagues.yaml is missing it
+
+    problems = []
+    if extra_in_config:
+        problems.append(
+            f"configured in leagues.yaml but NOT scored by CBS: {sorted(extra_in_config)}")
+    if extra_in_cbs:
+        problems.append(
+            f"scored by CBS but MISSING from leagues.yaml: {sorted(extra_in_cbs)}")
+
+    if problems:
+        logger.warning(
+            "Category mismatch for %s: %s (configured=%d cats, CBS=%d cats). "
+            "Fix config/leagues.yaml's scoring block.",
+            league_name or "league", "; ".join(problems), len(configured), len(actual),
+        )
+
+    return problems
+
+
 def priority_categories(matchup: Matchup) -> list[str]:
     """Return losing/weak categories sorted by closeness — easiest to flip first.
 
@@ -133,7 +183,12 @@ def check_nl_eligibility(players: list[Player]) -> list[dict]:
     """Flag any player on an AL team — ineligible for Casey Stengel."""
     warnings = []
     for p in players:
-        if p.team.upper() in _AL_TEAMS:
+        # BUG (found in 2026-07-18 live run): canonicalize before the
+        # membership check. CBS's own player.team field returns the short
+        # MLB-native form ("SD", "SF") for some teams, not the longer form
+        # these sets use ("SDP", "SFG") -- an uncanonicalized check would
+        # silently miss/misclassify Padres and Giants players.
+        if canonical_team(p.team) in _AL_TEAMS:
             warnings.append({
                 "player":  p.name,
                 "team":    p.team,
@@ -151,7 +206,7 @@ def filter_nl_waiver_pool(players: list, league_config: dict) -> list:
     """
     if not league_config.get("nl_only") and league_config.get("roster_type") != "nl_only":
         return players
-    return [wp for wp in players if (wp.player.team or "").upper() in _NL_TEAMS]
+    return [wp for wp in players if canonical_team(wp.player.team or "") in _NL_TEAMS]
 
 
 # ---------------------------------------------------------------------------

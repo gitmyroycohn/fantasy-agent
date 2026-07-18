@@ -22,17 +22,38 @@ Harrison, placed on the 15-day IL 7/9, was recommended for activation on
 7/11 because he still showed up in the probable-starters set). IL status now
 short-circuits all other advice for that player.
 
+ENH 2 fix: find_legal_swaps() below proposes bench -> active swaps using
+each player's FULL CBS position eligibility (Player.eligible_positions, via
+cbs/players.py -- e.g. a 2B/SS-eligible bench player is considered for an SS
+slot, not just the position they're currently rostered at), and only ever
+proposes a swap into a slot the incoming player is actually eligible for.
+
+ENH 3 fix: optimize_daily_lineup() now accepts opp_hand_by_team and
+down-ranks batters with a real platoon disadvantage against today's
+opposing starter (see the docstring on optimize_daily_lineup).
+
 DRY_RUN=True: output only, no CBS submissions.
 """
 import logging
 from dataclasses import dataclass, field
 from typing import Optional
 
-from mlb.teams import norm_name as _norm
+from mlb.teams import norm_name as _norm, canonical_team as _canon_team
+from config.settings import PLATOON_OPS_GAP, PLATOON_FLOOR_OPS
 
 logger = logging.getLogger(__name__)
 
 _PITCHER_POS = {"SP", "RP", "P"}
+_BATTER_SLOTS_ANY = {"UT", "U"}   # utility slots -- any batter is legal here
+
+
+def _ordinal(n: int) -> str:
+    """1 -> "1st", 2 -> "2nd", 3 -> "3rd", 11 -> "11th", etc."""
+    if 10 <= (n % 100) <= 20:
+        suffix = "th"
+    else:
+        suffix = {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
+    return f"{n}{suffix}"
 
 @dataclass
 class LineupAdvice:
@@ -42,21 +63,38 @@ class LineupAdvice:
     positions: list[str]
     slot: str           # current CBS slot (C, SP, BN, etc.)
     is_starting: bool   # currently active in lineup
-    advice: str         # "start", "bench", "ok", "bench_pitcher", "on_il"
+    advice: str         # "start", "bench", "ok", "bench_pitcher", "on_il", "out_of_lineup"
     reason: str
     # pitcher-specific
     is_probable_starter: Optional[bool] = None  # None = unknown (RP/batter)
+    # ENH 4/7: posted-lineup awareness (batters only)
+    lineup_status: str = "unknown"          # "confirmed" | "not_in_lineup" | "unknown"
+    batting_order: Optional[int] = None
 
     @property
     def is_pitcher(self) -> bool:
         return bool(self.positions and self.positions[0] in _PITCHER_POS
                     or "SP" in self.positions or "RP" in self.positions)
 
+    @property
+    def lineup_label(self) -> str:
+        """confirmed / expected / not-in-lineup -- for output display
+        (ENH 4/7 done-criteria: label expected vs confirmed, never present a
+        projected lineup as final)."""
+        if self.lineup_status == "confirmed":
+            return "confirmed"
+        if self.lineup_status == "not_in_lineup":
+            return "not-in-lineup"
+        if not self.is_pitcher and self.advice in ("start", "ok"):
+            return "expected"
+        return "unknown"
+
 def optimize_daily_lineup(
     lineup_slots: list[dict],
     teams_playing: set[str],
     probable_starters: set[str],  # norm names from mlb.schedule
     il_players: set[str] | None = None,  # norm names currently on MLB IL
+    opp_hand_by_team: dict[str, str] | None = None,  # ENH 3: {cbs_team_abbr: "L"|"R"}
 ) -> list[LineupAdvice]:
     """
     Cross-reference current lineup against today's schedule.
@@ -68,6 +106,13 @@ def optimize_daily_lineup(
         mlb.injuries.fetch_active_il(). This is the authoritative "hurt right
         now" source -- independent of CBS roster slot and independent of the
         probable-starters feed, both of which can lag a real-world IL move.
+    opp_hand_by_team: {cbs_team_abbr: "L"|"R"} -- the throwing hand of the
+        opposing probable starter each team's batters face today, from
+        mlb.schedule.todays_matchups(). Used for ENH 3 platoon weighting:
+        a batter with a real platoon split (>= PLATOON_OPS_GAP) who is weak
+        (< PLATOON_FLOOR_OPS) against today's hand is down-ranked to "bench"
+        with the reason surfaced, unless agent/decisions.py's must-start
+        floor (season OPS >= .850) overrides it afterward.
 
     Returns a list of LineupAdvice objects.
 
@@ -91,6 +136,18 @@ def optimize_daily_lineup(
     schedule_reliable = len(teams_playing) >= 10
     il_players = il_players or set()
 
+    # BUG (found in 2026-07-18 live run): canonicalize both sides of every
+    # team comparison. CBS's own player.team field returns the short,
+    # MLB-native abbreviation for SF/TB/KC/SD, while teams_playing/
+    # opp_hand_by_team here are built from the MLB schedule feed's
+    # mlb_to_cbs()-mapped (longer) form -- "SF" vs "SFG" never compared
+    # equal, so e.g. Landen Roupp (SF) was wrongly flagged "no game today"
+    # on a day the Giants played, while probable-starter teammate Logan Webb
+    # (also SF) looked fine only because that check doesn't compare teams at
+    # all. canonical_team() maps every known alias to one code.
+    teams_playing = {_canon_team(t) for t in (teams_playing or set())}
+    opp_hand_by_team = {_canon_team(k): v for k, v in (opp_hand_by_team or {}).items()}
+
     logger.info("optimize_daily_lineup: %d teams playing (reliable=%s), %d probable starters, %d IL",
                 len(teams_playing), schedule_reliable, len(probable_starters), len(il_players))
 
@@ -99,6 +156,7 @@ def optimize_daily_lineup(
     for slot_info in lineup_slots:
         name      = slot_info.get("player_name") or slot_info.get("name", "")
         team      = slot_info.get("team", "")
+        team_canon = _canon_team(team)
         positions = slot_info.get("positions") or []
         slot      = slot_info.get("slot", "")
         active    = slot_info.get("is_starting", True)
@@ -107,7 +165,7 @@ def optimize_daily_lineup(
             continue
 
         is_pitcher        = ("SP" in positions or "RP" in positions)
-        confirmed_playing = team.upper() in teams_playing
+        confirmed_playing = team_canon in teams_playing
         norm_name         = _norm(name)
 
         # BUG 5 fix: a confirmed current IL placement overrides everything
@@ -164,9 +222,55 @@ def optimize_daily_lineup(
                 ))
         else:
             # Batter
+            lineup_status = slot_info.get("lineup_status", "unknown")
+            batting_order = slot_info.get("batting_order")
+
+            if lineup_status == "not_in_lineup":
+                # ENH 4/7 fix: MLB's OFFICIAL posted lineup is out and this
+                # player isn't in it -- more authoritative than "team has a
+                # game" from the schedule alone (platooned out, resting,
+                # etc.). This is its own advice value (not "bench") so the
+                # must-start floor -- a heuristic override for schedule/
+                # platoon *uncertainty* -- does not sweep away a confirmed
+                # real-world absence just because a bat is normally elite.
+                advice_list.append(LineupAdvice(
+                    player_name=name, team=team, positions=positions,
+                    slot=slot, is_starting=active, advice="out_of_lineup",
+                    reason=f"Not in {team}'s official posted lineup today (CBS shows active)",
+                    lineup_status=lineup_status, batting_order=batting_order,
+                ))
+                continue
+
             if confirmed_playing:
                 advice = "start" if not active else "ok"
-                reason = f"{team} has a game today"
+                if lineup_status == "confirmed":
+                    order_str = f", batting {_ordinal(batting_order)}" if batting_order else ""
+                    reason = f"Confirmed in {team}'s official posted lineup today{order_str}"
+                else:
+                    reason = f"{team} has a game today (lineup not posted yet -- expected)"
+
+                # ENH 3: platoon weighting. Down-rank a batter with a real
+                # platoon split who's facing their disadvantage hand today --
+                # the must-start floor (agent/decisions.py, OPS >= .850)
+                # overrides this back to "ok" for elite bats afterward, the
+                # same way it already overrides an off-day "bench".
+                hand = opp_hand_by_team.get(team_canon)
+                stats = slot_info.get("stats") or {}
+                vs_l = stats.get("split_vs_l_ops")
+                vs_r = stats.get("split_vs_r_ops")
+                if hand in ("L", "R") and vs_l is not None and vs_r is not None:
+                    dis_ops = vs_l if hand == "L" else vs_r
+                    adv_ops = vs_r if hand == "L" else vs_l
+                    if (adv_ops - dis_ops) >= PLATOON_OPS_GAP and dis_ops < PLATOON_FLOOR_OPS:
+                        hand_label = "LHP" if hand == "L" else "RHP"
+                        other_label = "RHP" if hand == "L" else "LHP"
+                        advice = "bench"
+                        reason = (
+                            f"Platoon disadvantage vs {hand_label} today: "
+                            f"{dis_ops:.3f} OPS vs {hand_label} (vs {other_label}: "
+                            f"{adv_ops:.3f}) -- {team} has a game today but the "
+                            f"matchup favors sitting"
+                        )
             elif schedule_reliable:
                 # Only assert off-day when schedule data is healthy
                 advice = "bench"
@@ -178,9 +282,120 @@ def optimize_daily_lineup(
             advice_list.append(LineupAdvice(
                 player_name=name, team=team, positions=positions,
                 slot=slot, is_starting=active, advice=advice, reason=reason,
+                lineup_status=lineup_status, batting_order=batting_order,
             ))
 
     return advice_list
+
+_MUST_START_OPS_DEFAULT = 0.850   # ENH 3: batters at/above this season OPS are always active
+
+
+def apply_must_start_floor(
+    advice_list: list["LineupAdvice"],
+    ops_by_norm: dict[str, float],
+    floor: float = _MUST_START_OPS_DEFAULT,
+) -> None:
+    """Mutate advice_list in place: elite batters (season OPS >= floor)
+    always get advice="ok" instead of "bench" -- overriding both plain
+    schedule-uncertainty benches AND ENH 3's platoon-driven down-ranks
+    (done-criteria: "the must-start floor must continue to override platoon
+    down-ranking for elite bats").
+
+    Deliberately does NOT touch "out_of_lineup" (ENH 4/7): that status means
+    MLB's official posted lineup confirms the player isn't starting today --
+    a real-world fact, not a heuristic guess -- so a season-long OPS floor
+    must never override it.
+    """
+    for a in advice_list:
+        if (a.advice == "bench"
+                and not a.is_pitcher
+                and ops_by_norm.get(_norm(a.player_name), 0) >= floor):
+            a.advice = "ok"
+            a.reason = (
+                f"Must-start floor (OPS >= {floor:.3f} -- elite bat, always active): {a.reason}"
+            )
+
+
+def find_legal_swaps(
+    lineup_slots: list[dict],
+    advice_list: list[LineupAdvice],
+) -> list[dict]:
+    """ENH 2: propose legal bench -> active swaps for slots that should sit.
+
+    For every active player whose advice says they should sit (bench,
+    bench_pitcher, or on_il), look for the best available bench player who is
+    BOTH (a) eligible for the vacated slot per their FULL CBS position
+    eligibility (lineup_slots[i]["eligible_positions"] -- e.g. a 2B/SS player
+    can fill an SS slot even though he's rostered at 2B today) and (b)
+    confirmed playing today per their own advice entry. Never proposes an
+    illegal swap: eligibility is checked against the vacated slot (with
+    LF/CF/RF normalized to OF, and any per-league DH-for-all rule already
+    folded into eligible_positions upstream), and utility slots (UT/U) accept
+    any batter.
+
+    Each bench candidate is used for at most one swap. Returns a list of:
+        {"out": name, "out_slot": slot, "in": name, "in_positions": [...],
+         "reason": str}
+    """
+    by_name = {a.player_name: a for a in advice_list}
+    slot_by_name = {s.get("player_name") or s.get("name", ""): s for s in lineup_slots}
+
+    # Slots that need to be filled: currently-active players advised to sit.
+    vacated = [
+        a for a in advice_list
+        if a.is_starting and a.advice in ("bench", "bench_pitcher", "on_il", "out_of_lineup")
+    ]
+
+    # Bench candidates: currently-inactive players confirmed playing today
+    # (advice "start" -- i.e. should be activated) and not on IL.
+    candidates = [
+        a for a in advice_list
+        if not a.is_starting and a.advice == "start"
+    ]
+
+    used_candidates: set[str] = set()
+    swaps: list[dict] = []
+
+    def _slot_legal(candidate_advice: LineupAdvice, slot: str) -> bool:
+        slot_norm = "OF" if slot in ("LF", "CF", "RF") else slot
+        if slot_norm in _BATTER_SLOTS_ANY and not candidate_advice.is_pitcher:
+            return True
+        info = slot_by_name.get(candidate_advice.player_name, {})
+        eligible = info.get("eligible_positions") or candidate_advice.positions
+        eligible_norm = {("OF" if p in ("LF", "CF", "RF") else p) for p in eligible}
+        return slot_norm in eligible_norm
+
+    for out_advice in vacated:
+        best = None
+        for cand in candidates:
+            if cand.player_name in used_candidates:
+                continue
+            # A pitcher slot can only be filled by a pitcher, and vice versa.
+            if out_advice.is_pitcher != cand.is_pitcher:
+                continue
+            if not _slot_legal(cand, out_advice.slot):
+                continue
+            best = cand
+            break
+        if best is None:
+            continue
+        used_candidates.add(best.player_name)
+        swaps.append({
+            "out":          out_advice.player_name,
+            "out_slot":     out_advice.slot,
+            "out_reason":   out_advice.reason,
+            "in":           best.player_name,
+            "in_positions": slot_by_name.get(best.player_name, {}).get(
+                                "eligible_positions", best.positions),
+            "reason": (
+                f"{out_advice.player_name} ({out_advice.slot}) should sit -- "
+                f"{best.player_name} is eligible for {out_advice.slot} and "
+                f"confirmed playing today"
+            ),
+        })
+
+    return swaps
+
 
 def format_lineup_advice(advice_list: list[LineupAdvice], today_str: str = "") -> list[str]:
     """Return a list of print-ready lines summarizing lineup advice."""

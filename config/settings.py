@@ -21,5 +21,14 @@ MIN_K9_STREAMER       = STREAMING_SP_MIN_K9    # alias
 # Only consider SPs owned in <X% of leagues (avoids already-rostered guys)
 MIN_SP_OWNERSHIP_DROP = 50.0
 
+# Platoon weighting thresholds (ENH 3; sports/baseball/lineup_optimizer.py).
+# A batter is down-ranked for today's start/sit advice when their OPS split
+# against the hand they're facing today is both meaningfully worse than
+# their split against the other hand (PLATOON_OPS_GAP) AND weak in absolute
+# terms (below PLATOON_FLOOR_OPS). The must-start floor (_MUST_START_OPS in
+# agent/decisions.py) always overrides this for elite bats.
+PLATOON_OPS_GAP           = 0.100
+PLATOON_FLOOR_OPS         = 0.700
+
 AUTO_SET_LINEUP           = True
 DRY_RUN                   = True   # Leave True until fully validated

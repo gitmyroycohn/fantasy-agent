@@ -85,9 +85,11 @@ def _score_sp(player: Player, standings: dict, starts: int = 1) -> float:
 
     score = 0.0
 
-    # 2-start bonus — biggest single factor
+    # Multi-start bonus — biggest single factor. Scales with actual start
+    # count (BUG 5 item 5): in extended periods (e.g. the 14-day Period 16)
+    # an SP can make 3-4 starts, and that's worth more than a plain 2-starter.
     if starts >= 2:
-        score += TWO_START_BONUS
+        score += TWO_START_BONUS + max(0, starts - 2) * (TWO_START_BONUS * 0.5)
 
     # Reward pitchers who help losing categories
     if standings.get("K", {}).get("winning") is False:
@@ -112,7 +114,9 @@ def _reason(player: Player, standings: dict, starts: int = 1) -> str:
     parts = []
 
     if starts >= 2:
-        parts.append(f"*** 2-START WEEK ***")
+        # BUG 5 item 5: report the true start count (3+ in extended periods
+        # like the 14-day Period 16) instead of always saying "2-START".
+        parts.append(f"*** {starts}-START PERIOD ***")
 
     stats = player.stats
     if stats:

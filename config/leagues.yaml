@@ -1,3 +1,50 @@
+# ---------------------------------------------------------------------------
+# BUG 5 fix (Phase C): real CBS scoring-period calendar.
+#
+# CBS scoring periods are NOT uniform 7-day Monday-Sunday weeks: season_start
+# (3/25/26) is a Wednesday, Period 1 is 12 days, and Period 16 is 14 days
+# (extended for the All-Star break). The old `_current_week()` arithmetic in
+# agent/decisions.py assumed a Monday season_start and a flat 7-day cadence,
+# which was wrong on 81/166 days (49%) of the season -- verified: on 2026-07-05
+# CBS was in Period 14 but the agent reported "Week 15"; on 2026-07-12 CBS was
+# in Period 15 but the agent reported "Week 16".
+#
+# This table is the ground truth for date -> period resolution (see
+# config/periods.py). CBS's own live_scoring `period` field is still preferred
+# at runtime when the two disagree (config/periods.py logs a WARNING on
+# mismatch) -- this table exists so the agent can resolve *future* periods
+# (week_offset lookahead, schedule streaming) that CBS's live endpoint doesn't
+# expose directly.
+#
+# Source: league schedule as published by CBS for the 2026 season. Playoff
+# period matchups (21-22) are TBA at time of writing; only the date bounds are
+# needed here.
+season_start: "2026-03-25"
+
+periods:
+  - {n: 1,  start: "2026-03-25", end: "2026-04-05"}   # 12 days
+  - {n: 2,  start: "2026-04-06", end: "2026-04-12"}
+  - {n: 3,  start: "2026-04-13", end: "2026-04-19"}
+  - {n: 4,  start: "2026-04-20", end: "2026-04-26"}
+  - {n: 5,  start: "2026-04-27", end: "2026-05-03"}
+  - {n: 6,  start: "2026-05-04", end: "2026-05-10"}
+  - {n: 7,  start: "2026-05-11", end: "2026-05-17"}
+  - {n: 8,  start: "2026-05-18", end: "2026-05-24"}
+  - {n: 9,  start: "2026-05-25", end: "2026-05-31"}
+  - {n: 10, start: "2026-06-01", end: "2026-06-07"}
+  - {n: 11, start: "2026-06-08", end: "2026-06-14"}
+  - {n: 12, start: "2026-06-15", end: "2026-06-21"}
+  - {n: 13, start: "2026-06-22", end: "2026-06-28"}
+  - {n: 14, start: "2026-06-29", end: "2026-07-05"}
+  - {n: 15, start: "2026-07-06", end: "2026-07-12"}
+  - {n: 16, start: "2026-07-13", end: "2026-07-26"}   # 14 days -- All-Star break
+  - {n: 17, start: "2026-07-27", end: "2026-08-02"}
+  - {n: 18, start: "2026-08-03", end: "2026-08-09"}
+  - {n: 19, start: "2026-08-10", end: "2026-08-16"}
+  - {n: 20, start: "2026-08-17", end: "2026-08-23"}
+  - {n: 21, start: "2026-08-24", end: "2026-08-30"}   # playoffs
+  - {n: 22, start: "2026-08-31", end: "2026-09-06"}   # playoffs
+
 baseball:
   - id: "pins_and_pills"
     name: "Pins and Pills"
@@ -5,11 +52,28 @@ baseball:
     cbs_team_id: "7"
     format: "h2h_categories"
     scoring:
-      hitting: [R, HR, RBI, SB, AVG, OPS, TB, XBH]
-      pitching: [W, SV, K, ERA, WHIP, QS, HLD, INNdGS, K_BB]
+      # BUG 6 fix: this league scores 12 real categories, not 17. AVG, TB,
+      # XBH, QS, HLD, and K_BB do not exist in this league's settings; H was
+      # missing entirely. Category analysis and waiver targeting were
+      # optimizing for stats CBS never actually counts. Corrected list below
+      # is cross-checked at startup against CBS's league/scoring/live
+      # categories (sports/baseball/categories.validate_scoring_config) --
+      # any drift logs a WARNING instead of failing silently again.
+      hitting:  [H, HR, OPS, R, RBI, SB]
+      pitching: [ERA, INNdGS, K, S, W, WHIP]
     constraints:
       sp_must_be_claimed_before_week: true
       max_moves_per_week: null
+    # ENH 2: per-league position-eligibility rule (documentation of CBS's
+    # configured thresholds for this league; CBS's players/list response is
+    # the authoritative source since it already applies these thresholds --
+    # this block is the fallback/cross-check reference).
+    eligibility:
+      games_last_season: 162
+      games_this_season_min: 1
+      # any games_last_season OR games_this_season_min qualifies a player
+      threshold_mode: "or"
+      all_players_dh_eligible: true
     # Players intentionally held as speculative stash -- never flag as drop candidates
     prospect_stash: []
 
@@ -21,7 +85,18 @@ baseball:
     roster_type: "nl_only"
     no_bench: true
     scoring:
-      hitting: [R, HR, RBI, SB, AVG]
-      pitching: [W, SV, K, ERA, WHIP]
+      # BA/S (not AVG/SV) confirmed against CBS's live league/scoring/live
+      # categories on 2026-07-18 by validate_scoring_config()'s drift check
+      # -- CBS's own field names for this league are BA (batting average)
+      # and S (saves), matching the label CBS also uses for Pins and Pills'
+      # saves category.
+      hitting: [R, HR, RBI, SB, BA]
+      pitching: [W, S, K, ERA, WHIP]
+    eligibility:
+      games_last_season: 20
+      games_this_season_min: 20
+      threshold_mode: "or"
+      primary_position_included: true
+      all_players_dh_eligible: false
     # Players intentionally held as speculative stash -- never flag as drop candidates
     prospect_stash: []
