@@ -76,11 +76,9 @@ def _remaining_weeks(today: date = None) -> int:
     over the old Monday-week approximation. Falls back to the approximation if
     the table doesn't cover this date (e.g. a future season with no table yet).
     """
-    from datetime import datetime
-    from zoneinfo import ZoneInfo
-
     if today is None:
-        today = datetime.now(ZoneInfo("America/New_York")).date()
+        from mlb.clock import today_et
+        today = today_et()
 
     try:
         from config.periods import period_for_date, load_periods

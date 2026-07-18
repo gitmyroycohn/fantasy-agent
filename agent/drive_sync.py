@@ -4,8 +4,9 @@ so Claude can read them in future sessions.
 """
 import json
 import logging
-from datetime import datetime
 from pathlib import Path
+
+from mlb.clock import now_et
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaInMemoryUpload
 from google.oauth2.credentials import Credentials
@@ -78,5 +79,8 @@ def _upsert_file(service, folder_id: str, filename: str, content: str, mime: str
 
 
 def _format_run_log(output: dict) -> str:
-    ts = datetime.now().strftime("%Y-%m-%d %H:%M")
+    # Fixed a naive/UTC-labeled timestamp here -- was datetime.now() with no
+    # tz, same class of bug as BUG 5 item 7 (a run near UTC midnight, ~8pm
+    # ET, would silently log the wrong local day).
+    ts = now_et().strftime("%Y-%m-%d %H:%M ET")
     return f"# Fantasy Agent Run Log\n\n**Last run:** {ts}\n\n```json\n{json.dumps(output, indent=2)}\n```\n"
