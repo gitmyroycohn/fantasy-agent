@@ -3,13 +3,13 @@
     "waiver_adds": {
       "Willy Adames": {
         "first": "2026-06-17",
-        "last": "2026-07-12",
-        "n": 17
+        "last": "2026-07-19",
+        "n": 18
       },
       "Luisangel Acuna": {
         "first": "2026-06-17",
-        "last": "2026-07-12",
-        "n": 19
+        "last": "2026-07-19",
+        "n": 20
       },
       "Blaze Alexander": {
         "first": "2026-06-17",
@@ -18,8 +18,8 @@
       },
       "Nick Allen": {
         "first": "2026-06-17",
-        "last": "2026-07-12",
-        "n": 19
+        "last": "2026-07-19",
+        "n": 20
       },
       "Andrew Abbott": {
         "first": "2026-06-22",
@@ -43,13 +43,13 @@
       },
       "Elvis Alvarado": {
         "first": "2026-06-24",
-        "last": "2026-07-18",
-        "n": 6
+        "last": "2026-07-19",
+        "n": 7
       },
       "Travis Adams": {
         "first": "2026-06-26",
-        "last": "2026-07-18",
-        "n": 4
+        "last": "2026-07-19",
+        "n": 5
       },
       "Bryan Abreu": {
         "first": "2026-06-27",
@@ -95,8 +95,8 @@
       },
       "Mick Abel": {
         "first": "2026-06-25",
-        "last": "2026-07-18",
-        "n": 18
+        "last": "2026-07-19",
+        "n": 19
       },
       "Aaron Civale": {
         "first": "2026-06-26",
@@ -180,7 +180,17 @@
       },
       "Jared Jones": {
         "first": "2026-07-18",
-        "last": "2026-07-18",
+        "last": "2026-07-19",
+        "n": 2
+      },
+      "Michael McGreevy": {
+        "first": "2026-07-19",
+        "last": "2026-07-19",
+        "n": 1
+      },
+      "Brady Singer": {
+        "first": "2026-07-19",
+        "last": "2026-07-19",
         "n": 1
       }
     },
@@ -198,36 +208,36 @@
     "waiver_adds": {
       "Jose Alvarado": {
         "first": "2026-06-17",
-        "last": "2026-07-18",
-        "n": 32
+        "last": "2026-07-19",
+        "n": 33
       },
       "Tyler Alexander": {
         "first": "2026-06-17",
-        "last": "2026-07-18",
-        "n": 32
+        "last": "2026-07-19",
+        "n": 33
       },
       "Philip Abner": {
         "first": "2026-06-26",
-        "last": "2026-07-18",
-        "n": 23
+        "last": "2026-07-19",
+        "n": 24
       },
       "Kevin Alcantara": {
         "first": "2026-06-26",
-        "last": "2026-07-18",
-        "n": 23
+        "last": "2026-07-19",
+        "n": 24
       },
       "Pablo Abreu": {
         "first": "2026-06-27",
-        "last": "2026-07-18",
-        "n": 22
+        "last": "2026-07-19",
+        "n": 23
       }
     },
     "streaming_sp": {},
     "drop_candidates": {
       "Esteury Ruiz": {
         "first": "2026-07-11",
-        "last": "2026-07-18",
-        "n": 8,
+        "last": "2026-07-19",
+        "n": 9,
         "sev": "monitor"
       }
     },
