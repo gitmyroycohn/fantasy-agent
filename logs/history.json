@@ -23,8 +23,8 @@
       },
       "Jose Alvarado": {
         "first": "2026-06-22",
-        "last": "2026-07-26",
-        "n": 13
+        "last": "2026-07-29",
+        "n": 14
       },
       "Tyler Alexander": {
         "first": "2026-06-23",
@@ -33,8 +33,8 @@
       },
       "Elvis Alvarado": {
         "first": "2026-06-24",
-        "last": "2026-07-28",
-        "n": 13
+        "last": "2026-07-29",
+        "n": 14
       },
       "Travis Adams": {
         "first": "2026-06-26",
@@ -43,8 +43,8 @@
       },
       "Bryan Abreu": {
         "first": "2026-06-27",
-        "last": "2026-07-20",
-        "n": 3
+        "last": "2026-07-29",
+        "n": 4
       },
       "Kevin Alcantara": {
         "first": "2026-06-30",
@@ -63,8 +63,8 @@
       },
       "Keegan Akin": {
         "first": "2026-07-21",
-        "last": "2026-07-28",
-        "n": 7
+        "last": "2026-07-29",
+        "n": 8
       },
       "Andrew Abbott": {
         "first": "2026-07-21",
@@ -79,6 +79,11 @@
       "Andrew Alvarez": {
         "first": "2026-07-28",
         "last": "2026-07-28",
+        "n": 1
+      },
+      "Franco Aleman": {
+        "first": "2026-07-29",
+        "last": "2026-07-29",
         "n": 1
       }
     },
@@ -100,8 +105,8 @@
       },
       "Mick Abel": {
         "first": "2026-06-25",
-        "last": "2026-07-28",
-        "n": 27
+        "last": "2026-07-29",
+        "n": 28
       },
       "Erick Fedde": {
         "first": "2026-07-01",
@@ -190,8 +195,8 @@
       },
       "Slade Cecconi": {
         "first": "2026-07-28",
-        "last": "2026-07-28",
-        "n": 1
+        "last": "2026-07-29",
+        "n": 2
       }
     },
     "drop_candidates": {
@@ -208,28 +213,28 @@
     "waiver_adds": {
       "Jose Alvarado": {
         "first": "2026-06-17",
-        "last": "2026-07-28",
-        "n": 42
+        "last": "2026-07-29",
+        "n": 43
       },
       "Tyler Alexander": {
         "first": "2026-06-17",
-        "last": "2026-07-28",
-        "n": 42
+        "last": "2026-07-29",
+        "n": 43
       },
       "Philip Abner": {
         "first": "2026-06-26",
-        "last": "2026-07-28",
-        "n": 33
+        "last": "2026-07-29",
+        "n": 34
       },
       "Kevin Alcantara": {
         "first": "2026-06-26",
-        "last": "2026-07-28",
-        "n": 33
+        "last": "2026-07-29",
+        "n": 34
       },
       "Pablo Abreu": {
         "first": "2026-06-27",
-        "last": "2026-07-28",
-        "n": 32
+        "last": "2026-07-29",
+        "n": 33
       }
     },
     "streaming_sp": {},
@@ -242,9 +247,9 @@
       },
       "Tim Tawa": {
         "first": "2026-07-21",
-        "last": "2026-07-28",
-        "n": 8,
-        "sev": "monitor"
+        "last": "2026-07-29",
+        "n": 9,
+        "sev": "cut"
       }
     },
     "recently_dropped": {
