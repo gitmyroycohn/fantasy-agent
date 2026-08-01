@@ -125,7 +125,14 @@ def _reason(player: Player, standings: dict, starts: int = 1) -> str:
         whip = stats.get("WHIP", "?")
         parts.append(f"ERA {era}, K/9 {k9}, WHIP {whip}")
 
-    _PITCHER_CATS = {"K", "W", "QS", "SV", "HLD", "ERA", "WHIP", "K9", "S"}
+    # BUG fix (2026-08-01): this module only ever recommends starting
+    # pitchers ("SP" in wp.player.positions, see rank_streaming_sps). SPs
+    # essentially never record saves or holds -- those are reliever stats.
+    # The old set included "SV"/"S"/"HLD", so every streaming recommendation
+    # made while saves was a losing category got a misleading "helps: S"
+    # tag on a player who will not help that category. INNdGS added since
+    # it's a category a streamed SP directly and reliably contributes to.
+    _PITCHER_CATS = {"K", "W", "QS", "ERA", "WHIP", "K9", "INNdGS"}
     losing_pitcher = [cat for cat, s in standings.items()
                       if s.get("winning") is False and cat in _PITCHER_CATS]
     if losing_pitcher:
