@@ -11,11 +11,6 @@
         "last": "2026-07-31",
         "n": 29
       },
-      "Blaze Alexander": {
-        "first": "2026-06-17",
-        "last": "2026-07-11",
-        "n": 16
-      },
       "Nick Allen": {
         "first": "2026-06-17",
         "last": "2026-07-31",
@@ -23,8 +18,8 @@
       },
       "Jose Alvarado": {
         "first": "2026-06-22",
-        "last": "2026-08-01",
-        "n": 17
+        "last": "2026-08-02",
+        "n": 18
       },
       "Tyler Alexander": {
         "first": "2026-06-23",
@@ -43,13 +38,8 @@
       },
       "Bryan Abreu": {
         "first": "2026-06-27",
-        "last": "2026-08-01",
-        "n": 5
-      },
-      "Kevin Alcantara": {
-        "first": "2026-06-30",
-        "last": "2026-07-11",
-        "n": 8
+        "last": "2026-08-02",
+        "n": 6
       },
       "Cohen Achen": {
         "first": "2026-07-07",
@@ -63,8 +53,8 @@
       },
       "Keegan Akin": {
         "first": "2026-07-21",
-        "last": "2026-08-01",
-        "n": 11
+        "last": "2026-08-02",
+        "n": 12
       },
       "Andrew Abbott": {
         "first": "2026-07-21",
@@ -73,8 +63,8 @@
       },
       "Mick Abel": {
         "first": "2026-07-23",
-        "last": "2026-08-01",
-        "n": 4
+        "last": "2026-08-02",
+        "n": 5
       },
       "Andrew Alvarez": {
         "first": "2026-07-28",
@@ -83,8 +73,8 @@
       },
       "Franco Aleman": {
         "first": "2026-07-29",
-        "last": "2026-08-01",
-        "n": 4
+        "last": "2026-08-02",
+        "n": 5
       }
     },
     "streaming_sp": {
@@ -95,8 +85,8 @@
       },
       "Mick Abel": {
         "first": "2026-06-25",
-        "last": "2026-08-01",
-        "n": 31
+        "last": "2026-08-02",
+        "n": 32
       },
       "Erick Fedde": {
         "first": "2026-07-01",
@@ -128,11 +118,6 @@
         "last": "2026-07-12",
         "n": 2
       },
-      "German Marquez": {
-        "first": "2026-07-11",
-        "last": "2026-07-11",
-        "n": 1
-      },
       "Jared Jones": {
         "first": "2026-07-18",
         "last": "2026-07-22",
@@ -150,8 +135,8 @@
       },
       "Merrill Kelly": {
         "first": "2026-07-20",
-        "last": "2026-08-01",
-        "n": 5
+        "last": "2026-08-02",
+        "n": 6
       },
       "Dean Kremer": {
         "first": "2026-07-20",
@@ -180,18 +165,18 @@
       },
       "Slade Cecconi": {
         "first": "2026-07-28",
-        "last": "2026-08-01",
-        "n": 5
+        "last": "2026-08-02",
+        "n": 6
       },
       "Mitch Keller": {
         "first": "2026-07-30",
-        "last": "2026-08-01",
-        "n": 3
+        "last": "2026-08-02",
+        "n": 4
       },
       "Matthew Liberatore": {
         "first": "2026-07-30",
-        "last": "2026-07-30",
-        "n": 1
+        "last": "2026-08-02",
+        "n": 2
       },
       "Tyler Mahle": {
         "first": "2026-08-01",
@@ -199,42 +184,35 @@
         "n": 1
       }
     },
-    "drop_candidates": {
-      "Esmerlyn Valdez": {
-        "first": "2026-07-03",
-        "last": "2026-07-11",
-        "n": 5,
-        "sev": "monitor"
-      }
-    },
+    "drop_candidates": {},
     "recently_dropped": {}
   },
   "baberuthdivingclubformen": {
     "waiver_adds": {
       "Jose Alvarado": {
         "first": "2026-06-17",
-        "last": "2026-08-01",
-        "n": 46
+        "last": "2026-08-02",
+        "n": 47
       },
       "Tyler Alexander": {
         "first": "2026-06-17",
-        "last": "2026-08-01",
-        "n": 46
+        "last": "2026-08-02",
+        "n": 47
       },
       "Philip Abner": {
         "first": "2026-06-26",
-        "last": "2026-08-01",
-        "n": 37
+        "last": "2026-08-02",
+        "n": 38
       },
       "Kevin Alcantara": {
         "first": "2026-06-26",
-        "last": "2026-08-01",
-        "n": 37
+        "last": "2026-08-02",
+        "n": 38
       },
       "Pablo Abreu": {
         "first": "2026-06-27",
-        "last": "2026-08-01",
-        "n": 36
+        "last": "2026-08-02",
+        "n": 37
       }
     },
     "streaming_sp": {},
