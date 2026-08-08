@@ -1,14 +1,14 @@
 ================================================
-  FANTASY AGENT  --  Fri Aug 7, 2026  9:01 AM ET
+  FANTASY AGENT  --  Sat Aug 8, 2026  8:46 AM ET
 ================================================
 
-![Parque Deportivo José Martí, La Havana, Cuba](https://www.loc.gov/resource/ppbd.03731/full/pct:25/0/default.jpg)
-*Parque Deportivo José Martí, La Havana, Cuba (2003) — Library of Congress*
+![George Herman (Babe) Ruth, Big League Chewing Gum](https://www.loc.gov/resource/ppmsca.38379/full/pct:25/0/default.jpg)
+*George Herman (Babe) Ruth, Big League Chewing Gum (1933) — Library of Congress*
 
 
 [ PINS & PILLS  |  H2H Categories ]
-  Matchup : Week 18 vs Captain Jack: 6-5-1
-  Target  : SB, K, RBI, INNdGS +1 more
+  Matchup : Week 18 vs Captain Jack: 7-5-0
+  Target  : RBI, SB, K, H +1 more
   Stream SP: Andrew Alvarez (WAS) [2-START]  ERA 3.94  K/9 8.86
   ** Submit adds before Monday scoring period lock. **
   Also    : Mick Abel, J.T. Ginn
@@ -18,8 +18,8 @@
 [ CASEY STENGEL  |  NL-Only Roto ]
   Top Add  : Kevin Alcantara (CHC) [CF]  helps SB, HR, RBI
   Also     : Jose Alvarado (RP), Tyler Alexander (RP)
-  Standings: Period 20: 44 roto pts - winning 5 cats, losing 5
-  Weakest  : RBI, SB, ERA, HR
+  Standings: Period 20: 42 roto pts - winning 5 cats, losing 5
+  Weakest  : RBI, SB, HR, ERA
 
 ================================================
   Full details below
@@ -40,30 +40,30 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   Free agents visible: 8160
 
   FP projections (SP wire): 18/100 matched
-  Schedule (3 periods): P18(7d):25x2+ | P19(7d):0x2+ | P20(7d):0x2+
+  Schedule (3 periods): P18(7d):26x2+ | P19(7d):0x2+ | P20(7d):0x2+
   FP projections (all wire): 33/200 matched
-  Savant batter xStats: 622 players
+  Savant batter xStats: 624 players
   Savant EV/Barrel: 444 players
-  Savant pitcher xStats: 785 players
+  Savant pitcher xStats: 787 players
   Savant xStats (all wire): 26/200 matched
   FP projections (roster): 31/35 matched
   Savant xStats (roster): 29/35 matched
   Format: H2H Categories
 
   ⚠ CHURN GUARD: 5 moves recommended -- showing top 3 per section. Prioritize ruthlessly; avoid making all moves at once.
-  Matchup: Week 18 vs Captain Jack: 6-5-1
-  All categories (12): H L (34.0-43.0) | HR W (4.0-2.0) | OPS W (0.76-0.7358) | R T (22.0-22.0) | RBI L (19.0-24.0) | SB L (2.0-3.0) | ERA W (2.109-4.441) | INNdGS L (39.33-46.67) | K L (48.0-52.0) | S W (2.0-0.0) | W W (5.0-4.0) | WHIP W (1.0312-1.4013)
-  Priority categories (losing, easiest first): SB, K, RBI, INNdGS, H
+  Matchup: Week 18 vs Captain Jack: 7-5-0
+  All categories (12): H L (46.0-53.0) | HR W (4.0-3.0) | OPS W (0.7474-0.7365) | R W (27.0-26.0) | RBI L (27.0-28.0) | SB L (2.0-3.0) | ERA W (2.928-4.846) | INNdGS L (49.33-59.0) | K L (62.0-68.0) | S W (3.0-1.0) | W W (6.0-5.0) | WHIP W (1.2289-1.4615)
+  Priority categories (losing, easiest first): RBI, SB, K, H, INNdGS
   Streaming SP (Submit adds before Monday scoring period lock.):
-   + Andrew Alvarez (WAS) [2-START] [day 4] score=11.98 *** 2-START PERIOD *** | ERA 3.94, K/9 8.86, WHIP 1.45 | helps: K
-   + Mick Abel (MIN) [day 37] score=4.76 ERA 3.98, K/9 10.18, WHIP 1.57 | helps: K
-   + J.T. Ginn (ATH) [2-START] [NEW] score=4.0 *** 2-START PERIOD *** | helps: K
-   + Ryan Gusto (MIA) [2-START] [NEW] score=4.0 *** 2-START PERIOD *** | helps: K
-   + Grant Holmes (ATL) [2-START] [NEW] score=4.0 *** 2-START PERIOD *** | helps: K
+   + Andrew Alvarez (WAS) [2-START] [day 5] score=11.98 *** 2-START PERIOD *** | ERA 3.94, K/9 8.86, WHIP 1.45 | helps: K
+   + Mick Abel (MIN) [day 38] score=4.76 ERA 3.98, K/9 10.18, WHIP 1.57 | helps: K
+   + J.T. Ginn (ATH) [2-START] [day 2] score=4.0 *** 2-START PERIOD *** | helps: K
+   + Ryan Gusto (MIA) [2-START] [day 2] score=4.0 *** 2-START PERIOD *** | helps: K
+   + Grant Holmes (ATL) [2-START] [day 2] score=4.0 *** 2-START PERIOD *** | helps: K
   Waiver adds (5 suggestions) (top 3 shown -- 2 more suppressed):
-   + Mick Abel (MIN) [SP] [day 7] helps: K [xERA=5.23]
-   + Blaze Alexander (BAL) [3B] [day 4] helps: RBI [Brl%=7.1 | xwOBA=0.361]
-   + Jose Altuve (HOU) [2B] [day 3] helps: SB [Brl%=5.4 | xwOBA=0.278]
+   + Mick Abel (MIN) [SP] [day 8] helps: K [xERA=5.23]
+   + Blaze Alexander (BAL) [3B] [day 5] helps: RBI [Brl%=7.1 | xwOBA=0.361]
+   + Jose Altuve (HOU) [2B] [day 4] helps: SB [Brl%=5.3 | xwOBA=0.281]
 
   --- Closer Monkey News ---
   [LEDGER] Closer Monkey’s Leverage Ledger | 8.7.2026
@@ -74,35 +74,35 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   --- Injury Report (last 7 days) ---
   ★ YOUR ROSTER PLAYERS:
     ✅ Kyle Harrison (Milwaukee Brewers) — Activated from 15-Day IL [8/5]
-  🚑 Placed (26): J.P. Crawford (Seattle Mariners), Cionel Pérez (New York Mets), Shane McClanahan (Tampa Bay Rays), Brock Stewart (Los Angeles Dodgers), Gavin Hollowell (Chicago Cubs), Matt Vierling (Detroit Tigers), Luke Raley (Seattle Mariners), Will Klein (Los Angeles Dodgers)
-  ✅ Activated (28): Brenton Doyle (Colorado Rockies), Corey Seager (Texas Rangers), Jesús Sánchez (Toronto Blue Jays), DL Hall (Milwaukee Brewers), Brandon Lockridge (Milwaukee Brewers), Rafael Flores Jr. (Pittsburgh Pirates), Owen Caissie (Miami Marlins), Spencer Horwitz (Pittsburgh Pirates)
+  🚑 Placed (27): Jesus Rodriguez (San Francisco Giants), Luke Raley (Seattle Mariners), Will Klein (Los Angeles Dodgers), Ryan O'Hearn (Pittsburgh Pirates), Jake Fraley (Tampa Bay Rays), Lenyn Sosa (Toronto Blue Jays), Reynaldo López (Atlanta Braves), Luinder Avila (Kansas City Royals)
+  ✅ Activated (26): Owen Caissie (Miami Marlins), Brandon Lockridge (Milwaukee Brewers), Rafael Flores Jr. (Pittsburgh Pirates), Spencer Horwitz (Pittsburgh Pirates), Kyle Isbel (Kansas City Royals), Ha-Seong Kim (Atlanta Braves), Tyler Gilbert (Chicago White Sox), Josh Ekness (Miami Marlins)
 
   --- Trade Value Signals ---
   SELL HIGH (28) -- outpacing projections:
-   ~ Jordan Walker (STL) [RF] [strong]
-      SB 14 vs proj 4; RBI 81 vs proj 25; HR 22 vs proj 7
    ~ Bryan Baker (TB) [RP] [strong]
-      SV 32 vs proj 10; K 48 vs proj 21; ERA 1.42 vs proj 3.65
-   ~ Yordan Alvarez (HOU) [DH] [strong]
-      HR 35 vs proj 11; RBI 85 vs proj 30; R 78 vs proj 28
+      SV 33 vs proj 9; K 51 vs proj 21; ERA 1.59 vs proj 3.66
+   ~ Jordan Walker (STL) [RF] [strong]
+      SB 14 vs proj 4; RBI 81 vs proj 24; HR 22 vs proj 7
    ~ Sal Stewart (CIN) [1B] [strong]
-      RBI 87 vs proj 28; SB 12 vs proj 4; HR 25 vs proj 9
+      RBI 87 vs proj 26; HR 25 vs proj 8; SB 12 vs proj 4
+   ~ Yordan Alvarez (HOU) [DH] [strong]
+      HR 35 vs proj 11; RBI 86 vs proj 29; R 79 vs proj 27
 
   --- Trade Board (8 teams scanned) ---
   My surplus (can sell): none
   My deficit (need buy): none
 
-  --- Daily Lineup (Fri Aug 7, 30 MLB teams playing) ---
+  --- Daily Lineup (Sat Aug 8, 30 MLB teams playing) ---
   SPs starting today (9):
     [                  active] Nick Martinez (TB)
     [                  active] Jose Soriano (TOR)
     [                  active] Logan Webb (SF)
     [                  active] Jake Bennett (BOS)
+    [                  active] Yoshinobu Yamamoto (LAD)
     [ BENCH - move to active!] Zack Wheeler (PHI)
     [ BENCH - move to active!] Sandy Alcantara (MIA)
     [ BENCH - move to active!] Kyle Harrison (MIL)
     [ BENCH - move to active!] Logan Henderson (MIL)
-    [ BENCH - move to active!] Yoshinobu Yamamoto (LAD)
   On injured list - do not activate (4):
     🚑 Juan Soto (NYM) Currently on the MLB injured list -- ignore any start/activate recommendation
     🚑 Maikel Garcia (KC) Currently on the MLB injured list -- ignore any start/activate recommendation
@@ -133,12 +133,12 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
 
   ⚠ CHURN GUARD: 5 moves recommended -- showing top 3 per section. Prioritize ruthlessly; avoid making all moves at once.
   Waiver adds (5 suggestions) (top 3 shown -- 2 more suppressed):
-   + Kevin Alcantara (CHC) [CF] [day 43] helps: SB, HR, RBI [xwOBA=0.306]
-   + Jose Alvarado (PHI) [RP] [day 52] helps: K, S [xERA=3.61]
-   + Tyler Alexander (PHI) [RP] [day 52] helps: K, S [CM: 2nd-in-line | Mostly Linear] [xERA=3.33]
-  Standings: Period 20: 44 roto pts - winning 5 cats, losing 5
-  All categories (10): BA rank=2 | HR rank=7 | R rank=4 | RBI rank=5 | SB rank=6 | ERA rank=6 | K rank=4 | S rank=8 | W rank=1 | WHIP rank=3
-  Weakest categories: RBI, SB, ERA, HR, S
+   + Kevin Alcantara (CHC) [CF] [day 44] helps: SB, HR, RBI [xwOBA=0.306]
+   + Jose Alvarado (PHI) [RP] [day 53] helps: K, S [xERA=3.61]
+   + Tyler Alexander (PHI) [RP] [day 53] helps: K, S [CM: 2nd-in-line | Mostly Linear] [xERA=3.28]
+  Standings: Period 20: 42 roto pts - winning 5 cats, losing 5
+  All categories (10): BA rank=3 | HR rank=7 | R rank=4 | RBI rank=5 | SB rank=6 | ERA rank=7 | K rank=4 | S rank=8 | W rank=1 | WHIP rank=3
+  Weakest categories: RBI, SB, HR, ERA, S
 
   --- Closer Monkey News ---
   [LEDGER] Closer Monkey’s Leverage Ledger | 8.7.2026
@@ -151,38 +151,38 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
     🚑 Dalton Rushing (Los Angeles Dodgers) — Placed on 10-Day IL [8/3]
     ✅ Kyle Harrison (Milwaukee Brewers) — Activated from 15-Day IL [8/5]
     ✅ Brad Lord (Washington Nationals) — Activated from 15-Day IL [8/5]
-  🚑 Placed (25): J.P. Crawford (Seattle Mariners), Cionel Pérez (New York Mets), Shane McClanahan (Tampa Bay Rays), Brock Stewart (Los Angeles Dodgers), Gavin Hollowell (Chicago Cubs), Matt Vierling (Detroit Tigers), Luke Raley (Seattle Mariners), Will Klein (Los Angeles Dodgers)
-  ✅ Activated (27): Brenton Doyle (Colorado Rockies), Corey Seager (Texas Rangers), Jesús Sánchez (Toronto Blue Jays), DL Hall (Milwaukee Brewers), Brandon Lockridge (Milwaukee Brewers), Rafael Flores Jr. (Pittsburgh Pirates), Owen Caissie (Miami Marlins), Spencer Horwitz (Pittsburgh Pirates)
+  🚑 Placed (26): Jesus Rodriguez (San Francisco Giants), Luke Raley (Seattle Mariners), Will Klein (Los Angeles Dodgers), Ryan O'Hearn (Pittsburgh Pirates), Jake Fraley (Tampa Bay Rays), Lenyn Sosa (Toronto Blue Jays), Reynaldo López (Atlanta Braves), Luinder Avila (Kansas City Royals)
+  ✅ Activated (25): Owen Caissie (Miami Marlins), Brandon Lockridge (Milwaukee Brewers), Rafael Flores Jr. (Pittsburgh Pirates), Spencer Horwitz (Pittsburgh Pirates), Kyle Isbel (Kansas City Royals), Ha-Seong Kim (Atlanta Braves), Tyler Gilbert (Chicago White Sox), Josh Ekness (Miami Marlins)
 
   --- Trade Value Signals ---
   SELL HIGH (27) -- outpacing projections:
+   ~ Dalton Rushing (LAD) [C] [strong]
+      R 37 vs proj 1; RBI 36 vs proj 2; AVG 0 vs proj 0
    ~ Max Muncy (LAD) [3B] [strong]
       HR 22 vs proj 1; R 62 vs proj 3; RBI 52 vs proj 3
-   ~ Dalton Rushing (LAD) [C] [strong]
-      R 37 vs proj 6; HR 12 vs proj 2; RBI 36 vs proj 7
-   ~ Brad Lord (WAS) [RP] [strong]
-      K 52 vs proj 11
    ~ Jacob Young (WAS) [CF] [strong]
-      HR 9 vs proj 2; RBI 39 vs proj 13; R 43 vs proj 18
+      HR 9 vs proj 2; RBI 39 vs proj 13; R 43 vs proj 17
+   ~ Brandon Marsh (PHI) [CF] [strong]
+      HR 16 vs proj 4; SB 10 vs proj 3; R 60 vs proj 18
 
   --- Trade Board (8 teams scanned) ---
-  My surplus (can sell): BA, W
-  My deficit (need buy): HR, S
+  My surplus (can sell): W
+  My deficit (need buy): HR, ERA, S
   Top trade targets:
    >> B.J.'s Salty Dawgs  [alignment=2]
-      They have: HR
-      They need: BA
+      They have: ERA, HR
+      They need: —
    >> GasHouse Gang's Dice Baseball [alignment=2]
       They have: HR, S
       They need: —
-   >> Men of Steal [alignment=2]
-      They have: S
-      They need: BA
+   >>  SteinBurroughs Front Office [alignment=1]
+      They have: ERA
+      They need: —
    >> AYBA Eagles [alignment=1]
       They have: —
       They need: W
 
-  --- Daily Lineup (Fri Aug 7, 30 MLB teams playing) ---
+  --- Daily Lineup (Sat Aug 8, 30 MLB teams playing) ---
   SPs pitching today (6):
     Robbie Ray (SD)
     Casey Mize (SD)
