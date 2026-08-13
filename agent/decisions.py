@@ -2,6 +2,7 @@
 Decision engine -- runs per league and produces a list of recommended actions.
 """
 import logging
+from datetime import datetime
 from data.models import Team, Matchup
 from mlb.teams import norm_name as _norm_name
 from sports.baseball.streaming import rank_streaming_sps
@@ -194,9 +195,7 @@ def _h2h_decisions(auth, league_id, cfg, team, sport):
 
     _add_closer_news(actions)
     _add_injury_report(actions, team)
-    _add_trade_signals(actions, team, auth=auth, league_id=league_id,
-                       my_tid=cfg.get("cbs_team_id"), sport=sport)
-    _add_trade_leads(actions, auth, league_id, cfg, system="h2h")
+    _add_trade_content(actions, cfg, team, auth, league_id, sport, system="h2h")
     _add_lineup_advice(actions, team, no_bench=cfg.get("no_bench", False), league_cfg=cfg)
 
     league_name = cfg.get("name") or league_id
@@ -285,9 +284,7 @@ def _roto_decisions(auth, league_id, cfg, team, sport):
 
     _add_closer_news(actions)
     _add_injury_report(actions, team)
-    _add_trade_signals(actions, team, auth=auth, league_id=league_id,
-                       my_tid=cfg.get("cbs_team_id"), sport=sport)
-    _add_trade_leads(actions, auth, league_id, cfg, system="roto")
+    _add_trade_content(actions, cfg, team, auth, league_id, sport, system="roto")
     _add_lineup_advice(actions, team, no_bench=cfg.get("no_bench", False), league_cfg=cfg)
 
     league_name = cfg.get("name") or league_id
@@ -829,6 +826,99 @@ def _waiver_adds_for_cats(
     for r in final:
         r.pop("_score", None)
     return final
+
+
+_TRADE_URGENCY_WINDOW_DAYS = 7   # show "N days left" framing inside this window
+
+
+def trade_window_status(cfg: dict, today=None) -> dict:
+    """Resolve where `today` sits relative to this league's configured trade_deadline.
+
+    Trade-deadline enhancement: leagues.yaml carries a per-league
+    `trade_deadline: "YYYY-MM-DD"` (the last calendar date trades are
+    allowed, per CBS league settings -- e.g. hemp's is "no trades after
+    11:59 pm ET 8/3/26", stored as "2026-08-03"). This is a real calendar
+    date, not a scoring period, so -- same principle as the Phase C period
+    fix -- it's resolved off `today` (mlb.clock.today_et(), imported here as
+    `_today_et`) rather than any week/period-offset arithmetic. `today` can
+    be passed explicitly (tests do this); it defaults to `_today_et()`.
+
+    Returns {"status", "deadline", "days_left"}:
+      status:
+        "unset"  -- no trade_deadline configured (or unparseable) for this
+                    league; callers should treat this the same as "open" so
+                    a missing/bad config never silently kills trade content.
+        "open"   -- more than _TRADE_URGENCY_WINDOW_DAYS days out; no framing.
+        "urgent" -- deadline is today..._TRADE_URGENCY_WINDOW_DAYS days away;
+                    callers should prepend an urgency line.
+        "closed" -- today >= deadline; ALL trade content (signals, trade
+                    board, evaluate_trade verdicts) must be suppressed for
+                    this league for the rest of the season.
+      deadline:   the parsed date, or None if unset/unparseable.
+      days_left:  (deadline - today).days, or None if unset/unparseable.
+                  Negative once closed.
+
+    Entirely per-league: callers pass one league's `cfg` at a time, so one
+    league's deadline passing never affects another league's trade content.
+    """
+    raw = cfg.get("trade_deadline")
+    if not raw:
+        return {"status": "unset", "deadline": None, "days_left": None}
+
+    try:
+        deadline = datetime.strptime(str(raw).strip(), "%Y-%m-%d").date()
+    except ValueError:
+        logger.warning(
+            "Malformed trade_deadline %r for league %s -- expected YYYY-MM-DD; "
+            "treating trade window as unset (open) rather than guessing.",
+            raw, cfg.get("name", cfg.get("id", cfg.get("cbs_league_id", "?"))),
+        )
+        return {"status": "unset", "deadline": None, "days_left": None}
+
+    now = today if today is not None else _today_et()
+    days_left = (deadline - now).days
+
+    if now >= deadline:
+        status = "closed"
+    elif days_left <= _TRADE_URGENCY_WINDOW_DAYS:
+        status = "urgent"
+    else:
+        status = "open"
+
+    return {"status": status, "deadline": deadline, "days_left": days_left}
+
+
+def _add_trade_content(actions: list, cfg: dict, team, auth, league_id,
+                       sport: str, system: str) -> None:
+    """Trade-deadline-aware wrapper around _add_trade_signals/_add_trade_leads.
+
+    Looks up this league's trade_window_status(cfg) and:
+      - "closed":         appends a single trade_window_closed notice and
+                           skips both trade functions entirely -- no trade
+                           signals, no trade board, for the rest of the season.
+      - "urgent":          appends a trade_urgency notice (days_left) ahead of
+                           the normal trade sections.
+      - "open"/"unset":    normal trade content, no framing change.
+    """
+    window = trade_window_status(cfg)
+
+    if window["status"] == "closed":
+        actions.append({
+            "type":     "trade_window_closed",
+            "deadline": window["deadline"].isoformat() if window["deadline"] else None,
+        })
+        return
+
+    if window["status"] == "urgent":
+        actions.append({
+            "type":       "trade_urgency",
+            "days_left":  window["days_left"],
+            "deadline":   window["deadline"].isoformat() if window["deadline"] else None,
+        })
+
+    _add_trade_signals(actions, team, auth=auth, league_id=league_id,
+                       my_tid=cfg.get("cbs_team_id"), sport=sport)
+    _add_trade_leads(actions, auth, league_id, cfg, system=system)
 
 
 def _add_trade_signals(actions: list, team, auth=None, league_id=None,

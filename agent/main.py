@@ -245,6 +245,20 @@ def _print_decisions(result, dry_run):
                         print(f"   WATCH {d['player']} ({d['team']}) [{pos}]{dtag}")
                         print(f"         {d['reason']}{rstr}")
 
+        elif atype == "trade_urgency":
+            days_left = action.get("days_left")
+            deadline  = action.get("deadline", "")
+            if days_left is not None and days_left <= 0:
+                print(f"\n  ⏰ Trade deadline is TODAY ({deadline}).")
+            else:
+                plural = "" if days_left == 1 else "s"
+                print(f"\n  ⏰ Trade deadline in {days_left} day{plural} ({deadline}).")
+
+        elif atype == "trade_window_closed":
+            deadline = action.get("deadline", "")
+            print(f"\n  Trade deadline ({deadline}) has passed for this league -- "
+                  f"trade signals and trade board are suppressed for the rest of the season.")
+
         elif atype == "trade_signals":
             signals = action.get("signals", [])
             if signals:

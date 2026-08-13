@@ -51,7 +51,7 @@ from fantasypros.client import FantasyProsClient
 from savant.client import SavantClient
 from agent.trade_eval import evaluate_trade, format_trade_result
 from agent.tradevalue import analyze_roster_value
-from agent.decisions import run_decisions, get_filtered_waiver_adds
+from agent.decisions import run_decisions, get_filtered_waiver_adds, trade_window_status
 from data.models import Team
 from mlb.clock import now_et, today_et
 
@@ -154,6 +154,23 @@ def evaluate_trade_tool(
             return f"No league found matching '{league_id}'."
 
         league_cfg, _ = leagues[0]
+
+        # Trade deadline enhancement: evaluate_trade_tool stays callable
+        # on request past the deadline (manual override), but must not
+        # hand back an ACCEPT/DECLINE/CLOSE verdict once the league's
+        # trade_deadline has passed -- per-league, independent of any
+        # other league's deadline.
+        window = trade_window_status(league_cfg)
+        if window["status"] == "closed":
+            league_name  = league_cfg.get("name", league_cfg.get("id", league_id))
+            deadline_str = window["deadline"].isoformat() if window["deadline"] else "unknown"
+            return _respond(
+                f"Trade deadline has passed for {league_name} "
+                f"(deadline was {deadline_str}). No ACCEPT/DECLINE/CLOSE verdict "
+                "is available -- trades can no longer be made in this league "
+                "for the rest of the season."
+            )
+
         fp_client  = _get_fp()
         sav_client = _get_sav()
 
