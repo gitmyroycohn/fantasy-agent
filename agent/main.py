@@ -12,6 +12,7 @@ from cbs.waivers import get_available_players
 from cbs.lineup import get_current_lineup
 from mlb.stats import enrich_roster, enrich_players
 from agent.decisions import run_decisions
+from agent.football_decisions import run_football_decisions
 from agent.summary import format_tldr
 from agent.history import load_history, save_history, update_and_annotate, prune_history
 from data.models import Team
@@ -34,6 +35,17 @@ class _Tee:
     def flush(self):
         self.a.flush()
         self.b.flush()
+
+# Sports with a real decision pipeline implemented (run_decisions() for
+# baseball, run_football_decisions() for football -- see the sport dispatch
+# in run_league() below). football's pipeline is intentionally limited
+# (roster legality + open-slot waiver targets only, no performance-based
+# scoring yet -- see agent/football_decisions.py's docstring) but it is
+# real, CBS-data-grounded logic, not a stub, so it's safe to enable here.
+# mcp_server.py's own _SUPPORTED_SPORTS stays baseball-only until each
+# individual MCP tool (daily_decisions, waiver_recommendations, etc.) is
+# updated to dispatch by sport the same way this loop now does.
+_SUPPORTED_SPORTS = {"baseball", "football"}
 
 def load_leagues(path=None):
     if path is None:
@@ -59,12 +71,17 @@ def run_league(auth, league, sport, run_type, dry_run, history=None):
     if len(roster) > 5:
         print(f"  ... and {len(roster) - 5} more")
 
-    try:
-        enrich_roster(roster)
-        enriched = sum(1 for rs in roster if rs.player.stats)
-        print(f"  Stats enriched: {enriched}/{len(roster)} roster players")
-    except Exception as e:
-        print(f"  Stats enrichment: unavailable ({e})")
+    # mlb.stats enrichment (enrich_roster/enrich_players) matches players
+    # against MLB stat feeds by name/team -- meaningless (and a wasted API
+    # call, or worse a false-positive name match) for NFL players, so it's
+    # baseball-only.
+    if sport == "baseball":
+        try:
+            enrich_roster(roster)
+            enriched = sum(1 for rs in roster if rs.player.stats)
+            print(f"  Stats enriched: {enriched}/{len(roster)} roster players")
+        except Exception as e:
+            print(f"  Stats enrichment: unavailable ({e})")
 
     lineup = get_current_lineup(auth, lid, tid, sport)
     starting = sum(1 for s in lineup if s["is_starting"])
@@ -74,10 +91,11 @@ def run_league(auth, league, sport, run_type, dry_run, history=None):
         try:
             available = get_available_players(auth, lid, sport)
             print(f"  Free agents visible: {len(available)}")
-            try:
-                enrich_players(available[:200])
-            except Exception:
-                pass
+            if sport == "baseball":
+                try:
+                    enrich_players(available[:200])
+                except Exception:
+                    pass
         except Exception as e:
             print(f"  Free agents: unavailable ({e})")
 
@@ -85,7 +103,10 @@ def run_league(auth, league, sport, run_type, dry_run, history=None):
     if run_type in ("daily", "weekly", "waivers"):
         try:
             team = Team(id=tid, name=name, roster=roster)
-            result = run_decisions(auth, lid, league, team, sport)
+            if sport == "football":
+                result = run_football_decisions(auth, lid, league, team, sport)
+            else:
+                result = run_decisions(auth, lid, league, team, sport)
             if history is not None:
                 update_and_annotate(result, history, lid)
             _print_decisions(result, dry_run)
@@ -156,6 +177,58 @@ def _print_decisions(result, dry_run):
         elif atype == "nl_eligibility_warnings":
             for w in action.get("warnings", []):
                 print(f"  !! {w['warning']}")
+
+        elif atype == "roster_legality":
+            # Football only (agent/football_decisions.py) -- mirrors the
+            # exact phrasing CBS itself uses in its "ROSTER WARNINGS" UI
+            # (see sports/football/roster_rules.py's module docstring).
+            req = action.get("starters_required", 0)
+            present = action.get("starters_present", 0)
+            if action.get("legal"):
+                print(f"  Roster: legal ({present}/{req} starters filled)")
+            else:
+                print(f"  Roster: ILLEGAL ({present}/{req} starters filled)")
+                for issue in action.get("issues", []):
+                    print(f"    !! {issue}")
+
+        elif atype == "waiver_targets":
+            # Football only. Sorted by ownership% ascending only -- no
+            # performance signal behind this yet, see
+            # sports/football/waivers.py's docstring.
+            by_slot = action.get("by_slot", {})
+            if by_slot:
+                print(f"\n  --- Open-Slot Waiver Targets ---")
+                for slot, players in by_slot.items():
+                    print(f"  {slot}:")
+                    for p in players:
+                        pos = "/".join(p.get("positions", []))
+                        print(f"    + {p['player']} ({p.get('team','?')}) [{pos}] "
+                              f"owned {p.get('ownership_pct', 0):.1f}%")
+
+        elif atype == "keeper_guidance":
+            # Football only (agent/football_decisions.py / sports/football/keepers.py).
+            print(f"\n  --- Keepers ---")
+            if not action.get("is_keeper_league"):
+                print(f"  {action.get('note', 'Not a keeper league.')}")
+            else:
+                cap = action.get("max_keepers")
+                cap_str = str(cap) if cap is not None else "unknown"
+                print(f"  Keeper league -- max {cap_str}, "
+                      f"selected by: {action.get('decided_by') or '?'}, "
+                      f"deadline: {action.get('selection_deadline') or '?'}")
+                print(f"  {action.get('note', '')}")
+                keeps = action.get("recommended_keeps", [])
+                if keeps:
+                    src = action.get("ranking_source") or "?"
+                    print(f"  Recommended keeps (via {src}): {', '.join(keeps)}")
+                other = action.get("other_eligible", [])
+                if other:
+                    label = "Other eligible" if keeps else "Keeper-eligible roster"
+                    print(f"  {label}: {', '.join(other)}")
+                expired = action.get("contract_expired", [])
+                if expired:
+                    print(f"  Contract expired (not keeper-eligible, to draft "
+                          f"pool): {', '.join(expired)}")
 
         elif atype in ("streaming_sp", "streaming_sp_next_week"):
             recs = action.get("recommendations", [])
@@ -506,6 +579,16 @@ def main():
             # sport -> [league, ...] entries -- skip anything that isn't a
             # list of league dicts.
             if not isinstance(leagues, list):
+                continue
+            # Any sport listed here but not yet in _SUPPORTED_SPORTS has
+            # config (league IDs/scoring rules) but no decision pipeline
+            # wired up -- skip it rather than risk running the wrong
+            # sport's logic (run_league()'s sport dispatch below assumes
+            # every sport it's handed is in _SUPPORTED_SPORTS).
+            if sport not in _SUPPORTED_SPORTS:
+                if args.sport in (sport,):
+                    print(f"\n=== {sport} === (not yet supported by the agent "
+                          f"pipeline -- config only; skipping)")
                 continue
             if args.sport not in ("all", sport):
                 continue

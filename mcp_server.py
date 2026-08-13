@@ -4,13 +4,21 @@ Fantasy Baseball Agent -- MCP Server
 Exposes the agent's capabilities as tools for Claude Projects / Claude Desktop.
 
 Tools:
-  evaluate_trade          -- evaluate a specific trade offer
-  daily_decisions         -- run full daily analysis for a league
-  get_roster              -- your current roster for a league
-  get_team_roster         -- ANY team's current roster, by name (trade research)
-  list_league_teams       -- list team names in a league (helper for get_team_roster)
-  waiver_recommendations  -- top waiver wire adds
-  roster_value_signals    -- buy-low / sell-high signals
+  evaluate_trade          -- evaluate a specific trade offer [baseball only]
+  daily_decisions         -- run full daily analysis for a league [baseball + football]
+  get_roster              -- your current roster for a league [baseball + football]
+  get_team_roster         -- ANY team's current roster, by name (trade research) [baseball + football]
+  list_league_teams       -- list team names in a league (helper for get_team_roster) [baseball + football]
+  waiver_recommendations  -- top waiver wire adds [baseball only]
+  roster_value_signals    -- buy-low / sell-high signals [baseball only]
+
+Football support (added 2026-08-01) is intentionally partial -- see
+agent/football_decisions.py and sports/football/. Tools marked
+[baseball only] above still hard-call sports.baseball.*/mlb.* with no
+sport branching (streaming SPs, category analysis, Savant xStats, MLB
+schedule/injury data -- none of which apply to football) and will not
+resolve football leagues at all, by design (see _BASEBALL_ONLY_SPORTS /
+_FOOTBALL_AWARE_SPORTS below _resolve_leagues()).
 
 Setup (one-time):
   pip install mcp python-dotenv pyyaml requests beautifulsoup4
@@ -52,6 +60,7 @@ from savant.client import SavantClient
 from agent.trade_eval import evaluate_trade, format_trade_result
 from agent.tradevalue import analyze_roster_value
 from agent.decisions import run_decisions, get_filtered_waiver_adds
+from agent.football_decisions import run_football_decisions
 from data.models import Team
 from mlb.clock import now_et, today_et
 
@@ -104,14 +113,38 @@ def _get_fp():
 def _get_sav():
     return SavantClient()
 
-def _resolve_leagues(league_id: str) -> list[tuple[dict, str]]:
-    """Return list of (league_cfg, sport) matching the requested league_id."""
+
+# Most tools here (waiver_recommendations, roster_value_signals,
+# evaluate_trade_tool, hitting_matchups, probe_schedule) hard-import
+# sports.baseball.* / mlb.* with no sport branching -- calling them against
+# a football league would silently apply baseball logic (categories,
+# streaming SPs, MLB schedule/injury data, Savant xStats...) to a sport
+# none of that applies to. Those tools all call _resolve_leagues(league_id)
+# with no `sports` arg, so they get this baseball-only default and never
+# see football leagues.
+#
+# A few tools ARE football-safe and pass sports=_FOOTBALL_AWARE_SPORTS
+# explicitly below: get_roster / list_league_teams / get_team_roster only
+# ever fetch+print a roster generically (no baseball-specific analysis),
+# and daily_decisions dispatches per-league to run_football_decisions()
+# for football leagues instead of run_decisions() (see its docstring).
+_BASEBALL_ONLY_SPORTS  = {"baseball"}
+_FOOTBALL_AWARE_SPORTS = {"baseball", "football"}
+
+
+def _resolve_leagues(league_id: str,
+                     sports: set = _BASEBALL_ONLY_SPORTS) -> list[tuple[dict, str]]:
+    """Return list of (league_cfg, sport) matching the requested league_id,
+    restricted to `sports` (default: baseball only -- see the guidance
+    above _BASEBALL_ONLY_SPORTS for which tools should pass a wider set)."""
     config = _load_leagues()
     results = []
     for sport, leagues in config.items():
         # leagues.yaml also carries top-level season_start/periods keys
         # (BUG 5 fix) that aren't sport -> [league, ...] entries.
         if not isinstance(leagues, list):
+            continue
+        if sport not in sports:
             continue
         for league in (leagues or []):
             # A real league entry always has cbs_league_id -- filters out
@@ -187,7 +220,7 @@ def get_roster(league_id: str = "all") -> str:
     """
     try:
         auth    = _get_auth()
-        leagues = _resolve_leagues(league_id)
+        leagues = _resolve_leagues(league_id, sports=_FOOTBALL_AWARE_SPORTS)
         if not leagues:
             return f"No league found matching '{league_id}'."
 
@@ -197,10 +230,11 @@ def get_roster(league_id: str = "all") -> str:
             tid  = str(league_cfg["cbs_team_id"])
             name = league_cfg.get("name", lid)
             roster = cbs_get_roster(auth, lid, tid, sport)
-            try:
-                enrich_roster(roster)
-            except Exception:
-                pass
+            if sport == "baseball":  # mlb.stats enrichment is baseball-only
+                try:
+                    enrich_roster(roster)
+                except Exception:
+                    pass
 
             out.append(f"=== {name} ({sport}) ===")
             out.append(f"{'Slot':<6} {'Player':<24} {'Team':<5} {'Status'}")
@@ -244,7 +278,7 @@ def get_team_roster(league_id: str, team_name: str) -> str:
     """
     try:
         auth    = _get_auth()
-        leagues = _resolve_leagues(league_id)
+        leagues = _resolve_leagues(league_id, sports=_FOOTBALL_AWARE_SPORTS)
         if not leagues:
             return f"No league found matching '{league_id}'."
         if len(leagues) > 1:
@@ -295,7 +329,7 @@ def list_league_teams(league_id: str) -> str:
     """
     try:
         auth    = _get_auth()
-        leagues = _resolve_leagues(league_id)
+        leagues = _resolve_leagues(league_id, sports=_FOOTBALL_AWARE_SPORTS)
         if not leagues:
             return f"No league found matching '{league_id}'."
 
@@ -861,18 +895,33 @@ def hitting_matchups(
 @mcp.tool()
 def daily_decisions(league_id: str = "all") -> str:
     """
-    Run the full daily fantasy baseball analysis for your league(s).
+    Run the full daily fantasy analysis for your league(s) -- baseball or
+    football.
 
-    Returns the complete agent output: matchup summary, streaming SPs,
-    waiver adds, drop candidates, trade signals, trade board, closer news,
-    and daily lineup advice.
+    Baseball leagues get the complete agent output: matchup summary,
+    streaming SPs, waiver adds, drop candidates, trade signals, trade
+    board, closer news, and daily lineup advice.
+
+    Football leagues get a more limited report for now (see
+    agent/football_decisions.py): starting-lineup/roster legality, if any
+    starting slots are open, free-agent targets for those slots sorted by
+    ownership%, and keeper guidance (real per-league policy -- east_coast
+    has a confirmed 3-keeper cap with no cost mechanic and will get ranked
+    keeper suggestions if FANTASYPROS_API_KEY is set; f_league is a keeper
+    league too but its cap isn't known/published, so you'll be told to ask
+    that league's commissioner instead of a guess; hard_chargers isn't a
+    keeper league at all). There is no performance-based scoring for
+    football yet otherwise (no live NFL stat feed to calibrate against) --
+    don't expect start/sit advice or ranked waiver adds the way baseball
+    gets them.
 
     Args:
-        league_id: League id from config, or "all" for all leagues.
+        league_id: League id from config, or "all" for all leagues (baseball
+                   AND football).
     """
     try:
         auth    = _get_auth()
-        leagues = _resolve_leagues(league_id)
+        leagues = _resolve_leagues(league_id, sports=_FOOTBALL_AWARE_SPORTS)
         if not leagues:
             return f"No league found matching '{league_id}'."
 
@@ -885,12 +934,16 @@ def daily_decisions(league_id: str = "all") -> str:
                 tid  = str(league_cfg["cbs_team_id"])
                 name = league_cfg.get("name", lid)
                 roster = cbs_get_roster(auth, lid, tid, sport)
-                try:
-                    enrich_roster(roster)
-                except Exception:
-                    pass
-                team   = Team(id=tid, name=name, roster=roster)
-                result = run_decisions(auth, lid, league_cfg, team, sport)
+                if sport == "baseball":  # mlb.stats enrichment is baseball-only
+                    try:
+                        enrich_roster(roster)
+                    except Exception:
+                        pass
+                team = Team(id=tid, name=name, roster=roster)
+                if sport == "football":
+                    result = run_football_decisions(auth, lid, league_cfg, team, sport)
+                else:
+                    result = run_decisions(auth, lid, league_cfg, team, sport)
                 # Re-use main.py printer
                 from agent.main import _print_decisions
                 _print_decisions(result, dry_run=True)

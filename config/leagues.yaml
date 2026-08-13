@@ -100,3 +100,112 @@ baseball:
       all_players_dh_eligible: false
     # Players intentionally held as speculative stash -- never flag as drop candidates
     prospect_stash: []
+
+# ---------------------------------------------------------------------------
+# Football (2026 season). All 3 leagues confirmed Head-to-Head, Points format
+# (not category/roto -- baseball's h2h_categories/rotisserie formats and
+# scoring shapes do not apply here). League IDs, team IDs, and full scoring
+# rules pulled directly from each league's CBS /details/teams-managers and
+# /rules pages on 2026-07-31.
+#
+# `scoring_profile` names the profile implemented in
+# sports/football/scoring.py -- unlike baseball's flat hitting/pitching
+# category lists, football scoring here is either a flat per-play rate table
+# (hcfl05, ecfc) or a tiered/position-dependent table (sfflf) too large to
+# express cleanly as YAML, so the actual point values live in code and this
+# file only records league identity/roster/transaction settings plus which
+# profile applies. See sports/football/scoring.py for the point values
+# themselves.
+football:
+  - id: "f_league"
+    name: "F-League"
+    cbs_league_id: "sfflf"
+    cbs_team_id: "11"
+    my_team_name: "COWBOYS"
+    format: "h2h_points"
+    scoring_profile: "sfflf_tiered"
+    # NOTE: this league is NOT PPR -- receptions score 0 points at every
+    # position. Yardage only scores via bonus tiers (not per-yard), and TD
+    # point values differ by which position scores them (e.g. a passing TD
+    # is worth 6 for a QB but 12 if credited to a RB/WR/TE on a trick play).
+    # Full tier tables are in sports/football/scoring.py:SFFLF_PROFILE.
+    teams: 10
+    divisions: null
+    roster:
+      starters: 9
+      bench: 8
+      max_qb: 3
+      # positions: QB1 RB1 WR1 TE1 RB-WR2 WR-TE1 K1 DST1 (9 starters)
+    transactions:
+      trade_deadline: "2026-11-22T23:59:00-05:00"
+      trades_require_commish_approval: true
+      waiver_run_days: [Sun, Tue, Wed, Thu, Fri, Sat]
+      waiver_min_days_on_wire: 1
+    draft:
+      format: "extended_snake"
+      rounds: 17
+      scheduled: "2026-08-28T19:00:00-04:00"
+    playoffs:
+      start_week: 15
+      length_weeks: 3
+
+  - id: "hard_chargers"
+    name: "Hard Chargers Fantasy League"
+    cbs_league_id: "hcfl05"
+    cbs_team_id: "17"
+    my_team_name: "Stuck Pigs"
+    format: "h2h_points"
+    scoring_profile: "standard_ppr"
+    teams: 14
+    divisions: null
+    roster:
+      starters: 9
+      bench: 6
+      # No IR/practice squad slots -- 15 total roster max, tightest of the 3.
+      total_max: 15
+    transactions:
+      trade_deadline: "2026-11-19T23:59:00-05:00"
+      trades_require_commish_approval: true
+      waiver_run_days: [Tue, Wed, Thu, Fri, Sat]
+      waiver_min_days_on_wire: 1
+    draft:
+      format: "live_snake"
+      rounds: null  # not yet scheduled as of 2026-07-31 -- commish still needs to set up Draft Management
+      scheduled: null
+    playoffs:
+      start_week: 15
+      length_weeks: 3
+
+  - id: "east_coast"
+    name: "East Coast Fantasy Football League"
+    cbs_league_id: "ecfc"
+    cbs_team_id: "5"
+    my_team_name: "Hotlanta Hussies"
+    format: "h2h_points"
+    scoring_profile: "standard_ppr_strict"
+    # NOTE: league showed a "renew your league" banner as of 2026-07-31 --
+    # commissioner needs to renew or this league may lose data access
+    # mid-season. Also: the informal commish notes on the rules page say
+    # missed FG/XP (incl. blocked) = -1pt, but the structured settings table
+    # says missed FG = -1 / missed XP = -2. These two DISAGREE -- do not
+    # hardcode either value into scoring.py until confirmed with the
+    # commissioner (see sports/football/scoring.py:ECFC_PROFILE docstring).
+    teams: 10
+    divisions: 2
+    roster:
+      starters: 10
+      bench: 9
+      total_max: 19
+      wild_card_slots: 1
+    transactions:
+      trade_deadline: "2026-11-14T23:59:00-05:00"
+      trades_require_commish_approval: false  # trades process immediately in this league
+      waiver_run_days: [Tue, Wed, Thu, Fri, Sat]
+      waiver_min_days_on_wire: 1
+    draft:
+      format: "live_snake"
+      rounds: 16
+      scheduled: null  # not yet scheduled as of 2026-07-31
+    playoffs:
+      start_week: 15
+      length_weeks: 3
