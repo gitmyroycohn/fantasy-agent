@@ -28,7 +28,10 @@ from savant.client import SavantClient, enrich_with_savant
 from agent.tradevalue import analyze_roster_value
 from cbs.standings import fetch_all_teams_stats
 from agent.surplusmap import build_surplus_map, trade_leads_from_map, my_category_profile
-from mlb.injuries import fetch_il_transactions, annotate_roster_injuries, format_transactions, fetch_active_il
+from mlb.injuries import (
+    fetch_il_transactions, annotate_roster_injuries, format_transactions,
+    fetch_active_il, fetch_active_roster_names,
+)
 from mlb.splits import fetch_recent_form as _fetch_recent_form
 from config.periods import resolve_period
 
@@ -65,6 +68,48 @@ def _sav_enrich(players, label=""):
     except Exception as e:
         tag = f" ({label})" if label else ""
         print(f"  Savant xStats{tag} failed: {e}")
+
+
+def _filter_active_roster(waivers, label=""):
+    """Drop waiver candidates who are not currently on an MLB team's active
+    (26-man) roster -- catches players optioned to the minors, DFA'd,
+    released, or retired whose season-long MLB stat line is stale but who
+    are no longer producing for a real MLB team.
+
+    Bug fix (2026-08-15): Kevin Alcantara was recommended as the #1 waiver
+    add in both leagues 11 days after being optioned to Triple-A Iowa,
+    because the pool builder only checked season stats, never current
+    roster status. Every waiver-pool call site (H2H streaming/adds, roto
+    adds, and the MCP waiver_recommendations tool) should route through
+    this filter.
+
+    Guarded: if fetch_active_roster_names() fails or returns empty (MLB
+    Stats API hiccup), skip the filter for this run rather than wiping out
+    the whole waiver pool.
+    """
+    if not waivers:
+        return waivers
+    tag = f" ({label})" if label else ""
+    try:
+        active_names = fetch_active_roster_names()
+    except Exception as e:
+        logger.warning("Active-roster filter%s failed: %s", tag, e)
+        return waivers
+    if not active_names:
+        logger.warning(
+            "Active-roster filter%s: fetch_active_roster_names() returned "
+            "empty -- skipping filter for this run", tag,
+        )
+        return waivers
+    pre = len(waivers)
+    filtered = [wp for wp in waivers if _norm_name(wp.player.name) in active_names]
+    removed = pre - len(filtered)
+    if removed:
+        logger.info(
+            "Active-roster filter%s: removed %d optioned/DFA'd/non-MLB "
+            "players from waiver pool", tag, removed,
+        )
+    return filtered
 
 
 def run_decisions(auth, league_id, league_config, team, sport="baseball"):
@@ -111,6 +156,7 @@ def _h2h_decisions(auth, league_id, cfg, team, sport):
     })
 
     waivers = fetch_waiver_wire(auth, league_id, sport, position="SP")
+    waivers = _filter_active_roster(waivers, "SP wire")
     try:
         enrich_players(waivers[:100])
     except Exception as e:
@@ -178,6 +224,7 @@ def _h2h_decisions(auth, league_id, cfg, team, sport):
     if losing:
         all_waivers = fetch_waiver_wire(auth, league_id, sport,
                                         position="all", limit=200)
+        all_waivers = _filter_active_roster(all_waivers, "H2H all wire")
         try:
             enrich_players(all_waivers)
         except Exception as e:
@@ -222,6 +269,7 @@ def _roto_decisions(auth, league_id, cfg, team, sport):
 
     all_waivers = fetch_waiver_wire(auth, league_id, sport,
                                     position="all", limit=200)
+    all_waivers = _filter_active_roster(all_waivers, "roto wire")
     try:
         enrich_players(all_waivers)
     except Exception as e:
@@ -359,12 +407,13 @@ def _add_lineup_advice(actions, team, no_bench=False, league_cfg=None):
 
         # ENH 4/7: official posted lineups (confirmed/expected/not-in-lineup).
         try:
-            from mlb.lineups import fetch_posted_lineups, lineup_status_for
+            from mlb.lineups import fetch_posted_lineups, lineup_status_for, batting_order_for
             posted = fetch_posted_lineups()
         except Exception as e:
             logger.warning("Posted-lineup fetch failed, falling back to schedule-only: %s", e)
             posted = {"players": {}, "posted_teams": set()}
             lineup_status_for = lambda name, team, posted: "unknown"  # noqa: E731
+            batting_order_for = lambda name, team, posted: None  # noqa: E731
 
         lineup_slots = [
             {
@@ -376,10 +425,12 @@ def _add_lineup_advice(actions, team, no_bench=False, league_cfg=None):
                 "slot":               rs.slot,
                 "is_starting":        rs.is_starting,
                 "stats":              rs.player.stats or {},
+                # Bug fix (2026-08-16): both calls now require name AND team
+                # to match the posted lineup, not name alone -- see
+                # mlb.lineups.lineup_status_for() docstring (Franklin Arias
+                # bug, 2026-08-13).
                 "lineup_status":      lineup_status_for(rs.player.name, rs.player.team, posted),
-                "batting_order":      posted.get("players", {})
-                                            .get(_norm_name(rs.player.name), {})
-                                            .get("batting_order"),
+                "batting_order":      batting_order_for(rs.player.name, rs.player.team, posted),
             }
             for rs in team.roster
         ]
@@ -511,6 +562,9 @@ def get_filtered_waiver_adds(
     il_removed = pre_il - len(waivers)
     if il_removed:
         logger.info("IL filter: removed %d injured players from waiver pool", il_removed)
+
+    # Active-MLB-roster filter -- see _filter_active_roster() docstring.
+    waivers = _filter_active_roster(waivers, "wire")
 
     # Recently-dropped filter (Bug 4) -- suppress players flagged "cut" 2+ times.
     # Reads logs/history.json so no extra API calls are needed.

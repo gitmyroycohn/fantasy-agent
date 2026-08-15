@@ -29,11 +29,16 @@ fetch_posted_lineups(d=None) -> {
 }
 
 lineup_status_for(name, team, posted) -> "confirmed" | "not_in_lineup" | "unknown"
-    "confirmed":      player is in that team's posted lineup.
+    "confirmed":      player is in THEIR OWN team's posted lineup (name AND
+                      team must match -- see bug-fix note on the function).
     "not_in_lineup":  that team's lineup IS posted and this player is NOT in it.
     "unknown":        that team's lineup has not posted yet -- caller should
                       treat this as "expected" (based on schedule), never as
                       a confirmed absence.
+
+batting_order_for(name, team, posted) -> int | None
+    Batting-order slot for a hitter confirmed in their own team's posted
+    lineup today, else None. Same name+team scoping as lineup_status_for().
 """
 
 import logging
@@ -107,14 +112,48 @@ def fetch_posted_lineups(d: date = None) -> dict:
 
 
 def lineup_status_for(name: str, team: str, posted: dict) -> str:
-    """Return "confirmed" / "not_in_lineup" / "unknown" for a rostered hitter."""
+    """Return "confirmed" / "not_in_lineup" / "unknown" for a rostered hitter.
+
+    Bug fix (2026-08-16): this used to return "confirmed" on a normalized-
+    name match alone, ignoring the `team` argument entirely -- `players` is
+    a flat dict of every hitter in ANY team's posted lineup that day, keyed
+    only by name. That let a bench/minor-league player who merely shares a
+    normalized name with someone genuinely starting elsewhere get marked
+    "confirmed," which find_legal_swaps() (sports/baseball/lineup_optimizer.
+    py) then proposed as a legitimate swap-in. Reported live 2026-08-13:
+    Franklin Arias, a Double-A prospect never called up to MLB, surfaced as
+    a "confirmed playing" swap-in candidate.
+
+    Fix: only return "confirmed" when the stored entry's team matches the
+    player's own team. `team` is still checked here now, not just in the
+    not_in_lineup fallback below.
+    """
     norm = norm_name(name)
-    players = (posted or {}).get("players", {})
-    if norm in players:
+    team_up = (team or "").upper()
+    entry = (posted or {}).get("players", {}).get(norm)
+    if entry is not None and (entry.get("team") or "").upper() == team_up:
         return "confirmed"
-    if (team or "").upper() in (posted or {}).get("posted_teams", set()):
+    if team_up in (posted or {}).get("posted_teams", set()):
         return "not_in_lineup"
     return "unknown"
+
+
+def batting_order_for(name: str, team: str, posted: dict) -> int | None:
+    """Return the batting-order slot for a rostered hitter, but only if
+    they're confirmed in THEIR OWN team's posted lineup today -- else None.
+
+    Same team-scoping bug as lineup_status_for() above applied here too:
+    the original call site (agent/decisions.py) looked this up by
+    normalized name alone, so a bench/minor-league player could get a real
+    batting-order number attached from an unrelated same-named player on a
+    different team, reinforcing the same false "confirmed" impression.
+    """
+    norm = norm_name(name)
+    team_up = (team or "").upper()
+    entry = (posted or {}).get("players", {}).get(norm)
+    if entry is not None and (entry.get("team") or "").upper() == team_up:
+        return entry.get("batting_order")
+    return None
 
 
 def _team_abbr(side_info: dict) -> str:
