@@ -51,6 +51,13 @@ baseball:
     cbs_league_id: "hemp"
     cbs_team_id: "7"
     format: "h2h_categories"
+    # Trade deadline enhancement: confirmed from CBS league settings
+    # (Commissioner -> League Settings -> Trade Deadline) -- "No trades can
+    # be made after the trade deadline of 11:59 pm ET 8/3/26." Stored as the
+    # last calendar date trades are allowed; agent/decisions.trade_window_status
+    # treats today >= this date as past the deadline (see that function's
+    # docstring for the exact open/urgent/closed thresholds).
+    trade_deadline: "2026-08-03"
     scoring:
       # BUG 6 fix: this league scores 12 real categories, not 17. AVG, TB,
       # XBH, QS, HLD, and K_BB do not exist in this league's settings; H was
@@ -82,6 +89,9 @@ baseball:
     cbs_league_id: "baberuthdivingclubformen"
     cbs_team_id: "2"
     format: "rotisserie"
+    # Trade deadline enhancement: confirmed from CBS league settings --
+    # "No trades can be made after the trade deadline of 11:59 pm ET 7/31/26."
+    trade_deadline: "2026-07-31"
     roster_type: "nl_only"
     no_bench: true
     scoring:

@@ -13,6 +13,12 @@ fetch_active_il()
     → dict: {norm_name: {"name", "team", "il_type", "date"}}
     All players currently on any IL across MLB.
 
+fetch_active_roster_names()
+    → frozenset of norm_name strings
+    Every player currently on an MLB team's active (26-man, status "A")
+    roster. Used to exclude optioned/demoted/DFA'd players -- who may still
+    carry season stats -- from the waiver-wire candidate pool.
+
 annotate_roster_injuries(roster_slots, active_il)
     → list of dicts: {player, slot, il_type, date}
     Flags your CBS roster players found in the active IL.
@@ -20,6 +26,7 @@ annotate_roster_injuries(roster_slots, active_il)
 
 import logging
 from datetime import date, datetime, timedelta
+from functools import lru_cache
 
 import requests
 
@@ -240,6 +247,71 @@ def fetch_active_il() -> dict[str, dict]:
 
     logger.info("fetch_active_il: %d players currently on IL", len(active_il))
     return active_il
+
+
+# ---------------------------------------------------------------------------
+# Active MLB roster (all of MLB) -- optioned/DFA'd/released filter
+# ---------------------------------------------------------------------------
+
+@lru_cache(maxsize=1)
+def fetch_active_roster_names() -> frozenset[str]:
+    """
+    Return the normalized full names of every player currently on an MLB
+    team's active (26-man) roster.
+
+    Bug fix (2026-08-15): the waiver/free-agent pool was built purely from
+    season-long MLB Stats API stat lines with no check of *current* roster
+    status, so a player optioned to Triple-A weeks ago (e.g. Kevin
+    Alcantara, optioned to Iowa on 8/4) kept surfacing as a top waiver
+    recommendation on the strength of stats accrued before the demotion.
+
+    rosterType=active only returns players with MLB status code "A" --
+    optioned-to-minors players get a different status and simply aren't in
+    this list (same as fetch_active_il() above relies on rosterType=
+    fullRoster to find the "D*" IL status codes that "active" excludes).
+    So players on this active roster are a strict subset of fullRoster,
+    and optioned/DFA'd/released/retired players are naturally absent
+    without needing to parse the separate transactions feed.
+
+    Cached for the life of the process (lru_cache) -- one MLB Stats API
+    call per team, called once per agent run.
+    """
+    try:
+        r = requests.get(f"{MLB_API}/teams", params={"sportId": 1}, timeout=TIMEOUT)
+        r.raise_for_status()
+        teams = r.json().get("teams", [])
+    except Exception as exc:
+        logger.warning("fetch_active_roster_names: failed to get teams: %s", exc)
+        return frozenset()
+
+    active_names: set[str] = set()
+
+    for team in teams:
+        team_id = team.get("id")
+        if not team_id:
+            continue
+        try:
+            r = requests.get(
+                f"{MLB_API}/teams/{team_id}/roster",
+                params={"rosterType": "active", "season": _today_et().year},
+                timeout=TIMEOUT,
+            )
+            if r.status_code == 404:
+                continue
+            r.raise_for_status()
+            roster = r.json().get("roster", [])
+        except Exception as exc:
+            logger.debug("fetch_active_roster_names team %s: %s", team_id, exc)
+            continue
+
+        for entry in roster:
+            name = entry.get("person", {}).get("fullName", "")
+            if name:
+                active_names.add(_norm(name))
+
+    logger.info("fetch_active_roster_names: %d players on active MLB rosters",
+                len(active_names))
+    return frozenset(active_names)
 
 
 # ---------------------------------------------------------------------------
