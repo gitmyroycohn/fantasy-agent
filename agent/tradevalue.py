@@ -93,7 +93,23 @@ def analyze_roster_value(roster_slots) -> list[dict]:
         if not p.stats:
             continue
 
-        is_pitcher = bool(set(p.positions) & _PITCHER_POS)
+        # Bug fix (2026-08-15, P1): use eligible_positions, not the raw
+        # `positions` property. `positions` is derived straight from
+        # `Player.position`, which for a ROSTER player (unlike a free agent)
+        # is only the player's CURRENT CBS roster slot tag (see
+        # cbs/roster.py's ENH 2 comment) -- e.g. a full-time starter parked
+        # in an "RP" bench slot shows as positions=["RP"]. `eligible_positions`
+        # uses the full CBS position-eligibility index
+        # (Player.eligible_positions_override, wired in cbs/roster.py via
+        # cbs/players.py::fetch_position_eligibility_index) when available,
+        # falling back to `positions` only for free agents/unfetched players
+        # -- the same position-resolution logic already used everywhere else
+        # roster players' true position matters (e.g.
+        # sports/baseball/lineup_optimizer.py's slot-eligibility checks).
+        # Live incident: Joey Cantillo, a full-time SP, was shown tagged
+        # [RP] by roster_value_signals (mcp_server.py), which used this
+        # function's "positions" output directly.
+        is_pitcher = bool(set(p.eligible_positions) & _PITCHER_POS)
         s          = p.stats
 
         pa = s.get("PA") or s.get("AB") or 0
@@ -186,7 +202,10 @@ def analyze_roster_value(roster_slots) -> list[dict]:
         signals.append({
             "name":       p.name,
             "team":       p.team,
-            "positions":  p.positions,
+            # Bug fix (2026-08-15, P1): report eligible_positions (true CBS
+            # position eligibility), not the current-slot-derived
+            # `positions` -- see the is_pitcher fix above for why.
+            "positions":  p.eligible_positions,
             "signal":     signal,
             "reason":     "; ".join(reasons) + savant_note,
             "confidence": confidence,

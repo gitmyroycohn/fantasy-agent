@@ -21,6 +21,7 @@ def rank_streaming_sps(
     waiver_players: list[WaiverPlayer],
     current_cat_standings: dict,
     two_starters: dict[str, int] = None,   # {norm_name: num_starts} from mlb.schedule
+    start_dates: dict[str, tuple] = None,  # {norm_name: (iso_date, ...)} from mlb.schedule
     max_results: int = 5,
 ) -> list[dict]:
     """
@@ -29,8 +30,17 @@ def rank_streaming_sps(
 
     two_starters: pass the result of mlb.schedule.two_start_pitchers() to
     give 2-start pitchers a large scoring bonus.
+
+    start_dates: pass the result of mlb.schedule.two_start_pitcher_dates()
+    (or the "start_dates" entry threaded through from mlb.schedule's window
+    fetch) to attach each candidate's real probable-start date(s) to the
+    output as "start_dates". Added 2026-08-15 so a "2-START" claim is
+    directly verifiable against the actual calendar dates it's counting,
+    instead of only a bare count -- see mlb.schedule.two_start_pitcher_dates()
+    docstring for the investigation this closes out.
     """
     two_starters = two_starters or {}
+    start_dates  = start_dates or {}
 
     sp_candidates = [
         wp for wp in waiver_players
@@ -42,6 +52,7 @@ def rank_streaming_sps(
     for wp in sp_candidates:
         norm  = _norm(wp.player.name)
         starts = two_starters.get(norm, 1)   # default to 1 if not in schedule yet
+        dates  = start_dates.get(norm, ())
         score = _score_sp(wp.player, current_cat_standings, starts)
         if score > 0:
             _stats = wp.player.stats or {}
@@ -50,6 +61,7 @@ def rank_streaming_sps(
                 "team":        wp.player.team,
                 "ownership":   wp.ownership_pct,
                 "starts":      starts,
+                "start_dates": list(dates),
                 "score":       round(score, 2),
                 "reason":      _reason(wp.player, current_cat_standings, starts),
                 "era":         _stats.get("ERA", "?"),

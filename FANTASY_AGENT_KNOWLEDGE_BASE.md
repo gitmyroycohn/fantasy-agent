@@ -412,3 +412,61 @@ the GitHub Actions workflow once on this branch** (where `CBS_COOKIE` is a
 configured secret) to confirm the two live-data-dependent, unvalidated pieces
 before merging: `cbs/players.py`'s `players/list`-based eligibility index, and
 `mlb/lineups.py`'s `lineups` hydration shape.
+
+---
+
+## Aug 15 2026 bug batch (`fix/aug15-bug-batch` — commit `c2af12b3`, not yet merged)
+
+Full detail (Found/Severity/Symptom/Root cause/Fix/Tests) is in
+`claude/bug_tracker.md`'s "Fixed, branch ready for PR" section. Summary of what changed and why,
+in the style of the Phase B/C sections above:
+
+### "SPs starting/pitching today" was over-inclusive (P0)
+
+**Problem:** `agent/main.py`'s daily-lineup renderer bucketed "starting/pitching today" as
+`advice in ("start", "ok")`, but `optimize_daily_lineup()` also returns `advice="ok"` for an SP
+whose MLB team merely has a game today without being the confirmed probable starter. Live
+incident (2026-08-15): 7 of 9 pitchers listed under Pins and Pills' "SPs starting today" were
+not that day's confirmed starter per RotoWire.
+
+**Fix:** `LineupAdvice.is_probable_starter` (already tri-state-correct) is now exposed on the
+serialized advice dicts (`agent/decisions.py`), and a new `sports/baseball/lineup_optimizer.py::
+classify_sp_advice()` helper is the single place both of `agent/main.py`'s renderers derive the
+confirmed/pending/benched split from. Also investigated (and ruled out) a hypothesized second
+off-by-one in the streaming-SP date window — the window itself is correct; instead added
+`mlb/schedule.py::two_start_pitcher_dates()` and a `start_dates` field on each streaming
+recommendation so "2-START" claims are directly verifiable against real dates going forward.
+
+### roster_value_signals mistagged a full-time SP as [RP] (P1)
+
+**Problem:** `agent/tradevalue.py::analyze_roster_value()` and `sports/baseball/drops.py::
+find_drop_candidates()` read `Player.positions` (a roster player's current CBS slot tag) instead
+of `Player.eligible_positions` (the full CBS position-eligibility index, already used correctly
+elsewhere, e.g. the lineup optimizer). A full-time SP parked in an RP bench slot showed up
+tagged `[RP]`.
+
+**Fix:** both functions switched to `Player.eligible_positions`.
+
+### Name-only matching risk class closed for pitchers and MLB stat lookups (P1)
+
+**Problem:** same risk class as the Franklin Arias bug (Phase C, ENH 4/7 section above): two
+call sites matched on normalized player name with no team disambiguation.
+`mlb/schedule.py::probable_starters_today()` could flag the wrong same-named pitcher as a
+confirmed starter; `mlb/stats.py::_fetch_stats()`'s name-only fallback index could attribute a
+stat line to the wrong same-named player on a different team.
+
+**Fix:** `probable_starters_today()` now returns `{(norm_name, canonical_team)}` and
+`optimize_daily_lineup()` matches on both. `_fetch_stats()`'s name-only fallback now excludes
+any name that maps to 2+ teams in a season instead of picking one arbitrarily.
+
+### Validation
+
+Same sandbox constraint as Phase C: no `CBS_COOKIE`, no network egress to
+`statsapi.mlb.com`/`api.cbssports.com` while writing this batch. Validated with 17 new
+synthetic-fixture tests across 5 new test files (see `claude/bug_tracker.md` for the full list).
+Full suite: 165 collected, 164 passing, 1 pre-existing failure in `tests/test_football_decisions.py`
+(unrelated — confirmed present before this batch's changes, tracked separately). **This session
+also had no GitHub push/API access** (see `claude/bug_tracker.md`'s status caveat) — the commit
+exists locally on `fix/aug15-bug-batch` and was handed off as a git bundle + patch file rather
+than an actual pushed branch/PR. Recommend the same live-run confirmation Phase C recommended,
+now for this batch's changes too, once it's actually on `main`.

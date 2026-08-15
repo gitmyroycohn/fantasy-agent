@@ -70,7 +70,25 @@ def _fetch_stats(group: str, season: int) -> dict[str, dict]:
 
     Returns a lookup dict keyed two ways per player for flexible matching:
       - "{norm_name}_{team_lower}"  (preferred: name + CBS team abbrev)
-      - "{norm_name}"               (fallback: name only)
+      - "{norm_name}"               (fallback: name only -- ONLY when the
+        normalized name is unambiguous this season, i.e. maps to exactly
+        one team; see bug-fix note below)
+
+    Bug fix (2026-08-15, P1 -- same risk class as the Franklin Arias
+    incident in mlb.lineups.lineup_status_for(), 2026-08-13): the name-only
+    fallback used to be populated unconditionally via `result.setdefault(norm,
+    parsed)` -- "first name-collision writer wins" (the old comment said
+    "last writer wins", which was itself wrong: setdefault() never
+    overwrites). For a name shared by two different players in the same
+    stat group this season, _lookup()'s name-only fallback could silently
+    attribute an arbitrary one of those two players' stat line to the
+    other's namesake on a different team, if the precise "{norm}_{team}" key
+    ever misses (e.g. a stale/mismatched team on the caller's side). Now the
+    name-only fallback is only populated for names that map to exactly one
+    team this season; a genuine collision is left out of the name-only
+    index entirely, so _lookup() falls through to {} (unknown) rather than
+    risk a wrong match. Flagged as an unconfirmed, same-risk-class item in
+    the bug tracker's "Also worth knowing" section since 2026-08-13.
     """
     url = f"{MLB_API}/stats"
     params = {
@@ -90,6 +108,7 @@ def _fetch_stats(group: str, season: int) -> dict[str, dict]:
         return {}
 
     result: dict[str, dict] = {}
+    teams_by_name: dict[str, set] = {}
     for stat_group in data.get("stats", []):
         for split in stat_group.get("splits", []):
             player_info = split.get("player", {})
@@ -103,11 +122,21 @@ def _fetch_stats(group: str, season: int) -> dict[str, dict]:
             parsed = _parse_stat(raw_stat, group)
 
             norm        = norm_name(full_name)
-            key_precise = f"{norm}_{cbs_team.lower()}"
+            team_lower  = cbs_team.lower()
+            key_precise = f"{norm}_{team_lower}"
 
             result[key_precise] = parsed
-            # Name-only fallback (last writer wins if same name on two teams)
-            result.setdefault(norm, parsed)
+            teams_by_name.setdefault(norm, set()).add(team_lower)
+
+    # Name-only fallback: only for names that resolved to exactly one team
+    # this season. A name shared by 2+ players (different teams) is
+    # ambiguous -- deliberately NOT added to the name-only index, so a
+    # lookup that misses the precise key falls through to {} instead of
+    # risking a match to the wrong player.
+    for norm, teams in teams_by_name.items():
+        if len(teams) == 1:
+            team_lower = next(iter(teams))
+            result[norm] = result[f"{norm}_{team_lower}"]
 
     logger.info("MLB Stats API: %d %s entries loaded for %d",
                 len(result), group, season)

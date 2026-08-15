@@ -16,6 +16,7 @@ from agent.football_decisions import run_football_decisions
 from agent.summary import format_tldr
 from agent.history import load_history, save_history, update_and_annotate, prune_history
 from data.models import Team
+from sports.baseball.lineup_optimizer import classify_sp_advice
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -411,10 +412,13 @@ def _print_decisions(result, dry_run):
             on_il = [a for a in advice if a["advice"] == "on_il"]
 
             if no_bench:
-                sp_on  = [a for a in advice if "SP" in a["positions"]
-                           and a["advice"] in ("start", "ok")]
-                sp_off = [a for a in advice if "SP" in a["positions"]
-                           and a["advice"] == "bench_pitcher"]
+                # Bug fix (2026-08-15, P0): use is_probable_starter (via
+                # classify_sp_advice), not advice in ("start","ok") -- see
+                # that helper's docstring for the live incident this caused.
+                _sp = classify_sp_advice(advice)
+                sp_on      = _sp["confirmed"]
+                sp_pending = _sp["pending"]
+                sp_off     = _sp["benched"]
                 bat_off = [a for a in advice if "SP" not in a["positions"]
                             and "RP" not in a["positions"] and a["advice"] == "bench"]
                 bat_on  = [a for a in advice if "SP" not in a["positions"]
@@ -426,6 +430,10 @@ def _print_decisions(result, dry_run):
                         print(f"    {a['player']} ({a['team']})")
                 else:
                     print("  SPs pitching today: none confirmed yet")
+                if sp_pending:
+                    print(f"  SPs on a team playing today, NOT yet confirmed starting ({len(sp_pending)}):")
+                    for a in sp_pending:
+                        print(f"    {a['player']} ({a['team']}) {a['reason']}")
                 if sp_off:
                     print(f"  SPs NOT pitching today ({len(sp_off)}) [no bench -- FYI only]:")
                     for a in sp_off:
@@ -451,10 +459,13 @@ def _print_decisions(result, dry_run):
                 print(f"  Batters with games today: {len(bat_on)} ({confirmed_ct} confirmed in posted lineup)")
 
             else:
-                sp_on  = [a for a in advice if "SP" in a["positions"]
-                           and a["advice"] in ("start", "ok")]
-                sp_off = [a for a in advice if "SP" in a["positions"]
-                           and a["advice"] == "bench_pitcher"]
+                # Bug fix (2026-08-15, P0): use is_probable_starter (via
+                # classify_sp_advice), not advice in ("start","ok") -- see
+                # that helper's docstring for the live incident this caused.
+                _sp = classify_sp_advice(advice)
+                sp_on      = _sp["confirmed"]
+                sp_pending = _sp["pending"]
+                sp_off     = _sp["benched"]
                 bat_off = [a for a in advice if "SP" not in a["positions"]
                             and "RP" not in a["positions"] and a["advice"] == "bench"]
                 bat_on  = [a for a in advice if "SP" not in a["positions"]
@@ -467,6 +478,10 @@ def _print_decisions(result, dry_run):
                         print(f"    [{mark:>24}] {a['player']} ({a['team']})")
                 else:
                     print("  SPs starting today: none confirmed yet")
+                if sp_pending:
+                    print(f"  SPs on a team playing today, NOT yet confirmed starting ({len(sp_pending)}):")
+                    for a in sp_pending:
+                        print(f"    {a['player']} ({a['team']}) {a['reason']}")
                 if sp_off:
                     print(f"  SPs NOT starting today ({len(sp_off)}):")
                     for a in sp_off:

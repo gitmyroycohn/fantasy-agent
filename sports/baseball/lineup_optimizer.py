@@ -92,7 +92,7 @@ class LineupAdvice:
 def optimize_daily_lineup(
     lineup_slots: list[dict],
     teams_playing: set[str],
-    probable_starters: set[str],  # norm names from mlb.schedule
+    probable_starters: set,  # {(norm_name, canonical_team)} from mlb.schedule
     il_players: set[str] | None = None,  # norm names currently on MLB IL
     opp_hand_by_team: dict[str, str] | None = None,  # ENH 3: {cbs_team_abbr: "L"|"R"}
 ) -> list[LineupAdvice]:
@@ -101,7 +101,17 @@ def optimize_daily_lineup(
 
     lineup_slots: list of {slot, player_id, player_name, team, positions, is_starting}
     teams_playing: set of CBS team abbreviations with games today
-    probable_starters: set of norm-names for pitchers starting today
+    probable_starters: set of (norm_name, canonical_team) tuples for
+        pitchers starting today, from mlb.schedule.probable_starters_today().
+        Bug fix (2026-08-15, P1): previously a flat set of norm-names with
+        no team association -- the same "Franklin Arias" risk class
+        (mlb.lineups.lineup_status_for(), fixed 2026-08-13) but for
+        pitchers: a roster SP could be wrongly flagged "probable starter
+        today" if a DIFFERENT pitcher who merely shared a normalized name
+        was the real probable starter elsewhere. Matching now requires both
+        the name AND the player's own canonical_team() to agree -- see the
+        `probable = (norm_name, team_canon) in probable_starters` check
+        below.
     il_players: set of norm-names currently on the MLB injured list, from
         mlb.injuries.fetch_active_il(). This is the authoritative "hurt right
         now" source -- independent of CBS roster slot and independent of the
@@ -184,7 +194,10 @@ def optimize_daily_lineup(
         if is_pitcher:
             # BUG 1 fix: check ALL pitchers (SP and RP) against probable_starters.
             # An RP in the probable list is a confirmed spot starter.
-            probable = norm_name in probable_starters
+            # Bug fix (2026-08-15, P1): match on (name, team), not name
+            # alone -- see optimize_daily_lineup()'s probable_starters
+            # docstring for the Arias-class risk this closes.
+            probable = (norm_name, team_canon) in probable_starters
 
             if "SP" in positions:
                 if probable:
@@ -395,6 +408,52 @@ def find_legal_swaps(
         })
 
     return swaps
+
+
+def classify_sp_advice(advice: list[dict]) -> dict:
+    """Split a roster's serialized SP advice entries into three buckets using
+    the tri-state `is_probable_starter` field.
+
+    Bug fix (2026-08-15, P0): agent/main.py's CLI renderer previously bucketed
+    "SPs starting/pitching today" as `a["advice"] in ("start", "ok")`. But
+    optimize_daily_lineup() also returns advice="ok" for an SP whose team has
+    a game today but who is NOT the confirmed probable starter ("team has a
+    game -- probable starters not yet posted", see the "elif confirmed_playing"
+    branch above) -- that's a different, weaker claim than "confirmed
+    starting today", and the CLI's `advice in ("start", "ok")` filter treated
+    both identically. Live symptom (2026-08-15): Sandy Alcantara, Jose
+    Soriano, Jake Bennett, Zack Wheeler, Nick Martinez, and Kyle Harrison were
+    all shown under "SPs starting today" despite none of them being that
+    day's confirmed probable starter -- their MLB teams simply had a game.
+
+    `is_probable_starter` already carries the correct tri-state distinction
+    (True = confirmed probable starter today, False = team plays today but
+    this pitcher is not the confirmed starter, None = team has no game /
+    unknown) -- see LineupAdvice.__doc__ and the "if 'SP' in positions"
+    branch above. This function is the single place that turns that tri-state
+    into display buckets, used by both of agent/main.py's daily_lineup
+    renderers (no_bench and normal) so they can't drift out of sync again.
+
+    Args:
+        advice: the JSON-serializable advice dicts from
+            agent/decisions.py's daily_lineup action (each must include
+            "positions", "advice", and "is_probable_starter").
+
+    Returns {"confirmed": [...], "pending": [...], "benched": [...]}:
+        confirmed: SPs confirmed as today's probable starter
+                   (is_probable_starter is True).
+        pending:   SPs whose team plays today but who are NOT (yet, or ever
+                   today) the confirmed starter (is_probable_starter is
+                   False and advice == "ok") -- shown separately so they are
+                   never conflated with a confirmed start.
+        benched:   SPs flagged bench_pitcher (team has no game today).
+    """
+    sp = [a for a in advice if "SP" in (a.get("positions") or [])]
+    confirmed = [a for a in sp if a.get("is_probable_starter") is True]
+    pending   = [a for a in sp
+                 if a.get("is_probable_starter") is False and a.get("advice") == "ok"]
+    benched   = [a for a in sp if a.get("advice") == "bench_pitcher"]
+    return {"confirmed": confirmed, "pending": pending, "benched": benched}
 
 
 def format_lineup_advice(advice_list: list[LineupAdvice], today_str: str = "") -> list[str]:

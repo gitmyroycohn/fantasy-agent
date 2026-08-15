@@ -17,7 +17,7 @@ from functools import lru_cache
 
 import requests
 
-from mlb.teams import mlb_to_cbs, norm_name
+from mlb.teams import mlb_to_cbs, norm_name, canonical_team
 from mlb.clock import today_et as _today_et  # noqa: F401 -- re-exported; see mlb/clock.py
 
 logger = logging.getLogger(__name__)
@@ -99,6 +99,34 @@ def two_start_pitchers(d: date = None, next_week: bool = False,
 def is_two_starter(player_name: str, two_starters: dict[str, int]) -> bool:
     """Check if a player (by name) is a 2-starter this week."""
     return _norm(player_name) in two_starters
+
+
+def two_start_pitcher_dates(d: date = None) -> dict[str, tuple]:
+    """Return {norm_name: (iso_date, ...)} for the CURRENT real CBS scoring
+    period containing `d` (defaults to today, ET) -- the same period window
+    as schedule_weeks()'s week_offset=0 entry ("two_starters"), but
+    preserving each pitcher's actual probable-start date(s) instead of
+    collapsing them to a bare count.
+
+    Added 2026-08-15 (P0 bug batch -- streaming-SP date fidelity
+    investigation): rank_streaming_sps() previously surfaced only a start
+    *count* ("2-START") with no way to verify, from the tool's own output,
+    which calendar dates were being counted or whether they fell inside the
+    intended window. This lets callers (sports/baseball/streaming.py)
+    attach real dates to each candidate so that claim is directly
+    verifiable -- see the regression test asserting every returned date
+    falls inside [period start, period end].
+
+    Shares _fetch_start_dates()'s lru_cache with schedule_weeks(), so
+    calling both for the same `d` costs one MLB API request, not two.
+    """
+    from config.periods import period_for_date
+    if d is None:
+        d = _today_et()
+    p = period_for_date(d)
+    if p is None:
+        return {}
+    return _fetch_start_dates(p["start"].isoformat(), p["end"].isoformat())
 
 
 def schedule_weeks(n: int = 3, d: date = None) -> list[dict]:
@@ -205,21 +233,46 @@ def teams_playing_today(d: date = None) -> set[str]:
     return teams
 
 
-def probable_starters_today(d: date = None) -> set[str]:
-    """Return norm names of pitchers confirmed as probable starters today."""
+def probable_starters_today(d: date = None) -> set[tuple[str, str]]:
+    """Return {(norm_name, canonical_team)} for pitchers confirmed as
+    probable starters today.
+
+    Bug fix (2026-08-15, P1 -- same risk class as the Franklin Arias
+    incident in mlb.lineups.lineup_status_for(), 2026-08-13): this used to
+    return a flat set of names with NO team association. A roster SP could
+    be incorrectly flagged "probable starter today" if a DIFFERENT pitcher
+    who merely shares a normalized name was the actual probable starter on
+    some other team that day -- the exact same "team was never checked"
+    flaw as the Arias bug, just for pitchers. This was flagged as an
+    unconfirmed, same-risk-class item in the bug tracker's "Also worth
+    knowing" section since 2026-08-13 (alongside mlb/stats.py::_lookup()'s
+    name-only fallback, fixed in the same batch as this).
+
+    Callers must now match BOTH the normalized name AND canonical_team() of
+    the player's own team -- see sports/baseball/lineup_optimizer.py's
+    `(norm_name, team_canon) in probable_starters` check. team is
+    canonicalized the same way lineup_optimizer.py canonicalizes a roster
+    player's team (mlb.teams.canonical_team()), so both sides of the
+    comparison always agree regardless of which abbreviation convention the
+    CBS vs. MLB feed happens to use for a given team (see canonical_team()'s
+    docstring for the SF/TB/KC/SD alias history).
+    """
     if d is None:
         d = _today_et()
     games = _fetch_today_games(d.isoformat())
-    starters: set[str] = set()
+    starters: set[tuple[str, str]] = set()
     for game in games:
         for side in ("home", "away"):
-            pitcher = (game.get("teams", {})
-                           .get(side, {})
-                           .get("probablePitcher"))
+            side_info = game.get("teams", {}).get(side, {})
+            pitcher = side_info.get("probablePitcher")
             if pitcher:
                 name = pitcher.get("fullName", "")
-                if name:
-                    starters.add(_norm(name))
+                if not name:
+                    continue
+                team_raw = (side_info.get("team", {}).get("abbreviation", "")
+                            or side_info.get("team", {}).get("teamCode", ""))
+                team = canonical_team(mlb_to_cbs(team_raw.upper())) if team_raw else ""
+                starters.add((_norm(name), team))
     return starters
 
 
@@ -321,11 +374,29 @@ def _fetch_today_games(date_str: str) -> list:
 # ---------------------------------------------------------------------------
 
 @lru_cache(maxsize=14)
-def _fetch_start_counts(start_date: str, end_date: str) -> dict[str, int]:
-    """Fetch probable starters for [start_date, end_date].
+def _fetch_start_dates(start_date: str, end_date: str) -> dict[str, tuple]:
+    """Fetch probable-starter dates for [start_date, end_date] (inclusive).
 
-    Returns {norm_name: start_count} for every pitcher with at least one
-    probable start listed. Cached per (start_date, end_date) pair.
+    Returns {norm_name: (iso_date, ...)} -- every calendar date within the
+    queried window on which that pitcher is listed as a probable starter,
+    read directly from the MLB Stats API response's own `dates[].date`
+    entries (never inferred or shifted). `_fetch_start_counts()` derives its
+    counts from this so a pitcher's "N starts" figure and the actual dates
+    backing it can never drift apart.
+
+    Investigated as part of the 2026-08-15 P0 bug batch (streaming-SP date
+    fidelity): the previous `_fetch_start_counts()` computed a bare count
+    with no per-pitcher date retained anywhere downstream, so a live
+    cross-check against RotoWire's confirmed slate had no way to verify
+    *which* dates a "2-START" tag was counting, or whether those dates fell
+    inside the intended window at all -- callers had to trust the count.
+    Retaining real dates here (surfaced by rank_streaming_sps() as
+    "start_dates", see sports/baseball/streaming.py) closes that gap and is
+    covered by a regression test asserting every returned date falls inside
+    [start_date, end_date] with no off-by-one drift.
+
+    Cached per (start_date, end_date) pair; values are tuples (not lists) so
+    the lru_cache-returned object stays immutable.
     """
     url = f"{MLB_API}/schedule"
     params = {
@@ -343,8 +414,9 @@ def _fetch_start_counts(start_date: str, end_date: str) -> dict[str, int]:
         logger.error("MLB schedule API error (%s \u2013 %s): %s", start_date, end_date, e)
         return {}
 
-    counts: dict[str, int] = defaultdict(int)
+    dates_by_name: dict[str, list] = defaultdict(list)
     for date_entry in data.get("dates", []):
+        game_date = date_entry.get("date", "")
         for game in date_entry.get("games", []):
             for side in ("home", "away"):
                 pitcher = (game.get("teams", {})
@@ -352,13 +424,24 @@ def _fetch_start_counts(start_date: str, end_date: str) -> dict[str, int]:
                                .get("probablePitcher"))
                 if pitcher:
                     full_name = pitcher.get("fullName", "")
-                    if full_name:
-                        counts[_norm(full_name)] += 1
+                    if full_name and game_date:
+                        dates_by_name[_norm(full_name)].append(game_date)
 
     total_games = sum(len(d.get("games", [])) for d in data.get("dates", []))
     logger.info("Schedule %s\u2013%s: %d games, %d probable starters",
-                start_date, end_date, total_games, len(counts))
-    return dict(counts)
+                start_date, end_date, total_games, len(dates_by_name))
+    return {name: tuple(sorted(ds)) for name, ds in dates_by_name.items()}
+
+
+def _fetch_start_counts(start_date: str, end_date: str) -> dict[str, int]:
+    """Return {norm_name: start_count} for [start_date, end_date].
+
+    Derived from _fetch_start_dates() (len of each pitcher's date tuple) so
+    the count and the dates backing it can never disagree. Kept as a
+    separate top-level function (not just inlined) because tests monkeypatch
+    this exact name (see tests/test_schedule.py).
+    """
+    return {name: len(dates) for name, dates in _fetch_start_dates(start_date, end_date).items()}
 
 
 # ---------------------------------------------------------------------------

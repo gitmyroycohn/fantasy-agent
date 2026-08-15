@@ -75,7 +75,13 @@ def find_drop_candidates(roster, waiver_wire, nl_only=False, stash_names=None):
         if stash_set and _norm(p.name) in stash_set:
             continue
 
-        is_pitcher = bool(set(p.positions) & _PITCHER_POS)
+        # Bug fix (2026-08-15, P1 -- same class as agent/tradevalue.py's
+        # roster_value_signals mistagging): use eligible_positions, not the
+        # raw `positions` property, which for a roster player is only their
+        # CURRENT CBS slot tag (see cbs/roster.py's ENH 2 comment), not their
+        # true position -- a full-time SP parked in an RP bench slot would
+        # otherwise be evaluated and displayed as an RP here too.
+        is_pitcher = bool(set(p.eligible_positions) & _PITCHER_POS)
         result = _evaluate_pitcher(p) if is_pitcher else _evaluate_batter(p)
         if not result:
             continue
@@ -83,14 +89,14 @@ def find_drop_candidates(roster, waiver_wire, nl_only=False, stash_names=None):
         severity, reason = result
         replacement = _find_replacement(p, waiver_wire, is_pitcher)
 
-        if severity == "cut" and set(p.positions) & _SCARCE_POS and not replacement:
+        if severity == "cut" and set(p.eligible_positions) & _SCARCE_POS and not replacement:
             severity = "monitor"
             reason = f"[scarce pos] {reason}"
 
         drops.append({
             "player":      p.name,
             "team":        p.team,
-            "positions":   p.positions,
+            "positions":   p.eligible_positions,
             "slot":        rs.slot,
             "is_starting": rs.is_starting,
             "severity":    severity,
@@ -194,7 +200,10 @@ def _evaluate_pitcher(player):
     return None
 
 def _find_replacement(player, waiver_wire, is_pitcher):
-    pos_set    = set(player.positions)
+    # Bug fix (2026-08-15, P1): match against the roster player's true
+    # eligible_positions, not their current CBS slot tag -- see the
+    # find_drop_candidates() fix above for the full rationale.
+    pos_set    = set(player.eligible_positions)
     candidates = []
 
     for wp in waiver_wire:

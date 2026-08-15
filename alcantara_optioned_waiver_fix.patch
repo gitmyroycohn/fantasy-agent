@@ -1,0 +1,267 @@
+diff --git a/agent/decisions.py b/agent/decisions.py
+index 73bca02..d3d6aa0 100644
+--- a/agent/decisions.py
++++ b/agent/decisions.py
+@@ -28,7 +28,10 @@ from savant.client import SavantClient, enrich_with_savant
+ from agent.tradevalue import analyze_roster_value
+ from cbs.standings import fetch_all_teams_stats
+ from agent.surplusmap import build_surplus_map, trade_leads_from_map, my_category_profile
+-from mlb.injuries import fetch_il_transactions, annotate_roster_injuries, format_transactions, fetch_active_il
++from mlb.injuries import (
++    fetch_il_transactions, annotate_roster_injuries, format_transactions,
++    fetch_active_il, fetch_active_roster_names,
++)
+ from mlb.splits import fetch_recent_form as _fetch_recent_form
+ from config.periods import resolve_period
+ 
+@@ -67,6 +70,48 @@ def _sav_enrich(players, label=""):
+         print(f"  Savant xStats{tag} failed: {e}")
+ 
+ 
++def _filter_active_roster(waivers, label=""):
++    """Drop waiver candidates who are not currently on an MLB team's active
++    (26-man) roster -- catches players optioned to the minors, DFA'd,
++    released, or retired whose season-long MLB stat line is stale but who
++    are no longer producing for a real MLB team.
++
++    Bug fix (2026-08-15): Kevin Alcantara was recommended as the #1 waiver
++    add in both leagues 11 days after being optioned to Triple-A Iowa,
++    because the pool builder only checked season stats, never current
++    roster status. Every waiver-pool call site (H2H streaming/adds, roto
++    adds, and the MCP waiver_recommendations tool) should route through
++    this filter.
++
++    Guarded: if fetch_active_roster_names() fails or returns empty (MLB
++    Stats API hiccup), skip the filter for this run rather than wiping out
++    the whole waiver pool.
++    """
++    if not waivers:
++        return waivers
++    tag = f" ({label})" if label else ""
++    try:
++        active_names = fetch_active_roster_names()
++    except Exception as e:
++        logger.warning("Active-roster filter%s failed: %s", tag, e)
++        return waivers
++    if not active_names:
++        logger.warning(
++            "Active-roster filter%s: fetch_active_roster_names() returned "
++            "empty -- skipping filter for this run", tag,
++        )
++        return waivers
++    pre = len(waivers)
++    filtered = [wp for wp in waivers if _norm_name(wp.player.name) in active_names]
++    removed = pre - len(filtered)
++    if removed:
++        logger.info(
++            "Active-roster filter%s: removed %d optioned/DFA'd/non-MLB "
++            "players from waiver pool", tag, removed,
++        )
++    return filtered
++
++
+ def run_decisions(auth, league_id, league_config, team, sport="baseball"):
+     fmt = league_config.get("format")
+     if fmt == "h2h_categories":
+@@ -111,6 +156,7 @@ def _h2h_decisions(auth, league_id, cfg, team, sport):
+     })
+ 
+     waivers = fetch_waiver_wire(auth, league_id, sport, position="SP")
++    waivers = _filter_active_roster(waivers, "SP wire")
+     try:
+         enrich_players(waivers[:100])
+     except Exception as e:
+@@ -178,6 +224,7 @@ def _h2h_decisions(auth, league_id, cfg, team, sport):
+     if losing:
+         all_waivers = fetch_waiver_wire(auth, league_id, sport,
+                                         position="all", limit=200)
++        all_waivers = _filter_active_roster(all_waivers, "H2H all wire")
+         try:
+             enrich_players(all_waivers)
+         except Exception as e:
+@@ -222,6 +269,7 @@ def _roto_decisions(auth, league_id, cfg, team, sport):
+ 
+     all_waivers = fetch_waiver_wire(auth, league_id, sport,
+                                     position="all", limit=200)
++    all_waivers = _filter_active_roster(all_waivers, "roto wire")
+     try:
+         enrich_players(all_waivers)
+     except Exception as e:
+@@ -512,6 +560,9 @@ def get_filtered_waiver_adds(
+     if il_removed:
+         logger.info("IL filter: removed %d injured players from waiver pool", il_removed)
+ 
++    # Active-MLB-roster filter -- see _filter_active_roster() docstring.
++    waivers = _filter_active_roster(waivers, "wire")
++
+     # Recently-dropped filter (Bug 4) -- suppress players flagged "cut" 2+ times.
+     # Reads logs/history.json so no extra API calls are needed.
+     try:
+diff --git a/mlb/injuries.py b/mlb/injuries.py
+index 36ef9ed..dca9601 100644
+--- a/mlb/injuries.py
++++ b/mlb/injuries.py
+@@ -13,6 +13,12 @@ fetch_active_il()
+     → dict: {norm_name: {"name", "team", "il_type", "date"}}
+     All players currently on any IL across MLB.
+ 
++fetch_active_roster_names()
++    → frozenset of norm_name strings
++    Every player currently on an MLB team's active (26-man, status "A")
++    roster. Used to exclude optioned/demoted/DFA'd players -- who may still
++    carry season stats -- from the waiver-wire candidate pool.
++
+ annotate_roster_injuries(roster_slots, active_il)
+     → list of dicts: {player, slot, il_type, date}
+     Flags your CBS roster players found in the active IL.
+@@ -20,6 +26,7 @@ annotate_roster_injuries(roster_slots, active_il)
+ 
+ import logging
+ from datetime import date, datetime, timedelta
++from functools import lru_cache
+ 
+ import requests
+ 
+@@ -242,6 +249,71 @@ def fetch_active_il() -> dict[str, dict]:
+     return active_il
+ 
+ 
++# ---------------------------------------------------------------------------
++# Active MLB roster (all of MLB) -- optioned/DFA'd/released filter
++# ---------------------------------------------------------------------------
++
++@lru_cache(maxsize=1)
++def fetch_active_roster_names() -> frozenset[str]:
++    """
++    Return the normalized full names of every player currently on an MLB
++    team's active (26-man) roster.
++
++    Bug fix (2026-08-15): the waiver/free-agent pool was built purely from
++    season-long MLB Stats API stat lines with no check of *current* roster
++    status, so a player optioned to Triple-A weeks ago (e.g. Kevin
++    Alcantara, optioned to Iowa on 8/4) kept surfacing as a top waiver
++    recommendation on the strength of stats accrued before the demotion.
++
++    rosterType=active only returns players with MLB status code "A" --
++    optioned-to-minors players get a different status and simply aren't in
++    this list (same as fetch_active_il() above relies on rosterType=
++    fullRoster to find the "D*" IL status codes that "active" excludes).
++    So players on this active roster are a strict subset of fullRoster,
++    and optioned/DFA'd/released/retired players are naturally absent
++    without needing to parse the separate transactions feed.
++
++    Cached for the life of the process (lru_cache) -- one MLB Stats API
++    call per team, called once per agent run.
++    """
++    try:
++        r = requests.get(f"{MLB_API}/teams", params={"sportId": 1}, timeout=TIMEOUT)
++        r.raise_for_status()
++        teams = r.json().get("teams", [])
++    except Exception as exc:
++        logger.warning("fetch_active_roster_names: failed to get teams: %s", exc)
++        return frozenset()
++
++    active_names: set[str] = set()
++
++    for team in teams:
++        team_id = team.get("id")
++        if not team_id:
++            continue
++        try:
++            r = requests.get(
++                f"{MLB_API}/teams/{team_id}/roster",
++                params={"rosterType": "active", "season": _today_et().year},
++                timeout=TIMEOUT,
++            )
++            if r.status_code == 404:
++                continue
++            r.raise_for_status()
++            roster = r.json().get("roster", [])
++        except Exception as exc:
++            logger.debug("fetch_active_roster_names team %s: %s", team_id, exc)
++            continue
++
++        for entry in roster:
++            name = entry.get("person", {}).get("fullName", "")
++            if name:
++                active_names.add(_norm(name))
++
++    logger.info("fetch_active_roster_names: %d players on active MLB rosters",
++                len(active_names))
++    return frozenset(active_names)
++
++
+ # ---------------------------------------------------------------------------
+ # Roster cross-reference
+ # ---------------------------------------------------------------------------
+diff --git a/tests/test_active_roster_filter.py b/tests/test_active_roster_filter.py
+new file mode 100644
+index 0000000..ebeccc0
+--- /dev/null
++++ b/tests/test_active_roster_filter.py
+@@ -0,0 +1,65 @@
++"""
++Regression test for the "optioned/demoted players surfacing as waiver adds"
++bug (found 2026-08-15): Kevin Alcantara (CHC) was recommended as the #1
++waiver add in both leagues on a live run, 11 days after being optioned to
++Triple-A Iowa on 8/4. The waiver pool builder scored him purely off
++season-long MLB stats and never checked whether he was still on an active
++MLB roster.
++
++agent.decisions._filter_active_roster() is the fix: it cross-checks each
++waiver candidate's normalized name against mlb.injuries.fetch_active_roster_
++names() (the current 26-man active-roster set from the MLB Stats API) and
++drops anyone not currently on an active roster.
++"""
++from unittest.mock import patch
++
++from agent.decisions import _filter_active_roster
++from data.models import Player, WaiverPlayer
++
++
++def _wp(name, team="CHC", position="OF"):
++    return WaiverPlayer(player=Player(id=name, name=name, position=position, team=team))
++
++
++def test_optioned_player_is_removed_from_pool():
++    """Alcantara has real season stats but was optioned -- must be dropped."""
++    pool = [_wp("Kevin Alcantara"), _wp("Some Active Guy")]
++    with patch("agent.decisions.fetch_active_roster_names",
++               return_value=frozenset({"someactiveguy"})):
++        result = _filter_active_roster(pool, "test")
++    names = {wp.player.name for wp in result}
++    assert names == {"Some Active Guy"}
++    assert "Kevin Alcantara" not in names
++
++
++def test_active_players_all_pass_through():
++    pool = [_wp("Player One"), _wp("Player Two")]
++    with patch("agent.decisions.fetch_active_roster_names",
++               return_value=frozenset({"playerone", "playertwo"})):
++        result = _filter_active_roster(pool, "test")
++    assert len(result) == 2
++
++
++def test_empty_active_set_skips_filter_instead_of_wiping_pool():
++    """If the MLB Stats API call fails and returns {}, don't nuke the whole
++    waiver pool -- fail open, not closed."""
++    pool = [_wp("Player One"), _wp("Player Two")]
++    with patch("agent.decisions.fetch_active_roster_names",
++               return_value=frozenset()):
++        result = _filter_active_roster(pool, "test")
++    assert len(result) == 2
++
++
++def test_active_roster_lookup_exception_skips_filter():
++    pool = [_wp("Player One")]
++    with patch("agent.decisions.fetch_active_roster_names",
++               side_effect=RuntimeError("MLB API down")):
++        result = _filter_active_roster(pool, "test")
++    assert len(result) == 1
++
++
++def test_empty_pool_returns_empty_without_calling_api():
++    with patch("agent.decisions.fetch_active_roster_names") as mock_fetch:
++        result = _filter_active_roster([], "test")
++    assert result == []
++    mock_fetch.assert_not_called()

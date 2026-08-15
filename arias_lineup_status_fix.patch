@@ -1,0 +1,179 @@
+diff --git a/agent/decisions.py b/agent/decisions.py
+index 73bca02..d03854a 100644
+--- a/agent/decisions.py
++++ b/agent/decisions.py
+@@ -359,12 +407,13 @@ def _add_lineup_advice(actions, team, no_bench=False, league_cfg=None):
+ 
+         # ENH 4/7: official posted lineups (confirmed/expected/not-in-lineup).
+         try:
+-            from mlb.lineups import fetch_posted_lineups, lineup_status_for
++            from mlb.lineups import fetch_posted_lineups, lineup_status_for, batting_order_for
+             posted = fetch_posted_lineups()
+         except Exception as e:
+             logger.warning("Posted-lineup fetch failed, falling back to schedule-only: %s", e)
+             posted = {"players": {}, "posted_teams": set()}
+             lineup_status_for = lambda name, team, posted: "unknown"  # noqa: E731
++            batting_order_for = lambda name, team, posted: None  # noqa: E731
+ 
+         lineup_slots = [
+             {
+@@ -376,10 +425,12 @@ def _add_lineup_advice(actions, team, no_bench=False, league_cfg=None):
+                 "slot":               rs.slot,
+                 "is_starting":        rs.is_starting,
+                 "stats":              rs.player.stats or {},
++                # Bug fix (2026-08-16): both calls now require name AND team
++                # to match the posted lineup, not name alone -- see
++                # mlb.lineups.lineup_status_for() docstring (Franklin Arias
++                # bug, 2026-08-13).
+                 "lineup_status":      lineup_status_for(rs.player.name, rs.player.team, posted),
+-                "batting_order":      posted.get("players", {})
+-                                            .get(_norm_name(rs.player.name), {})
+-                                            .get("batting_order"),
++                "batting_order":      batting_order_for(rs.player.name, rs.player.team, posted),
+             }
+             for rs in team.roster
+         ]
+
+diff --git a/mlb/lineups.py b/mlb/lineups.py
+index 8b1eb6e..47a2efe 100644
+--- a/mlb/lineups.py
++++ b/mlb/lineups.py
+@@ -29,11 +29,16 @@ fetch_posted_lineups(d=None) -> {
+ }
+ 
+ lineup_status_for(name, team, posted) -> "confirmed" | "not_in_lineup" | "unknown"
+-    "confirmed":      player is in that team's posted lineup.
++    "confirmed":      player is in THEIR OWN team's posted lineup (name AND
++                      team must match -- see bug-fix note on the function).
+     "not_in_lineup":  that team's lineup IS posted and this player is NOT in it.
+     "unknown":        that team's lineup has not posted yet -- caller should
+                       treat this as "expected" (based on schedule), never as
+                       a confirmed absence.
++
++batting_order_for(name, team, posted) -> int | None
++    Batting-order slot for a hitter confirmed in their own team's posted
++    lineup today, else None. Same name+team scoping as lineup_status_for().
+ """
+ 
+ import logging
+@@ -107,16 +112,50 @@ def fetch_posted_lineups(d: date = None) -> dict:
+ 
+ 
+ def lineup_status_for(name: str, team: str, posted: dict) -> str:
+-    """Return "confirmed" / "not_in_lineup" / "unknown" for a rostered hitter."""
++    """Return "confirmed" / "not_in_lineup" / "unknown" for a rostered hitter.
++
++    Bug fix (2026-08-16): this used to return "confirmed" on a normalized-
++    name match alone, ignoring the `team` argument entirely -- `players` is
++    a flat dict of every hitter in ANY team's posted lineup that day, keyed
++    only by name. That let a bench/minor-league player who merely shares a
++    normalized name with someone genuinely starting elsewhere get marked
++    "confirmed," which find_legal_swaps() (sports/baseball/lineup_optimizer.
++    py) then proposed as a legitimate swap-in. Reported live 2026-08-13:
++    Franklin Arias, a Double-A prospect never called up to MLB, surfaced as
++    a "confirmed playing" swap-in candidate.
++
++    Fix: only return "confirmed" when the stored entry's team matches the
++    player's own team. `team` is still checked here now, not just in the
++    not_in_lineup fallback below.
++    """
+     norm = norm_name(name)
+-    players = (posted or {}).get("players", {})
+-    if norm in players:
++    team_up = (team or "").upper()
++    entry = (posted or {}).get("players", {}).get(norm)
++    if entry is not None and (entry.get("team") or "").upper() == team_up:
+         return "confirmed"
+-    if (team or "").upper() in (posted or {}).get("posted_teams", set()):
++    if team_up in (posted or {}).get("posted_teams", set()):
+         return "not_in_lineup"
+     return "unknown"
+ 
+ 
++def batting_order_for(name: str, team: str, posted: dict) -> int | None:
++    """Return the batting-order slot for a rostered hitter, but only if
++    they're confirmed in THEIR OWN team's posted lineup today -- else None.
++
++    Same team-scoping bug as lineup_status_for() above applied here too:
++    the original call site (agent/decisions.py) looked this up by
++    normalized name alone, so a bench/minor-league player could get a real
++    batting-order number attached from an unrelated same-named player on a
++    different team, reinforcing the same false "confirmed" impression.
++    """
++    norm = norm_name(name)
++    team_up = (team or "").upper()
++    entry = (posted or {}).get("players", {}).get(norm)
++    if entry is not None and (entry.get("team") or "").upper() == team_up:
++        return entry.get("batting_order")
++    return None
++
++
+ def _team_abbr(side_info: dict) -> str:
+     raw = (side_info.get("team", {}).get("abbreviation", "")
+            or side_info.get("team", {}).get("teamCode", ""))
+
+diff --git a/tests/test_lineups.py b/tests/test_lineups.py
+index c7203b5..1e90260 100644
+--- a/tests/test_lineups.py
++++ b/tests/test_lineups.py
+@@ -1,7 +1,7 @@
+ """
+ ENH 4/7 tests: mlb/lineups.py posted-lineup parsing and status resolution.
+ """
+-from mlb.lineups import lineup_status_for
++from mlb.lineups import lineup_status_for, batting_order_for
+ 
+ 
+ def test_lineup_status_confirmed():
+@@ -12,6 +12,51 @@ def test_lineup_status_confirmed():
+     assert lineup_status_for("John Smith", "NYY", posted) == "confirmed"
+ 
+ 
++def test_lineup_status_name_match_wrong_team_is_not_confirmed():
++    """Regression test for the Franklin Arias bug (found 2026-08-13): a
++    Double-A prospect never called up to MLB surfaced as a "confirmed
++    playing" swap-in because lineup_status_for() matched on name alone,
++    ignoring which team the posted-lineup entry actually belonged to.
++
++    Here "Franklin Arias" (a minor leaguer, team "CHC") shares a normalized
++    name with a real MLB player confirmed in a lineup for a different team
++    ("SEA") -- the CHC prospect must NOT be reported as confirmed.
++    """
++    posted = {
++        "players": {"franklinarias": {"team": "SEA", "batting_order": 6}},
++        "posted_teams": {"SEA"},
++    }
++    assert lineup_status_for("Franklin Arias", "CHC", posted) != "confirmed"
++
++
++def test_lineup_status_name_match_wrong_team_falls_back_to_unknown():
++    """When the prospect's own team hasn't posted a lineup (or has no MLB
++    game), the wrong-team name match must resolve to "unknown", not
++    "not_in_lineup" or "confirmed" -- his own team's status is simply not
++    known from this data."""
++    posted = {
++        "players": {"franklinarias": {"team": "SEA", "batting_order": 6}},
++        "posted_teams": {"SEA"},
++    }
++    assert lineup_status_for("Franklin Arias", "CHC", posted) == "unknown"
++
++
++def test_batting_order_for_wrong_team_returns_none():
++    posted = {
++        "players": {"franklinarias": {"team": "SEA", "batting_order": 6}},
++        "posted_teams": {"SEA"},
++    }
++    assert batting_order_for("Franklin Arias", "CHC", posted) is None
++
++
++def test_batting_order_for_matching_team_returns_slot():
++    posted = {
++        "players": {"johnsmith": {"team": "NYY", "batting_order": 2}},
++        "posted_teams": {"NYY"},
++    }
++    assert batting_order_for("John Smith", "NYY", posted) == 2
++
++
+ def test_lineup_status_not_in_lineup_when_team_posted_but_player_absent():
+     posted = {
+         "players": {"someoneelse": {"team": "NYY", "batting_order": 1}},

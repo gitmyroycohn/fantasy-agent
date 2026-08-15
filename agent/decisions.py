@@ -19,6 +19,7 @@ from mlb.schedule import (
     two_start_pitchers, week_bounds, _today_et,
     teams_playing_today, probable_starters_today,
     schedule_weeks, back_to_back_two_starters,
+    two_start_pitcher_dates,
 )
 from sports.baseball.lineup_optimizer import optimize_daily_lineup
 from config.settings import FANTASYPROS_API_KEY
@@ -166,11 +167,21 @@ def _h2h_decisions(auth, league_id, cfg, team, sport):
     # 3-week schedule lookahead
     sched_weeks   = []
     two_start_now = {}
+    two_start_dates_now = {}
     bb_two_starters = set()   # back-to-back 2-starters (elite holds)
     try:
         sched_weeks     = schedule_weeks(n=3)
         two_start_now   = sched_weeks[0]["two_starters"] if sched_weeks else {}
         bb_two_starters = back_to_back_two_starters(sched_weeks, min_weeks=2)
+        # Bug batch 2026-08-15 (streaming-SP date fidelity): attach real
+        # probable-start dates alongside the bare counts above so
+        # rank_streaming_sps()'s "2-START" claims are directly verifiable.
+        # Best-effort -- if this fails, streaming still works, just without
+        # the "start_dates" field on each recommendation.
+        try:
+            two_start_dates_now = two_start_pitcher_dates()
+        except Exception as e:
+            logger.warning("Streaming SP start-date lookup failed: %s", e)
         # BUG 5 item 5: label with the real period number and days, and
         # break out 3+ start SPs separately since extended periods (e.g. the
         # 14-day Period 16) can produce them.
@@ -191,7 +202,8 @@ def _h2h_decisions(auth, league_id, cfg, team, sport):
 
     cat_status = {c.category: {"winning": c.winning}
                   for c in matchup.category_standings}
-    sp_recs = rank_streaming_sps(waivers, cat_status, two_starters=two_start_now)
+    sp_recs = rank_streaming_sps(waivers, cat_status, two_starters=two_start_now,
+                                 start_dates=two_start_dates_now)
     if sp_recs:
         # Annotate back-to-back 2-starters
         for r in sp_recs:
@@ -467,7 +479,12 @@ def _add_lineup_advice(actions, team, no_bench=False, league_cfg=None):
                 "type":              "daily_lineup",
                 "today":             today_str,
                 "teams_playing":     sorted(teams_today),
-                "probable_starters": sorted(starters_today),
+                # Bug fix (2026-08-15, P1): starters_today is now a set of
+                # (norm_name, canonical_team) tuples (see
+                # mlb.schedule.probable_starters_today()) -- this display
+                # field is names-only informational output, so unpack to
+                # just the names.
+                "probable_starters": sorted({name for name, _team in starters_today}),
                 "no_bench":          no_bench,
                 "swaps":             swaps,
                 "advice": [
@@ -483,6 +500,21 @@ def _add_lineup_advice(actions, team, no_bench=False, league_cfg=None):
                         "lineup_status": a.lineup_status,
                         "lineup_label":  a.lineup_label,
                         "batting_order": a.batting_order,
+                        # Bug fix (2026-08-15, P0): expose the real tri-state
+                        # is_probable_starter (True = confirmed probable
+                        # starter today, False = pitcher's team plays today
+                        # but they are NOT the confirmed starter, None =
+                        # team has no game / unknown) so downstream renderers
+                        # (agent/main.py) can distinguish "confirmed starting
+                        # today" from "just rostered on a team that plays
+                        # today" instead of reconstructing it from `advice`
+                        # alone -- see agent/main.py's sp_on/sp_off fix for
+                        # the incident this caused (SPs who merely had a game
+                        # today, e.g. Sandy Alcantara/Jose Soriano/Jake
+                        # Bennett/Zack Wheeler/Nick Martinez/Kyle Harrison on
+                        # 2026-08-15, were shown as "SPs starting today"
+                        # despite not being the probable starter).
+                        "is_probable_starter": a.is_probable_starter,
                     }
                     for a in advice
                 ],
