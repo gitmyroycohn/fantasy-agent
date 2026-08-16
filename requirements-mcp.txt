@@ -1,4 +1,16 @@
-# Additional dependency for the MCP server (mcp_server.py)
+﻿# Additional dependency for the MCP server (mcp_server.py)
 # Install with: pip install -r requirements-mcp.txt
-mcp[cli]>=1.0.0
+#
+# Pinned <2.0.0 (2026-08-16): mcp 2.0.0 was released on PyPI 2026-07-28,
+# four minutes after 1.29.0, and restructured mcp.server -- it no longer
+# exposes mcp.server.fastmcp, which this file's mcp_server.py imports
+# (`from mcp.server.fastmcp import FastMCP`). Since this pin previously had
+# no upper bound, every Render deploy from 2026-07-28 onward silently
+# resolved to 2.0.0 at build time, and the build succeeded (pip install
+# doesn't exercise the import) but the start command crashed immediately
+# with ModuleNotFoundError -- exit status 1, matching every failed deploy
+# in Render's event log back to commit 1447ea9 (the last live deploy,
+# 2026-07-27). Re-pin to the last known-good 1.x release once mcp_server.py
+# is migrated to the 2.0.0 API, if that's ever worth doing.
+mcp[cli]>=1.0.0,<2.0.0
 uvicorn>=0.30.0
