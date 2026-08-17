@@ -1,20 +1,15 @@
 {
   "hemp": {
     "waiver_adds": {
-      "Willy Adames": {
-        "first": "2026-06-17",
-        "last": "2026-07-26",
-        "n": 25
-      },
       "Luisangel Acuna": {
         "first": "2026-06-17",
-        "last": "2026-08-16",
-        "n": 38
+        "last": "2026-08-17",
+        "n": 39
       },
       "Nick Allen": {
         "first": "2026-06-17",
-        "last": "2026-08-16",
-        "n": 28
+        "last": "2026-08-17",
+        "n": 29
       },
       "Jose Alvarado": {
         "first": "2026-06-22",
@@ -23,13 +18,13 @@
       },
       "Elvis Alvarado": {
         "first": "2026-06-24",
-        "last": "2026-07-29",
-        "n": 14
+        "last": "2026-08-17",
+        "n": 15
       },
       "Bryan Abreu": {
         "first": "2026-06-27",
-        "last": "2026-08-13",
-        "n": 8
+        "last": "2026-08-17",
+        "n": 9
       },
       "Keegan Akin": {
         "first": "2026-07-21",
@@ -73,8 +68,8 @@
       },
       "Jose Altuve": {
         "first": "2026-08-05",
-        "last": "2026-08-16",
-        "n": 9
+        "last": "2026-08-17",
+        "n": 10
       },
       "Adael Amador": {
         "first": "2026-08-16",
@@ -87,16 +82,6 @@
         "first": "2026-06-25",
         "last": "2026-08-14",
         "n": 43
-      },
-      "Erick Fedde": {
-        "first": "2026-07-01",
-        "last": "2026-07-26",
-        "n": 8
-      },
-      "Walker Buehler": {
-        "first": "2026-07-09",
-        "last": "2026-07-26",
-        "n": 8
       },
       "Michael McGreevy": {
         "first": "2026-07-19",
@@ -112,16 +97,6 @@
         "first": "2026-07-20",
         "last": "2026-08-02",
         "n": 6
-      },
-      "Ryan Feltner": {
-        "first": "2026-07-23",
-        "last": "2026-07-26",
-        "n": 4
-      },
-      "Kohl Drake": {
-        "first": "2026-07-24",
-        "last": "2026-07-26",
-        "n": 3
       },
       "Slade Cecconi": {
         "first": "2026-07-28",
@@ -205,12 +180,27 @@
       },
       "Gerardo Carrillo": {
         "first": "2026-08-16",
-        "last": "2026-08-16",
-        "n": 1
+        "last": "2026-08-17",
+        "n": 2
       },
       "Cade Smith": {
         "first": "2026-08-16",
-        "last": "2026-08-16",
+        "last": "2026-08-17",
+        "n": 2
+      },
+      "Didier Fuentes": {
+        "first": "2026-08-17",
+        "last": "2026-08-17",
+        "n": 1
+      },
+      "Trevor Williams": {
+        "first": "2026-08-17",
+        "last": "2026-08-17",
+        "n": 1
+      },
+      "Tyler Wells": {
+        "first": "2026-08-17",
+        "last": "2026-08-17",
         "n": 1
       }
     },
@@ -221,13 +211,13 @@
     "waiver_adds": {
       "Jose Alvarado": {
         "first": "2026-06-17",
-        "last": "2026-08-16",
-        "n": 61
+        "last": "2026-08-17",
+        "n": 62
       },
       "Tyler Alexander": {
         "first": "2026-06-17",
-        "last": "2026-08-16",
-        "n": 61
+        "last": "2026-08-17",
+        "n": 62
       },
       "Philip Abner": {
         "first": "2026-06-26",
@@ -251,18 +241,18 @@
       },
       "Adael Amador": {
         "first": "2026-08-16",
-        "last": "2026-08-16",
-        "n": 1
+        "last": "2026-08-17",
+        "n": 2
       },
       "Logan Allen": {
         "first": "2026-08-16",
-        "last": "2026-08-16",
-        "n": 1
+        "last": "2026-08-17",
+        "n": 2
       },
       "Zach Agnos": {
         "first": "2026-08-16",
-        "last": "2026-08-16",
-        "n": 1
+        "last": "2026-08-17",
+        "n": 2
       }
     },
     "streaming_sp": {},
@@ -275,9 +265,15 @@
       },
       "Max Muncy": {
         "first": "2026-08-16",
-        "last": "2026-08-16",
+        "last": "2026-08-17",
+        "n": 2,
+        "sev": "monitor"
+      },
+      "Daniel Duarte": {
+        "first": "2026-08-17",
+        "last": "2026-08-17",
         "n": 1,
-        "sev": "cut"
+        "sev": "monitor"
       }
     },
     "recently_dropped": {}
