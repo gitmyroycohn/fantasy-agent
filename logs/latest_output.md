@@ -1,24 +1,24 @@
 ================================================
-  FANTASY AGENT  --  Sat Aug 22, 2026  8:40 AM ET
+  FANTASY AGENT  --  Sun Aug 23, 2026  8:41 AM ET
 ================================================
 
-![[Pitcher Jackie Mitchell shaking hands with Babe Ruth, while Lou Gehrig (left) and Joe Engel stand by]](https://www.loc.gov/resource/cph.3c22449/full/pct:25/0/default.jpg)
-*[Pitcher Jackie Mitchell shaking hands with Babe Ruth, while Lou Gehrig (left) and Joe Engel stand by] (1952-01-01) — Library of Congress*
+![Kids, they don't hardly make 'em like that anymore](https://www.loc.gov/resource/ppmscd.03856/full/pct:25/0/default.jpg)
+*Kids, they don't hardly make 'em like that anymore (1994) — Library of Congress*
 
 
 [ PINS & PILLS  |  H2H Categories ]
-  Matchup : Week 20 vs Orange Crush: 8-4-0
-  Target  : ERA, W, INNdGS, K
-  Stream SP: Cade Smith (NYY)  ERA 2.21  K/9 12.63
+  Matchup : Week 20 vs Orange Crush: 8-3-1
+  Target  : W, INNdGS, K
+  Stream SP: Cade Smith (NYY)  ERA 2.33  K/9 12.57
   ** Submit adds before Monday scoring period lock. **
   Also    : Trevor Williams, Didier Fuentes
-  Top Add  : Bryan Abreu (HOU) [RP]  helps K
-  Also     : Jose Alvarado (RP), Elvis Alvarado (RP)
+  Top Add  : Andrew Abbott (CIN) [SP]  helps W, K
+  Also     : Andrew Alvarez (SP), Bryan Abreu (RP)
 
 [ CASEY STENGEL  |  NL-Only Roto ]
   Top Add  : Kevin Alcantara (CHC) [CF]  helps SB, HR, RBI
   Also     : Jose Alvarado (RP), Tyler Alexander (RP)
-  Standings: Period 22: 44 roto pts - winning 5 cats, losing 5
+  Standings: Period 22: 42 roto pts - winning 5 cats, losing 5
   Weakest  : ERA, RBI, SB, HR
 
 [ PINS & PILLS  |  H2H Categories ]
@@ -35,7 +35,7 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
 
 === Pins and Pills (baseball) ===
   Roster: 35 players
-     C Drake Baldwin (ATL)
+     C William Contreras (MIL)
     1B Bryce Harper (PHI)
     2B Bo Bichette (NYM)
     3B Sal Stewart (CIN)
@@ -45,56 +45,56 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   Lineup: 18/35 starting
   Free agents visible: 8170
 
-  FP projections (SP wire): 78/80 matched
-  Schedule (3 periods): P20(7d):26x2+ | P21(7d):0x2+ | P22(7d):0x2+
+  FP projections (SP wire): 77/79 matched
+  Schedule (3 periods): P20(7d):32x2+ | P21(7d):0x2+ | P22(7d):0x2+
   FP projections (all wire): 15/16 matched
-  Savant pitcher xStats: 814 players
-  Savant batter xStats: 637 players
+  Savant pitcher xStats: 818 players
+  Savant batter xStats: 638 players
   Savant EV/Barrel: 452 players
   Savant xStats (all wire): 16/16 matched
   Format: H2H Categories
 
   ⚠ CHURN GUARD: 5 moves recommended -- showing top 3 per section. Prioritize ruthlessly; avoid making all moves at once.
-  Matchup: Week 20 vs Orange Crush: 8-4-0
-  All categories (12): H W (60.0-50.0) | HR W (8.0-7.0) | OPS W (0.905-0.7225) | R W (43.0-30.0) | RBI W (33.0-22.0) | SB W (2.0-1.0) | ERA L (4.041-3.837) | INNdGS L (42.33-55.67) | K L (47.0-82.0) | S W (6.0-4.0) | W L (3.0-5.0) | WHIP W (1.2449-1.3579)
-  Priority categories (losing, easiest first): ERA, W, INNdGS, K
+  Matchup: Week 20 vs Orange Crush: 8-3-1
+  All categories (12): H W (69.0-57.0) | HR T (10.0-10.0) | OPS W (0.8595-0.7109) | R W (48.0-35.0) | RBI W (40.0-30.0) | SB W (3.0-1.0) | ERA W (3.764-4.171) | INNdGS L (48.33-68.83) | K L (51.0-101.0) | S W (6.0-5.0) | W L (4.0-6.0) | WHIP W (1.2545-1.378)
+  Priority categories (losing, easiest first): W, INNdGS, K
   Streaming SP (Submit adds before Monday scoring period lock.):
-   + Cade Smith (NYY) [day 7] score=9.76 ERA 2.21, K/9 12.63, WHIP 1.11 | helps: ERA, K, W
-   + Trevor Williams (WAS) [day 6] score=9.29 ERA 1.84, K/9 11.66, WHIP 1.09 | helps: ERA, K, W
-   + Didier Fuentes (ATL) [day 6] score=9.19 ERA 2.6, K/9 11.87, WHIP 1.08 | helps: ERA, K, W
-   + Tyler Wells (TB) [day 6] score=7.38 ERA 2.79, K/9 8.95, WHIP 0.99 | helps: ERA, K, W
-   + Luis Medina (ATH) [day 5] score=7.22 ERA 3.51, K/9 10.7, WHIP 1.47 | helps: ERA, K, W
+   + Cade Smith (NYY) [day 8] score=8.69 ERA 2.33, K/9 12.57, WHIP 1.1 | helps: K, W
+   + Trevor Williams (WAS) [day 7] score=8.29 ERA 1.84, K/9 11.66, WHIP 1.09 | helps: K, W
+   + Didier Fuentes (ATL) [day 7] score=8.19 ERA 2.6, K/9 11.87, WHIP 1.08 | helps: K, W
+   + Luis Medina (ATH) [day 6] score=7.22 ERA 3.77, K/9 10.83, WHIP 1.52 | helps: K, W
+   + Tyler Wells (TB) [day 7] score=6.33 ERA 2.7, K/9 8.81, WHIP 0.98 | helps: K, W
   Waiver adds (5 suggestions) (top 3 shown -- 2 more suppressed):
-   + Bryan Abreu (HOU) [RP] [day 14] helps: K [xERA=4.03]
-   + Jose Alvarado (PHI) [RP] [day 23] helps: K [xERA=3.83]
-   + Elvis Alvarado (ATH) [RP] [day 19] helps: K [xERA=4.75]
+   + Andrew Abbott (CIN) [SP] [day 9] helps: W, K [xERA=4.65]
+   + Andrew Alvarez (WAS) [SP] [day 6] helps: W, K [xERA=4.43]
+   + Bryan Abreu (HOU) [RP] [day 15] helps: K [xERA=4.05]
 
   --- Closer Monkey News ---
-  [LEDGER] Closer Monkey’s Leverage Ledger | 8.21.2026
+  [LEDGER] Closer Monkey’s Leverage Ledger | 8.23.2026
     Closer Monkey - Instant emails for every closer change. Closer depth charts to keep you ahead.
-    Thursday’s 9-game slate featured three wins, six saves, one loss, and two blown saves by relievers. Here are the saves in condensed form: There have been 1,000 saves this season by 235 different pitchers. For perspective, this season has already set an MLB record for the number of pitchers with at least
-    https://closermonkey.com/2026/08/21/closer-monkeys-leverage-ledger-8-21-2026/
+    Saturday’s slate featured six wins, nine saves, six losses, and five blown saves by relievers. Here are the saves in condensed form: There have been 1,014 saves this season by 236 different pitchers. For perspective, this season has already set an MLB record for the number of pitchers with at least one s
+    https://closermonkey.com/2026/08/23/closer-monkeys-leverage-ledger-8-23-2026/
 
   --- Injury Report (last 7 days) ---
   ★ YOUR ROSTER PLAYERS:
     ✅ Maikel Garcia (Kansas City Royals) — Activated from 10-Day IL [8/17]
     🚑 Maikel Garcia (Kansas City Royals) — Placed on 10-Day IL [8/21]
-  🚑 Placed (23): Sebastián Rivero (Los Angeles Angels), Vladimir Guerrero Jr. (Toronto Blue Jays), Masataka Yoshida (Boston Red Sox), Justin Slaten (Boston Red Sox), Justin Wrobleski (Los Angeles Dodgers), Tyler Soderstrom (Athletics), Daniel Palencia (Chicago Cubs), Max Fried (New York Yankees)
-  ✅ Activated (21): Jakob Junis (Texas Rangers), Edward Cabrera (Chicago Cubs), Jordan Lawlar (Arizona Diamondbacks), Justin Martinez (Arizona Diamondbacks), Shane McClanahan (Tampa Bay Rays), Vinnie Pasquantino (Kansas City Royals), Oneil Cruz (Pittsburgh Pirates), Carlos Rodón (New York Yankees)
+  🚑 Placed (25): Tyler Soderstrom (Athletics), Masataka Yoshida (Boston Red Sox), Justin Wrobleski (Los Angeles Dodgers), Justin Slaten (Boston Red Sox), Edward Cabrera (Chicago Cubs), Dansby Swanson (Chicago Cubs), Max Fried (New York Yankees), Austin Martin (Minnesota Twins)
+  ✅ Activated (21): Edward Cabrera (Chicago Cubs), Justin Martinez (Arizona Diamondbacks), Oneil Cruz (Pittsburgh Pirates), Shane McClanahan (Tampa Bay Rays), Vinnie Pasquantino (Kansas City Royals), Jordan Lawlar (Arizona Diamondbacks), Austin Warren (New York Mets), Carlos Rodón (New York Yankees)
 
   Trade deadline (2026-08-03) has passed for this league -- trade signals and trade board are suppressed for the rest of the season.
 
-  --- Daily Lineup (Sat Aug 22, 30 MLB teams playing) ---
-  SPs starting today (1):
-    [                  active] Logan Henderson (MIL)
-  SPs on a team playing today, NOT yet confirmed starting (8):
-    Jose Soriano (TOR) TOR has a game -- probable starters not yet posted
-    Logan Webb (SF) SF has a game -- probable starters not yet posted
-    Jake Bennett (BOS) BOS has a game -- probable starters not yet posted
+  --- Daily Lineup (Sun Aug 23, 30 MLB teams playing) ---
+  SPs starting today (3):
+    [                  active] Nick Martinez (TB)
+    [                  active] Jose Soriano (TOR)
+    [                  active] Jake Bennett (BOS)
+  SPs on a team playing today, NOT yet confirmed starting (6):
+    Logan Henderson (MIL) MIL has a game -- probable starters not yet posted
     Yoshinobu Yamamoto (LAD) LAD has a game -- probable starters not yet posted
     Zack Wheeler (PHI) PHI has a game -- probable starters not yet posted
-    Nick Martinez (TB) TB has a game -- probable starters not yet posted
     Sandy Alcantara (MIA) MIA has a game -- probable starters not yet posted
+    Logan Webb (SF) SF has a game -- probable starters not yet posted
     Kyle Harrison (MIL) MIL has a game -- probable starters not yet posted
   On injured list - do not activate (4):
     🚑 Juan Soto (NYM) Currently on the MLB injured list -- ignore any start/activate recommendation
@@ -115,7 +115,7 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   ... and 24 more
   Stats enriched: 28/29 roster players
   Lineup: 24/29 starting
-  Free agents visible: 8224
+  Free agents visible: 8223
 
   FP projections (roto wire): 17/18 matched
   Savant xStats (roto wire): 18/18 matched
@@ -124,36 +124,36 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
 
   ⚠ CHURN GUARD: 5 moves recommended -- showing top 3 per section. Prioritize ruthlessly; avoid making all moves at once.
   Waiver adds (5 suggestions) (top 3 shown -- 2 more suppressed):
-   + Kevin Alcantara (CHC) [CF] [day 56] helps: SB, HR, RBI [xwOBA=0.305]
-   + Jose Alvarado (PHI) [RP] [day 67] helps: K, S [xERA=3.83]
-   + Tyler Alexander (PHI) [RP] [day 67] helps: K, S [xERA=3.19]
-  Standings: Period 22: 44 roto pts - winning 5 cats, losing 5
-  All categories (10): BA rank=3 | HR rank=6 | R rank=3 | RBI rank=6 | SB rank=6 | ERA rank=5 | K rank=4 | S rank=8 | W rank=1 | WHIP rank=3
+   + Kevin Alcantara (CHC) [CF] [day 57] helps: SB, HR, RBI [xwOBA=0.285]
+   + Jose Alvarado (PHI) [RP] [day 68] helps: K, S [xERA=3.97]
+   + Tyler Alexander (PHI) [RP] [day 68] helps: K, S [xERA=3.19]
+  Standings: Period 22: 42 roto pts - winning 5 cats, losing 5
+  All categories (10): BA rank=4 | HR rank=7 | R rank=4 | RBI rank=6 | SB rank=6 | ERA rank=5 | K rank=4 | S rank=8 | W rank=1 | WHIP rank=3
   Weakest categories: ERA, RBI, SB, HR, S
 
   --- Closer Monkey News ---
-  [LEDGER] Closer Monkey’s Leverage Ledger | 8.21.2026
+  [LEDGER] Closer Monkey’s Leverage Ledger | 8.23.2026
     Closer Monkey - Instant emails for every closer change. Closer depth charts to keep you ahead.
-    Thursday’s 9-game slate featured three wins, six saves, one loss, and two blown saves by relievers. Here are the saves in condensed form: There have been 1,000 saves this season by 235 different pitchers. For perspective, this season has already set an MLB record for the number of pitchers with at least
-    https://closermonkey.com/2026/08/21/closer-monkeys-leverage-ledger-8-21-2026/
+    Saturday’s slate featured six wins, nine saves, six losses, and five blown saves by relievers. Here are the saves in condensed form: There have been 1,014 saves this season by 236 different pitchers. For perspective, this season has already set an MLB record for the number of pitchers with at least one s
+    https://closermonkey.com/2026/08/23/closer-monkeys-leverage-ledger-8-23-2026/
 
   --- Injury Report (last 7 days) ---
   ★ YOUR ROSTER PLAYERS:
     🚑 Justin Wrobleski (Los Angeles Dodgers) — Placed on 15-Day IL [8/16]
-  🚑 Placed (23): Sebastián Rivero (Los Angeles Angels), Vladimir Guerrero Jr. (Toronto Blue Jays), Masataka Yoshida (Boston Red Sox), Justin Slaten (Boston Red Sox), Tyler Soderstrom (Athletics), Daniel Palencia (Chicago Cubs), Max Fried (New York Yankees), Edward Cabrera (Chicago Cubs)
-  ✅ Activated (22): Jakob Junis (Texas Rangers), Edward Cabrera (Chicago Cubs), Jordan Lawlar (Arizona Diamondbacks), Justin Martinez (Arizona Diamondbacks), Shane McClanahan (Tampa Bay Rays), Vinnie Pasquantino (Kansas City Royals), Oneil Cruz (Pittsburgh Pirates), Maikel Garcia (Kansas City Royals)
+  🚑 Placed (25): Tyler Soderstrom (Athletics), Masataka Yoshida (Boston Red Sox), Justin Slaten (Boston Red Sox), Edward Cabrera (Chicago Cubs), Dansby Swanson (Chicago Cubs), Max Fried (New York Yankees), Austin Martin (Minnesota Twins), Daniel Palencia (Chicago Cubs)
+  ✅ Activated (22): Edward Cabrera (Chicago Cubs), Justin Martinez (Arizona Diamondbacks), Oneil Cruz (Pittsburgh Pirates), Maikel Garcia (Kansas City Royals), Shane McClanahan (Tampa Bay Rays), Vinnie Pasquantino (Kansas City Royals), Jordan Lawlar (Arizona Diamondbacks), Austin Warren (New York Mets)
 
   Trade deadline (2026-07-31) has passed for this league -- trade signals and trade board are suppressed for the rest of the season.
 
-  --- Daily Lineup (Sat Aug 22, 30 MLB teams playing) ---
-  SPs pitching today (2):
-    Casey Mize (SD)
-    Logan Henderson (MIL)
-  SPs on a team playing today, NOT yet confirmed starting (4):
+  --- Daily Lineup (Sun Aug 23, 30 MLB teams playing) ---
+  SPs pitching today (1):
+    Shota Imanaga (CHC)
+  SPs on a team playing today, NOT yet confirmed starting (5):
     Robbie Ray (SD) SD has a game -- probable starters not yet posted
+    Casey Mize (SD) SD has a game -- probable starters not yet posted
     Logan Webb (SF) SF has a game -- probable starters not yet posted
     Kyle Harrison (MIL) MIL has a game -- probable starters not yet posted
-    Shota Imanaga (CHC) CHC has a game -- probable starters not yet posted
+    Logan Henderson (MIL) MIL has a game -- probable starters not yet posted
   On injured list - do not activate (5):
     🚑 Will Smith (LAD) Currently on the MLB injured list -- ignore any start/activate recommendation
     🚑 Dalton Rushing (LAD) Currently on the MLB injured list -- ignore any start/activate recommendation
