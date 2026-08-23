@@ -1,35 +1,30 @@
 {
   "hemp": {
     "waiver_adds": {
-      "Willy Adames": {
-        "first": "2026-06-17",
-        "last": "2026-07-26",
-        "n": 25
-      },
       "Luisangel Acuna": {
         "first": "2026-06-17",
-        "last": "2026-08-16",
-        "n": 38
+        "last": "2026-08-17",
+        "n": 39
       },
       "Nick Allen": {
         "first": "2026-06-17",
-        "last": "2026-08-16",
-        "n": 28
+        "last": "2026-08-17",
+        "n": 29
       },
       "Jose Alvarado": {
         "first": "2026-06-22",
-        "last": "2026-08-02",
-        "n": 18
+        "last": "2026-08-23",
+        "n": 24
       },
       "Elvis Alvarado": {
         "first": "2026-06-24",
-        "last": "2026-07-29",
-        "n": 14
+        "last": "2026-08-23",
+        "n": 20
       },
       "Bryan Abreu": {
         "first": "2026-06-27",
-        "last": "2026-08-13",
-        "n": 8
+        "last": "2026-08-23",
+        "n": 15
       },
       "Keegan Akin": {
         "first": "2026-07-21",
@@ -38,8 +33,8 @@
       },
       "Andrew Abbott": {
         "first": "2026-07-21",
-        "last": "2026-07-28",
-        "n": 5
+        "last": "2026-08-23",
+        "n": 9
       },
       "Mick Abel": {
         "first": "2026-07-23",
@@ -48,8 +43,8 @@
       },
       "Andrew Alvarez": {
         "first": "2026-07-28",
-        "last": "2026-08-16",
-        "n": 2
+        "last": "2026-08-23",
+        "n": 6
       },
       "Franco Aleman": {
         "first": "2026-07-29",
@@ -63,8 +58,8 @@
       },
       "Kevin Alcantara": {
         "first": "2026-08-04",
-        "last": "2026-08-15",
-        "n": 10
+        "last": "2026-08-19",
+        "n": 12
       },
       "Dominic Abbadessa": {
         "first": "2026-08-04",
@@ -73,12 +68,22 @@
       },
       "Jose Altuve": {
         "first": "2026-08-05",
-        "last": "2026-08-16",
-        "n": 9
+        "last": "2026-08-17",
+        "n": 10
       },
       "Adael Amador": {
         "first": "2026-08-16",
         "last": "2026-08-16",
+        "n": 1
+      },
+      "Travis Adams": {
+        "first": "2026-08-19",
+        "last": "2026-08-19",
+        "n": 1
+      },
+      "Tyler Alexander": {
+        "first": "2026-08-22",
+        "last": "2026-08-22",
         "n": 1
       }
     },
@@ -87,16 +92,6 @@
         "first": "2026-06-25",
         "last": "2026-08-14",
         "n": 43
-      },
-      "Erick Fedde": {
-        "first": "2026-07-01",
-        "last": "2026-07-26",
-        "n": 8
-      },
-      "Walker Buehler": {
-        "first": "2026-07-09",
-        "last": "2026-07-26",
-        "n": 8
       },
       "Michael McGreevy": {
         "first": "2026-07-19",
@@ -113,16 +108,6 @@
         "last": "2026-08-02",
         "n": 6
       },
-      "Ryan Feltner": {
-        "first": "2026-07-23",
-        "last": "2026-07-26",
-        "n": 4
-      },
-      "Kohl Drake": {
-        "first": "2026-07-24",
-        "last": "2026-07-26",
-        "n": 3
-      },
       "Slade Cecconi": {
         "first": "2026-07-28",
         "last": "2026-08-02",
@@ -137,11 +122,6 @@
         "first": "2026-07-30",
         "last": "2026-08-02",
         "n": 2
-      },
-      "Tyler Mahle": {
-        "first": "2026-08-01",
-        "last": "2026-08-01",
-        "n": 1
       },
       "Andrew Alvarez": {
         "first": "2026-08-04",
@@ -205,13 +185,33 @@
       },
       "Gerardo Carrillo": {
         "first": "2026-08-16",
-        "last": "2026-08-16",
-        "n": 1
+        "last": "2026-08-17",
+        "n": 2
       },
       "Cade Smith": {
         "first": "2026-08-16",
-        "last": "2026-08-16",
-        "n": 1
+        "last": "2026-08-23",
+        "n": 8
+      },
+      "Didier Fuentes": {
+        "first": "2026-08-17",
+        "last": "2026-08-23",
+        "n": 7
+      },
+      "Trevor Williams": {
+        "first": "2026-08-17",
+        "last": "2026-08-23",
+        "n": 7
+      },
+      "Tyler Wells": {
+        "first": "2026-08-17",
+        "last": "2026-08-23",
+        "n": 7
+      },
+      "Luis Medina": {
+        "first": "2026-08-18",
+        "last": "2026-08-23",
+        "n": 6
       }
     },
     "drop_candidates": {},
@@ -221,13 +221,13 @@
     "waiver_adds": {
       "Jose Alvarado": {
         "first": "2026-06-17",
-        "last": "2026-08-16",
-        "n": 61
+        "last": "2026-08-23",
+        "n": 68
       },
       "Tyler Alexander": {
         "first": "2026-06-17",
-        "last": "2026-08-16",
-        "n": 61
+        "last": "2026-08-23",
+        "n": 68
       },
       "Philip Abner": {
         "first": "2026-06-26",
@@ -236,8 +236,8 @@
       },
       "Kevin Alcantara": {
         "first": "2026-06-26",
-        "last": "2026-08-15",
-        "n": 51
+        "last": "2026-08-23",
+        "n": 57
       },
       "Pablo Abreu": {
         "first": "2026-06-27",
@@ -251,36 +251,40 @@
       },
       "Adael Amador": {
         "first": "2026-08-16",
-        "last": "2026-08-16",
-        "n": 1
+        "last": "2026-08-21",
+        "n": 6
       },
       "Logan Allen": {
         "first": "2026-08-16",
-        "last": "2026-08-16",
-        "n": 1
+        "last": "2026-08-23",
+        "n": 8
       },
       "Zach Agnos": {
         "first": "2026-08-16",
-        "last": "2026-08-16",
-        "n": 1
+        "last": "2026-08-23",
+        "n": 4
       }
     },
     "streaming_sp": {},
     "drop_candidates": {
-      "Tim Tawa": {
-        "first": "2026-07-21",
-        "last": "2026-07-29",
-        "n": 9,
-        "sev": "cut"
-      },
       "Max Muncy": {
         "first": "2026-08-16",
-        "last": "2026-08-16",
-        "n": 1,
+        "last": "2026-08-19",
+        "n": 4,
         "sev": "cut"
+      },
+      "Daniel Duarte": {
+        "first": "2026-08-17",
+        "last": "2026-08-17",
+        "n": 1,
+        "sev": "monitor"
       }
     },
-    "recently_dropped": {}
+    "recently_dropped": {
+      "Max Muncy": {
+        "flagged": "2026-08-19"
+      }
+    }
   },
   "sfflf": {
     "waiver_adds": {},
