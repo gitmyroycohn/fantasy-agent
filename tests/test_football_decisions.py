@@ -151,10 +151,69 @@ def test_east_coast_keeper_guidance_uses_fp_rankings_when_available():
     assert kg["max_keepers"] == 3
     assert kg["ranking_source"] == "fantasypros_ecr"
     assert kg["recommended_keeps"] == ["Jalen Hurts", "Stefon Diggs", "Tony Pollard"]
-    # run_football_decisions doesn't source contract_data yet (no real
-    # acquisition-history feed wired up) -- so no expirations are ever
-    # computed here, only when a caller explicitly passes contract_data
-    # to keeper_guidance() directly (see test_football_keepers.py).
+    # fetch_contract_years isn't mocked in this test, and auth=None here,
+    # so the real fetch inside _east_coast_contract_data() fails (no
+    # .fetch_league_page on None) and is caught -- contract_data stays
+    # None, same safe fallback as "no contract data supplied". See
+    # test_east_coast_contract_expiration_excludes_player_via_live_wiring
+    # below for the real wiring exercised end-to-end with a mock.
+    assert kg["contract_expired"] == []
+
+
+def test_east_coast_contract_expiration_excludes_player_via_live_wiring():
+    # End-to-end exercise of the 2026-08-23 fix: fetch_contract_years()
+    # (the CBS CONTRACT-column scrape) is mocked; everything downstream --
+    # conversion to acquired_season, normalized-name matching against the
+    # roster, and exclusion from keeper eligibility -- runs for real
+    # through run_football_decisions(). This is the actual bug: Jonathan
+    # Taylor is the #1 ECR-ranked keeper candidate here but has an expired
+    # contract and must never be recommended.
+    roster = [
+        _starter("Jonathan Taylor", "RB"), _starter("Saquon Barkley", "RB"),
+        _starter("Drake Maye", "QB"), _starter("Stefon Diggs", "WR"),
+        _starter("Jake Ferguson", "TE"), _starter("K1", "K"), _starter("DST1", "DST"),
+    ]
+    bench = [_bench(f"Bench{i}", "WR") for i in range(9)]
+    team = Team(id="5", name="Hotlanta Hussies", roster=roster + bench)
+
+    fake_rankings = {
+        "jonathan taylor": 1.0, "saquon barkley": 10.0, "drake maye": 20.0,
+        "stefon diggs": 30.0, "jake ferguson": 40.0,
+    }
+    # Deliberately mixed-case / padded -- this comes from a different CBS
+    # page (HTML scrape) than the roster names above, and the matching in
+    # _east_coast_contract_data() must normalize, not require an exact
+    # string match between the two sources.
+    fake_contract_years = {"jonathan taylor ": 0, " Saquon Barkley": 1, "DRAKE MAYE": 2}
+
+    with patch.object(fd, "fetch_waiver_wire", return_value=[]), \
+         patch.object(fd, "_fp_nfl_rankings_by_name", return_value=fake_rankings), \
+         patch.object(fd, "fetch_contract_years", return_value=fake_contract_years):
+        result = fd.run_football_decisions(auth=object(), league_id="ecfc",
+                                            league_config=_EAST_COAST_CONFIG, team=team)
+
+    kg = next(a for a in result["actions"] if a["type"] == "keeper_guidance")
+    assert kg["contract_expired"] == ["Jonathan Taylor"]
+    assert "Jonathan Taylor" not in kg["recommended_keeps"]
+    assert "Jonathan Taylor" not in kg["other_eligible"]
+    assert kg["recommended_keeps"][0] == "Saquon Barkley"
+
+
+def test_east_coast_contract_fetch_failure_does_not_crash():
+    # fetch_contract_years() raising (auth problem, CBS page format
+    # changed, etc.) must degrade to "no contract data" like every other
+    # FantasyPros-adjacent adapter in this module, never propagate.
+    roster = [_starter("Jalen Hurts", "QB")]
+    bench = [_bench(f"Bench{i}", "WR") for i in range(9)]
+    team = Team(id="5", name="Hotlanta Hussies", roster=roster + bench)
+
+    with patch.object(fd, "fetch_waiver_wire", return_value=[]), \
+         patch.object(fd, "_fp_nfl_rankings_by_name", return_value={}), \
+         patch.object(fd, "fetch_contract_years", side_effect=RuntimeError("CBS page changed")):
+        result = fd.run_football_decisions(auth=object(), league_id="ecfc",
+                                            league_config=_EAST_COAST_CONFIG, team=team)
+
+    kg = next(a for a in result["actions"] if a["type"] == "keeper_guidance")
     assert kg["contract_expired"] == []
 
 

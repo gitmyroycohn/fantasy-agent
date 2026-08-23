@@ -177,3 +177,106 @@ def resolve_team_id(all_rosters: dict, query: str) -> str | None:
         if q in info["name"].strip().lower():
             return tid
     return None
+
+
+# ---------------------------------------------------------------------------
+# Contract-years scraping (east_coast football keeper house rule)
+# ---------------------------------------------------------------------------
+
+def fetch_contract_years(auth: CBSAuth, league_id: str, team_id: str,
+                         sport: str = "football") -> dict[str, int]:
+    """Scrape CBS's read-only CONTRACT column from a team's live roster
+    page (/teams/<team_id>) -- confirmed present on east_coast (ecfc) via
+    Christopher's Salary/Contracts commissioner feature, live-verified
+    2026-08-18 (see project memory "football keeper policies"). This is
+    the plain HTML table cell, NOT the commissioner-only "Edit Salary &
+    Contracts" JS widget -- no interaction needed, just page-text parsing,
+    same fetch path as _roster_from_html's fallback above.
+
+    Returns {player_name: contract_value} using the same name-extraction
+    logic as _roster_from_html (a.playerLink / aria-label text) -- NOT
+    normalized, so this may not exact-match names from _roster_from_api's
+    JSON-derived roster (a different CBS data source). Callers that need
+    to match this against an already-fetched roster should normalize both
+    sides rather than assume identical strings -- see
+    agent/football_decisions.py's east_coast wiring for that.
+
+    contract_value is CBS's displayed count of seasons of validity
+    remaining, counting the current season (0=already expired, 1=this is
+    the final valid season, 2=this plus one more after) -- see
+    sports/football/keepers.py::contract_years_to_acquired_seasons() for
+    the conversion into keeper_guidance()'s expected acquired_season shape
+    (this function only reports what CBS displays, no interpretation).
+
+    Column position: this table actually has THREE header-ish rows above
+    the player rows -- a 1-cell title row ("Players... Set Your Default
+    View"), a grouped-column row (e.g. a "Contracts" cell spanning
+    several real columns), and the real per-column header row (which has
+    its own standalone "contract" cell). Live-inspected 2026-08-23 via
+    contract_diag.py (see project memory "football keeper policies") --
+    an earlier version of this function took the table's FIRST <tr>,
+    which is that 1-cell title row, found no "contract" match, and
+    silently fell back to a wrong hardcoded index. This version instead
+    scans every <tr> in the table for one containing a cell whose exact
+    (case-insensitive, stripped) text equals "contract" -- an exact
+    match, not a substring, so the grouped "Contracts" row (plural) does
+    not false-match -- and uses that cell's index. Falls back to the
+    confirmed-live 0-based index 12 with a WARNING log only if no row
+    matches at all, rather than silently guessing wrong or crashing.
+    Skips (and logs) any row whose contract cell isn't parseable as an
+    integer -- never fabricates a value. Returns {} (not a partial/wrong
+    guess) if no player rows are found at all.
+    """
+    r = auth.fetch_league_page(league_id, sport, f"/teams/{team_id}")
+    soup = BeautifulSoup(r.text, "html.parser")
+
+    rows = soup.select("tr.playerRow")
+    if not rows:
+        logger.warning("fetch_contract_years: no tr.playerRow found on "
+                       "%s/teams/%s -- returning empty", league_id, team_id)
+        return {}
+
+    contract_idx = None
+    table = rows[0].find_parent("table")
+    if table is not None:
+        for header_row in table.find_all("tr"):
+            for i, cell in enumerate(header_row.find_all(["th", "td"])):
+                if cell.get_text(strip=True).lower() == "contract":
+                    contract_idx = i
+                    break
+            if contract_idx is not None:
+                break
+    if contract_idx is None:
+        logger.warning(
+            "fetch_contract_years: could not locate a 'CONTRACT' header "
+            "cell on %s/teams/%s -- falling back to the index (12) "
+            "confirmed live 2026-08-23. If parsed values look wrong, "
+            "CBS's table layout has changed and this needs re-verifying.",
+            league_id, team_id)
+        contract_idx = 12
+
+    result: dict[str, int] = {}
+    for row in rows:
+        if "empty" in row.get("class", []):
+            continue
+        link = row.select_one("a.playerLink") or row.select_one("a[aria-label]")
+        if link is None:
+            continue
+        name = (link.get("aria-label") or link.text).strip()
+        cells = row.find_all("td")
+        if contract_idx >= len(cells):
+            logger.warning("fetch_contract_years: row for %r has only %d "
+                           "cells, expected contract at index %d -- skipping",
+                           name, len(cells), contract_idx)
+            continue
+        raw = cells[contract_idx].get_text(strip=True)
+        try:
+            result[name] = int(raw)
+        except ValueError:
+            logger.warning("fetch_contract_years: non-integer contract "
+                           "value %r for %r -- skipping", raw, name)
+            continue
+
+    logger.info("fetch_contract_years: parsed %d contract values for team "
+               "%s in %s", len(result), team_id, league_id)
+    return result

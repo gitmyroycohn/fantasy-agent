@@ -155,6 +155,10 @@ football:
       format: "extended_snake"
       rounds: 17
       scheduled: "2026-08-28T19:00:00-04:00"
+      # Manual draft order posted to the league feed 2026-06-27, confirmed
+      # live via Chrome 2026-08-23 (draft is 5 days out at that point).
+      # Order reverses on even-numbered rounds (standard snake).
+      pick_position: 8   # of 10 -- RAIDERS,PATRIOTS,SEAHAWKS,CHIEFS,BRONCOS,JETS,BILLS,COWBOYS,BUCCANEERS,49ERS
     playoffs:
       start_week: 15
       length_weeks: 3
@@ -180,8 +184,15 @@ football:
       waiver_min_days_on_wire: 1
     draft:
       format: "live_snake"
-      rounds: null  # not yet scheduled as of 2026-07-31 -- commish still needs to set up Draft Management
-      scheduled: null
+      # CONFIRMED live via Chrome 2026-08-23 (was null/unscheduled as of
+      # 2026-07-31 -- commish set this up sometime in between; manual
+      # draft order posted to the league feed 2026-08-22, one day before
+      # this was checked).
+      rounds: 15
+      scheduled: "2026-08-29T20:00:00-04:00"
+      allowed_time_per_pick_seconds: 90
+      # Order reverses on even-numbered rounds (standard snake).
+      pick_position: 14   # of 14 -- last pick, i.e. the "turn" (picks 14 and 15 back-to-back into round 2)
     playoffs:
       start_week: 15
       length_weeks: 3

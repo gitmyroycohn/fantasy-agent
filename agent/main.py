@@ -193,18 +193,23 @@ def _print_decisions(result, dry_run):
                     print(f"    !! {issue}")
 
         elif atype == "waiver_targets":
-            # Football only. Sorted by ownership% ascending only -- no
-            # performance signal behind this yet, see
-            # sports/football/waivers.py's docstring.
+            # Football only. For hard_chargers/east_coast (both PPR),
+            # ranked by FantasyPros' points_ppr projection when available
+            # (ranking_source == "fantasypros_projected_ppr"); sfflf and
+            # any league with no projections data falls back to
+            # ownership_pct ascending -- see sports/football/waivers.py.
             by_slot = action.get("by_slot", {})
             if by_slot:
-                print(f"\n  --- Open-Slot Waiver Targets ---")
+                ranking_source = action.get("ranking_source", "ownership_pct")
+                print(f"\n  --- Open-Slot Waiver Targets (ranked by {ranking_source}) ---")
                 for slot, players in by_slot.items():
                     print(f"  {slot}:")
                     for p in players:
                         pos = "/".join(p.get("positions", []))
+                        proj = p.get("projected_ppr")
+                        proj_str = f", proj {proj:.1f} PPR pts" if proj is not None else ""
                         print(f"    + {p['player']} ({p.get('team','?')}) [{pos}] "
-                              f"owned {p.get('ownership_pct', 0):.1f}%")
+                              f"owned {p.get('ownership_pct', 0):.1f}%{proj_str}")
 
         elif atype == "keeper_guidance":
             # Football only (agent/football_decisions.py / sports/football/keepers.py).

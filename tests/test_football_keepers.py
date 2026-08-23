@@ -20,6 +20,7 @@ import pytest
 from data.models import Player, RosterSlot
 from sports.football.keepers import (
     keeper_guidance, KEEPER_POLICIES, contract_status, CONTRACT_YEARS,
+    contract_years_to_acquired_seasons,
 )
 
 
@@ -200,3 +201,54 @@ def test_f_league_ignores_contract_data_no_contract_rule_there():
     assert result.contract_expired == []
     assert set(result.other_eligible) == {"Player A", "Player B"}
     assert "contract" not in result.note.lower()
+
+
+# --- contract_years_to_acquired_seasons() (CBS CONTRACT-column adapter) --
+
+def test_contract_years_conversion_matches_real_2026_08_18_snapshot():
+    # Golden test: the exact values observed on Christopher's real
+    # east_coast roster 2026-08-18 (see project memory "football keeper
+    # policies") -- Jonathan Taylor showed 0 and is confirmed expired;
+    # Saquon Barkley/Brock Bowers showed 1 and are confirmed entering
+    # their final valid season; the rest of the roster showed 2.
+    raw = {"Jonathan Taylor": 0, "Saquon Barkley": 1, "Brock Bowers": 1,
+           "Drake Maye": 2}
+    acquired = contract_years_to_acquired_seasons(raw, current_season=2026)
+
+    assert acquired["Jonathan Taylor"] == 2023
+    assert contract_status("Jonathan Taylor", 2023, 2026).is_expired is True
+
+    assert acquired["Saquon Barkley"] == 2024
+    assert acquired["Brock Bowers"] == 2024
+    barkley = contract_status("Saquon Barkley", 2024, 2026)
+    assert barkley.is_expired is False
+    assert barkley.expires_after_season == 2026  # "entering the last year"
+
+    assert acquired["Drake Maye"] == 2025
+    maye = contract_status("Drake Maye", 2025, 2026)
+    assert maye.is_expired is False
+    assert maye.expires_after_season == 2027
+
+
+def test_contract_years_conversion_feeds_keeper_guidance_correctly():
+    # End-to-end: a CONTRACT-column value of 0 must exclude that player
+    # from keeper eligibility entirely, even if he'd otherwise be the
+    # top-ranked pick -- this is the real bug being fixed (Jonathan
+    # Taylor was FantasyPros' #1 ECR keeper candidate on this roster but
+    # isn't actually keeper-eligible).
+    roster = [_slot(n, "WR") for n in
+              ["Jonathan Taylor", "Saquon Barkley", "Drake Maye"]]
+    contract_years = {"Jonathan Taylor": 0, "Saquon Barkley": 1, "Drake Maye": 2}
+    acquired = contract_years_to_acquired_seasons(contract_years, current_season=2026)
+    rankings = {"jonathan taylor": 1.0, "saquon barkley": 10.0, "drake maye": 20.0}
+
+    result = keeper_guidance(roster, "east_coast", rankings=rankings,
+                              ranking_source="fantasypros_ecr",
+                              contract_data=acquired, current_season=2026)
+
+    assert result.contract_expired == ["Jonathan Taylor"]
+    assert "Jonathan Taylor" not in result.recommended_keeps
+    assert "Jonathan Taylor" not in result.other_eligible
+    # Best-ranked of the two REMAINING eligible players becomes the top
+    # (still-actionable) recommendation, not Taylor despite his #1 rank.
+    assert result.recommended_keeps[0] == "Saquon Barkley"

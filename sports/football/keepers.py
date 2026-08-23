@@ -37,15 +37,13 @@ league -- CBS's own public /rules page doesn't publish it):
     "Not Yet Selected"; only "Pain Inc." has picked (3 selected).
 
 Ranking WHICH players to keep requires some notion of player value.
-fantasypros/client.py already has nfl_consensus_rankings() (ECR rankings)
-implemented and unused -- this module can rank a roster by those rankings
-when available, but the exact response shape from FantasyPros' NFL
-endpoint has never been hit against the live API in this build (no network
-access here, and no verified sample response), so the adapter that calls it
-(agent/football_decisions.py) is written defensively and degrades to "no
-ranking available" rather than guessing at field names. Treat any FP-based
-ranking output as unverified until it's been checked against a real API
-response once FANTASYPROS_API_KEY + live network access are both available.
+fantasypros/client.py's nfl_consensus_rankings() (ECR rankings) is used for
+this via agent/football_decisions.py::_fp_nfl_rankings_by_name() -- its
+field mapping (player_name, rank_ecr) was VERIFIED live against a real
+/nfl/2026/consensus-rankings response on 2026-08-23 (fp_probe.py, see
+project memory), so this is a real ranking signal now, not a guess. The
+adapter still degrades to "no ranking available" on any fetch error,
+same safe-failure pattern as everywhere else in this build.
 
 east_coast (ecfc) ONLY -- 3-year keeper contract rule (Christopher-authored
 house rule, confirmed 2026-08-13, does NOT apply to f_league or
@@ -161,6 +159,45 @@ def contract_status(player_name: str, acquired_season: int,
         expires_after_season=expires_after_season,
         is_expired=years_elapsed > CONTRACT_YEARS,
     )
+
+
+def contract_years_to_acquired_seasons(contract_years: dict[str, int],
+                                        current_season: int) -> dict[str, int]:
+    """Convert CBS's displayed CONTRACT column value (see
+    cbs.roster.fetch_contract_years) into the {player_name: acquired_season}
+    shape keeper_guidance()/contract_status() above expect.
+
+    CBS's displayed value is "seasons of contract validity remaining,
+    counting the current season" -- this is CBS's own generic
+    Salary/Contracts number repurposed for Christopher's house rule, not a
+    bespoke encoding of it. Verified against Christopher's real east_coast
+    roster on 2026-08-18 (see project memory "football keeper policies"):
+    Jonathan Taylor showed 0 and is confirmed NOT keeper-eligible
+    (expired); Brock Bowers and Saquon Barkley showed 1 and are described
+    as entering their final valid season; the rest of the 20-man roster
+    showed 2 (this season plus one more after). Derivation, checked
+    against those three real values:
+
+        years_elapsed    = CONTRACT_YEARS - contract_value + 1
+        acquired_season  = current_season - years_elapsed + 1
+                         = current_season + contract_value - CONTRACT_YEARS
+
+    e.g. current_season=2026: value 0 -> acquired 2023 -> years_elapsed 4
+    -> is_expired True (matches Taylor). value 1 -> acquired 2024 ->
+    years_elapsed 3, expires_after_season 2026 -> not yet expired but
+    this IS the final season (matches Bowers/Barkley). value 2 -> acquired
+    2025 -> years_elapsed 2, one more season (2027) left after this one.
+
+    A value outside {0,1,2,3} has never been observed for this league --
+    the formula still produces an answer via contract_status(), but
+    contract_years_to_acquired_seasons() itself does no bounds-checking,
+    so treat an unexpected value as worth spot-checking against a live
+    page before trusting it, the same way this whole mapping was.
+    """
+    return {
+        name: current_season + value - CONTRACT_YEARS
+        for name, value in contract_years.items()
+    }
 
 
 @dataclass

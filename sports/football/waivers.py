@@ -1,27 +1,27 @@
 """
 Waiver-wire filtering for Christopher's 3 CBS football leagues.
 
-There is deliberately NO performance-based waiver ranking here yet, unlike
-sports/baseball/streaming.py (SP streaming, scored against real ERA/K9
-thresholds) and sports/baseball/drops.py (drop candidates, scored against
-real _BAT_FLOOR/_PITCH_FLOOR thresholds calibrated on actual MLB stat
-distributions). Football has no live stat feed, no MCP tool, and not even
-a single drafted roster yet as of 2026-08-01 (all 3 leagues are preseason --
-see project memory). Inventing NFL fantasy-point floors with no real season
-data behind them would be worse than not having the feature: it would look
-authoritative while being a guess. That piece gets built once real weekly
-football stats exist to calibrate against, the same way baseball's floors
-were tuned against real production data.
+Roster-fit filtering (whether a free agent could legally fill one of the
+team's open starting slots, or would breach a league's roster-size /
+position-cap limits) is pure roster-fit logic (sports/football/roster_rules.py)
+and has always been real -- this module wraps it into waiver-candidate
+filtering.
 
-What IS buildable without live stats: whether a free agent could legally
-fill one of the team's open starting slots, or would breach a league's
-roster-size / position-cap limits if added. That's pure roster-fit logic
-(sports/football/roster_rules.py) and is genuinely useful today -- this
-module wraps it into waiver-candidate filtering, with ownership_pct
-(already present in data.models.WaiverPlayer) as the only ranking signal,
-mirroring the "under-owned = worth grabbing" logic
-sports/baseball/streaming.py uses via MIN_SP_OWNERSHIP_DROP, just without
-the additional stat-based scoring layer baseball has on top of it.
+Performance-based ranking on top of that filtering is now REAL for two of
+the three leagues, not invented from raw stats: hard_chargers and
+east_coast are both real per-play PPR formats, and FantasyPros' own
+season-long PPR points projection (/nfl/{season}/projections,
+stats.points_ppr field -- verified live against a real API response via
+fp_probe.py on 2026-08-23, see project memory) is a legitimate value
+signal for them specifically. sfflf is deliberately excluded: its scoring
+is non-PPR tiered/position-diff, a format FantasyPros doesn't project for,
+so ranking its free agents by points_ppr would silently misrank them
+against a scoring system that isn't theirs -- sfflf always falls back to
+ownership_pct-only sorting (see _PPR_PROJECTION_LEAGUES below), the same
+"under-owned = worth grabbing" signal sports/baseball/streaming.py uses via
+MIN_SP_OWNERSHIP_DROP, mirrored here without baseball's additional
+stat-floor scoring layer. This is still not a full lineup optimizer or
+start/sit tool -- it only ranks candidates for open starting slots.
 """
 
 from __future__ import annotations
@@ -31,6 +31,18 @@ from sports.football.roster_rules import (
     LEAGUE_STARTING_SLOTS,
     open_slots,
 )
+
+# Leagues where FantasyPros' points_ppr season-long projection is a valid
+# ranking signal for waiver candidates -- both are real per-play PPR
+# formats FP's PPR projection actually represents. sfflf is intentionally
+# absent: its non-PPR tiered/position-diff scoring isn't what points_ppr
+# measures, so it always uses ownership_pct-only sorting instead, whether
+# or not a projections map is passed in.
+_PPR_PROJECTION_LEAGUES = {"hard_chargers", "east_coast"}
+
+
+def _norm(name: str) -> str:
+    return name.strip().lower()
 
 
 def eligible_for_slot(player, slot_label: str, league_id: str) -> bool:
@@ -42,10 +54,23 @@ def eligible_for_slot(player, slot_label: str, league_id: str) -> bool:
 
 
 def find_waiver_candidates_for_open_slots(roster: list, waiver_wire: list,
-                                           league_id: str) -> dict[str, list]:
+                                           league_id: str,
+                                           projections: dict[str, float] | None = None
+                                           ) -> dict[str, list]:
     """For each currently-unfilled starting slot, return the free agents on
-    the waiver wire eligible to fill it, sorted by ownership_pct ascending
-    (lower ownership = more available/under-the-radar).
+    the waiver wire eligible to fill it.
+
+    projections: optional {normalized_player_name: points_ppr} map (see
+    agent/football_decisions.py::_fp_nfl_projections_by_name()). Only used
+    when league_id is in _PPR_PROJECTION_LEAGUES (hard_chargers,
+    east_coast) -- passing it for sfflf has no effect, since points_ppr
+    isn't a signal that fits sfflf's non-PPR tiered scoring.
+
+    When applied: candidates with a projection are sorted first, highest
+    points_ppr first; candidates with no projection match follow, sorted
+    by ownership_pct ascending (same fallback as always). When not
+    applied (sfflf, or no projections supplied): every candidate is
+    sorted by ownership_pct ascending, same as before this signal existed.
 
     Returns {slot_label: [WaiverPlayer, ...]}. An empty dict means every
     starting slot is already filled (nothing to target this way -- doesn't
@@ -53,10 +78,19 @@ def find_waiver_candidates_for_open_slots(roster: list, waiver_wire: list,
     looks for slot gaps, not swap-upgrades).
     """
     slots_needed = open_slots(roster, league_id)
+    use_projections = bool(projections) and league_id in _PPR_PROJECTION_LEAGUES
     result = {}
     for label in slots_needed:
         candidates = [wp for wp in waiver_wire if eligible_for_slot(wp.player, label, league_id)]
-        candidates.sort(key=lambda wp: wp.ownership_pct)
+        if use_projections:
+            def _sort_key(wp, _proj=projections):
+                pts = _proj.get(_norm(wp.player.name))
+                # projected candidates first (best points_ppr first), then
+                # unprojected candidates by ownership_pct ascending
+                return (0, -pts) if pts is not None else (1, wp.ownership_pct)
+            candidates.sort(key=_sort_key)
+        else:
+            candidates.sort(key=lambda wp: wp.ownership_pct)
         result[label] = candidates
     return result
 
