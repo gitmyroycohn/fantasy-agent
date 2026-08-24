@@ -1,5 +1,5 @@
 ================================================
-  FANTASY AGENT  --  Mon Aug 24, 2026  8:51 AM ET
+  FANTASY AGENT  --  Mon Aug 24, 2026  9:59 AM ET
 ================================================
 
 
@@ -40,14 +40,14 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   ... and 30 more
   Stats enriched: 30/35 roster players
   Lineup: 18/35 starting
-  Free agents visible: 8170
+  Free agents visible: 8173
 
   FP projections (SP wire): 77/79 matched
   Schedule (3 periods): P21(7d):0x2+ | P22(7d):0x2+
   FP projections (all wire): 15/16 matched
   Savant pitcher xStats: 821 players
-  Savant batter xStats: 638 players
-  Savant EV/Barrel: 455 players
+  Savant batter xStats: 637 players
+  Savant EV/Barrel: 454 players
   Savant xStats (all wire): 16/16 matched
   Format: H2H Categories
 
@@ -67,10 +67,10 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
    + Jose Alvarado (PHI) [RP] [day 25] helps: K [xERA=3.97]
 
   --- Closer Monkey News ---
-  [LEDGER] Closer Monkey’s Leverage Ledger | 8.23.2026
+  [LEDGER] Closer Monkey’s Leverage Ledger | 8.24.2026
     Closer Monkey - Instant emails for every closer change. Closer depth charts to keep you ahead.
-    Saturday’s slate featured six wins, nine saves, six losses, and five blown saves by relievers. Here are the saves in condensed form: There have been 1,014 saves this season by 236 different pitchers. For perspective, this season has already set an MLB record for the number of pitchers with at least one s
-    https://closermonkey.com/2026/08/23/closer-monkeys-leverage-ledger-8-23-2026/
+    Sunday’s slate featured eight wins (though one was accompanied by a blown save), six saves, five losses, and two blown saves by relievers. Here are the saves in condensed form: There have been 1,020 saves this season by 236 different pitchers. For perspective, this season has already set an MLB record fo
+    https://closermonkey.com/2026/08/24/closer-monkeys-leverage-ledger-8-24-2026/
 
   --- Injury Report (last 7 days) ---
   ★ YOUR ROSTER PLAYERS:
@@ -124,7 +124,7 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   ... and 24 more
   Stats enriched: 28/29 roster players
   Lineup: 24/29 starting
-  Free agents visible: 8225
+  Free agents visible: 8226
 
   FP projections (roto wire): 17/18 matched
   Savant xStats (roto wire): 18/18 matched
@@ -141,10 +141,10 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   Weakest categories: RBI, SB, ERA, HR, S
 
   --- Closer Monkey News ---
-  [LEDGER] Closer Monkey’s Leverage Ledger | 8.23.2026
+  [LEDGER] Closer Monkey’s Leverage Ledger | 8.24.2026
     Closer Monkey - Instant emails for every closer change. Closer depth charts to keep you ahead.
-    Saturday’s slate featured six wins, nine saves, six losses, and five blown saves by relievers. Here are the saves in condensed form: There have been 1,014 saves this season by 236 different pitchers. For perspective, this season has already set an MLB record for the number of pitchers with at least one s
-    https://closermonkey.com/2026/08/23/closer-monkeys-leverage-ledger-8-23-2026/
+    Sunday’s slate featured eight wins (though one was accompanied by a blown save), six saves, five losses, and two blown saves by relievers. Here are the saves in condensed form: There have been 1,020 saves this season by 236 different pitchers. For perspective, this season has already set an MLB record fo
+    https://closermonkey.com/2026/08/24/closer-monkeys-leverage-ledger-8-24-2026/
 
   --- Injury Report (last 7 days) ---
   🚑 Placed (28): Daniel Palencia (Chicago Cubs), Max Fried (New York Yankees), Edward Cabrera (Chicago Cubs), Dansby Swanson (Chicago Cubs), Austin Martin (Minnesota Twins), Edwin Díaz (Los Angeles Dodgers), Hunter Goodman (Colorado Rockies), Rhys Hoskins (Cleveland Guardians)
