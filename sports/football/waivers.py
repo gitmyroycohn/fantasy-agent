@@ -7,21 +7,31 @@ position-cap limits) is pure roster-fit logic (sports/football/roster_rules.py)
 and has always been real -- this module wraps it into waiver-candidate
 filtering.
 
-Performance-based ranking on top of that filtering is now REAL for two of
-the three leagues, not invented from raw stats: hard_chargers and
-east_coast are both real per-play PPR formats, and FantasyPros' own
-season-long PPR points projection (/nfl/{season}/projections,
-stats.points_ppr field -- verified live against a real API response via
-fp_probe.py on 2026-08-23, see project memory) is a legitimate value
-signal for them specifically. sfflf is deliberately excluded: its scoring
-is non-PPR tiered/position-diff, a format FantasyPros doesn't project for,
+Performance-based ranking on top of that filtering is now REAL for all
+three leagues, not invented from raw stats -- but not from one shared
+formula, since the leagues don't share a scoring format:
+hard_chargers and east_coast are both real per-play PPR formats, and
+FantasyPros' own season-long PPR points projection (/nfl/{season}/
+projections, stats.points_ppr field -- verified live against a real API
+response via fp_probe.py on 2026-08-23, see project memory) is a
+legitimate value signal for them directly. sfflf's scoring is non-PPR
+tiered/position-diff -- a format FantasyPros doesn't project for directly,
 so ranking its free agents by points_ppr would silently misrank them
-against a scoring system that isn't theirs -- sfflf always falls back to
-ownership_pct-only sorting (see _PPR_PROJECTION_LEAGUES below), the same
-"under-owned = worth grabbing" signal sports/baseball/streaming.py uses via
-MIN_SP_OWNERSHIP_DROP, mirrored here without baseball's additional
-stat-floor scoring layer. This is still not a full lineup optimizer or
-start/sit tool -- it only ranks candidates for open starting slots.
+against a scoring system that isn't theirs -- but as of 2026-08-23 its
+candidates ARE ranked by a real signal too: sfflf's own tiered/position-
+dependent formula reimplemented against FantasyPros' raw per-category
+projection stats (pass/rush/rec yards, TDs by type) instead of points_ppr
+-- see sports/football/scoring.py::estimate_sfflf_points() for the method
+and its one documented gap (no long-TD-yardage bonus, since season
+projections don't carry per-TD yardage -- a systematic but uniform
+underestimate, fine for ranking candidates against each other). Any
+league falls back to ownership_pct-only sorting (see _PROJECTION_LEAGUES
+below) whenever no projections map is supplied or FantasyPros' API is
+unavailable -- the same "under-owned = worth grabbing" signal
+sports/baseball/streaming.py uses via MIN_SP_OWNERSHIP_DROP, mirrored here
+without baseball's additional stat-floor scoring layer. This is still not
+a full lineup optimizer or start/sit tool -- it only ranks candidates for
+open starting slots.
 """
 
 from __future__ import annotations
@@ -32,13 +42,17 @@ from sports.football.roster_rules import (
     open_slots,
 )
 
-# Leagues where FantasyPros' points_ppr season-long projection is a valid
-# ranking signal for waiver candidates -- both are real per-play PPR
-# formats FP's PPR projection actually represents. sfflf is intentionally
-# absent: its non-PPR tiered/position-diff scoring isn't what points_ppr
-# measures, so it always uses ownership_pct-only sorting instead, whether
-# or not a projections map is passed in.
-_PPR_PROJECTION_LEAGUES = {"hard_chargers", "east_coast"}
+# Leagues where a real (non-ownership) FantasyPros-derived signal exists
+# for ranking waiver candidates. The signal itself differs per league --
+# hard_chargers/east_coast use FantasyPros' points_ppr projection directly
+# (real per-play PPR formats, a fair match); f_league uses an ESTIMATE of
+# its own tiered/position-dependent scoring computed from FantasyPros' raw
+# stat projections (see sports/football/scoring.py::estimate_sfflf_points())
+# -- which adapter the caller uses is agent/football_decisions.py's job,
+# not this module's; this set only gates whether find_waiver_candidates_
+# for_open_slots() trusts a supplied `projections` map at all for a given
+# league, vs. always falling back to ownership_pct.
+_PROJECTION_LEAGUES = {"hard_chargers", "east_coast", "f_league"}
 
 
 def _norm(name: str) -> str:
@@ -60,17 +74,24 @@ def find_waiver_candidates_for_open_slots(roster: list, waiver_wire: list,
     """For each currently-unfilled starting slot, return the free agents on
     the waiver wire eligible to fill it.
 
-    projections: optional {normalized_player_name: points_ppr} map (see
-    agent/football_decisions.py::_fp_nfl_projections_by_name()). Only used
-    when league_id is in _PPR_PROJECTION_LEAGUES (hard_chargers,
-    east_coast) -- passing it for sfflf has no effect, since points_ppr
-    isn't a signal that fits sfflf's non-PPR tiered scoring.
+    projections: optional {normalized_player_name: points} map -- for
+    hard_chargers/east_coast this is FantasyPros' points_ppr projection
+    (agent/football_decisions.py::_fp_nfl_projections_by_name()); for
+    f_league it's an sfflf-scoring ESTIMATE derived from FantasyPros' raw
+    stats (agent/football_decisions.py::_fp_sfflf_points_by_name(), which
+    wraps sports/football/scoring.py::estimate_sfflf_points()). Only used
+    when league_id is in _PROJECTION_LEAGUES; the values are NOT
+    cross-league comparable (a hard_chargers points_ppr number and an
+    f_league estimated-points number measure different scoring formats),
+    but this function only sorts within one league's own candidate list,
+    so that's never an issue here.
 
     When applied: candidates with a projection are sorted first, highest
-    points_ppr first; candidates with no projection match follow, sorted
-    by ownership_pct ascending (same fallback as always). When not
-    applied (sfflf, or no projections supplied): every candidate is
-    sorted by ownership_pct ascending, same as before this signal existed.
+    projected points first; candidates with no projection match follow,
+    sorted by ownership_pct ascending (same fallback as always). When not
+    applied (league not in _PROJECTION_LEAGUES, or no projections
+    supplied): every candidate is sorted by ownership_pct ascending, same
+    as before this signal existed.
 
     Returns {slot_label: [WaiverPlayer, ...]}. An empty dict means every
     starting slot is already filled (nothing to target this way -- doesn't
@@ -78,14 +99,14 @@ def find_waiver_candidates_for_open_slots(roster: list, waiver_wire: list,
     looks for slot gaps, not swap-upgrades).
     """
     slots_needed = open_slots(roster, league_id)
-    use_projections = bool(projections) and league_id in _PPR_PROJECTION_LEAGUES
+    use_projections = bool(projections) and league_id in _PROJECTION_LEAGUES
     result = {}
     for label in slots_needed:
         candidates = [wp for wp in waiver_wire if eligible_for_slot(wp.player, label, league_id)]
         if use_projections:
             def _sort_key(wp, _proj=projections):
                 pts = _proj.get(_norm(wp.player.name))
-                # projected candidates first (best points_ppr first), then
+                # projected candidates first (best projected points first), then
                 # unprojected candidates by ownership_pct ascending
                 return (0, -pts) if pts is not None else (1, wp.ownership_pct)
             candidates.sort(key=_sort_key)

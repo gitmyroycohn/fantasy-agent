@@ -37,21 +37,27 @@ What this DOES do (real, CBS-data-grounded logic):
     though he might otherwise be the #1 ECR-ranked keeper candidate on the
     roster. See _east_coast_contract_data()'s docstring for the safe-
     degrade behavior on any fetch/match failure.
-  - Waiver-target ranking for hard_chargers/east_coast (both real per-play
-    PPR leagues): when FANTASYPROS_API_KEY is configured, ranks open-slot
-    waiver candidates by FantasyPros' points_ppr season-long projection
-    (see _fp_nfl_projections_by_name() and
-    sports/football/waivers.py::_PPR_PROJECTION_LEAGUES) instead of
-    ownership_pct alone. Field mapping (name / stats.points_ppr) was also
-    verified via fp_probe.py on 2026-08-23. sfflf is intentionally excluded
-    -- its non-PPR tiered/position-diff scoring isn't what points_ppr
-    represents, so it always stays on ownership_pct-only sorting.
+  - Waiver-target ranking for all 3 leagues, when FANTASYPROS_API_KEY is
+    configured, instead of ownership_pct alone (see
+    sports/football/waivers.py::_PROJECTION_LEAGUES) -- but not from one
+    shared signal, since the leagues don't share a scoring format:
+      * hard_chargers/east_coast (both real per-play PPR): ranked by
+        FantasyPros' own points_ppr season-long projection directly (see
+        _fp_nfl_projections_by_name()). Field mapping (name /
+        stats.points_ppr) verified via fp_probe.py on 2026-08-23.
+      * f_league (non-PPR, tiered, position-dependent scoring -- points_ppr
+        doesn't represent it): ranked by an ESTIMATE of sfflf's own
+        formula, reimplemented against FantasyPros' raw per-category stat
+        projections (see _fp_sfflf_points_by_name() and
+        sports/football/scoring.py::estimate_sfflf_points()). This omits
+        the real formula's long-TD-yardage bonus (season projections don't
+        carry per-TD yardage) -- a systematic but uniform underestimate,
+        fine for ranking candidates against each other, not a real point
+        projection. K/DST get no estimate (returns None) and always fall
+        back to ownership_pct within f_league.
 
 What this does NOT do yet, on purpose:
-  - No performance-based start/sit or lineup-optimizer logic, and no
-    performance-based waiver ranking at all for sfflf (its scoring format
-    has no FantasyPros projection equivalent -- see
-    sports/football/waivers.py's docstring).
+  - No performance-based start/sit or lineup-optimizer logic.
   - No trade evaluation, no drop-candidate scoring, no matchup/score
     tracking -- none of these exist for football yet.
 
@@ -64,8 +70,9 @@ import logging
 from sports.football.roster_rules import validate_roster
 from sports.football.waivers import (
     find_waiver_candidates_for_open_slots,
-    _PPR_PROJECTION_LEAGUES,
+    _PROJECTION_LEAGUES,
 )
+from sports.football.scoring import estimate_sfflf_points
 from sports.football.keepers import keeper_guidance, contract_years_to_acquired_seasons
 from cbs.waivers import fetch_waiver_wire
 from cbs.roster import fetch_contract_years
@@ -159,6 +166,47 @@ def _fp_nfl_projections_by_name(client) -> dict[str, float]:
     return projections
 
 
+def _fp_sfflf_points_by_name(client) -> dict[str, float]:
+    """Adapter from FantasyProsClient.nfl_projections() to a
+    {normalized_name: estimated_sfflf_points} dict -- ranks f_league
+    (sfflf) waiver-wire candidates by an ESTIMATE of f_league's OWN
+    tiered/position-dependent scoring, instead of leaving it on
+    ownership_pct-only sorting (the previous behavior, still the fallback
+    if this returns {} or FANTASYPROS_API_KEY isn't configured).
+
+    Same underlying data source as _fp_nfl_projections_by_name() --
+    FantasyPros' /nfl/{season}/projections -- just scored through sfflf's
+    own formula (sports/football/scoring.py::estimate_sfflf_points())
+    instead of read directly as points_ppr, since sfflf isn't a PPR
+    format and points_ppr doesn't represent it. See that function's
+    docstring for the one deliberate gap (no long-TD-yardage bonus --
+    season projections don't carry per-TD yardage) and why it's an
+    acceptable estimate for ranking, not a real point projection.
+
+    K/DST entries are skipped (estimate_sfflf_points() returns None for
+    them -- see its docstring on why). Degrades to an empty dict on any
+    fetch error, same safe-failure pattern as the rest of this module --
+    never a fabricated estimate.
+    """
+    if client is None:
+        return {}
+    try:
+        entries = client.nfl_projections(position="ALL", scoring="PPR")
+    except Exception as e:
+        logger.warning("FantasyPros NFL projections fetch failed (sfflf estimate): %s", e)
+        return {}
+
+    projections = {}
+    for entry in entries:
+        name = entry.get("name")
+        position = entry.get("position_id")
+        stats = entry.get("stats") or {}
+        pts = estimate_sfflf_points(stats, position)
+        if name and pts is not None:
+            projections[name.strip().lower()] = pts
+    return projections
+
+
 def _east_coast_contract_data(auth, league_id, team_id, roster) -> dict[str, int] | None:
     """east_coast ONLY: fetch CBS's live CONTRACT column
     (cbs.roster.fetch_contract_years) and convert it into the
@@ -236,25 +284,31 @@ def run_football_decisions(auth, league_id, league_config, team, sport="football
             waivers = []
 
         if waivers:
-            projections = _fp_nfl_projections_by_name(_fp_client) if _fp_client else {}
-            use_projections = bool(projections) and internal_id in _PPR_PROJECTION_LEAGUES
+            if internal_id == "f_league":
+                projections = _fp_sfflf_points_by_name(_fp_client) if _fp_client else {}
+                ranking_source_label = "fantasypros_estimated_sfflf_points"
+            else:
+                projections = _fp_nfl_projections_by_name(_fp_client) if _fp_client else {}
+                ranking_source_label = "fantasypros_projected_ppr"
+            use_projections = bool(projections) and internal_id in _PROJECTION_LEAGUES
             candidates_by_slot = find_waiver_candidates_for_open_slots(
                 team.roster, waivers, internal_id, projections=projections or None)
             if any(candidates_by_slot.values()):
                 actions.append({
                     "type": "waiver_targets",
-                    # Ranked by FantasyPros points_ppr projection for
-                    # hard_chargers/east_coast when available (see
-                    # sports/football/waivers.py); sfflf (non-PPR scoring)
-                    # and any league with no projections data still falls
-                    # back to ownership_pct ascending. Capped at 5 per slot.
-                    "ranking_source": "fantasypros_projected_ppr" if use_projections else "ownership_pct",
+                    # Ranked by FantasyPros points_ppr for hard_chargers/
+                    # east_coast, or by an sfflf-scoring estimate for
+                    # f_league (see sports/football/waivers.py and
+                    # _fp_sfflf_points_by_name()) when available; any
+                    # league with no projections data falls back to
+                    # ownership_pct ascending. Capped at 5 per slot.
+                    "ranking_source": ranking_source_label if use_projections else "ownership_pct",
                     "by_slot": {
                         slot: [
                             {"player": wp.player.name, "team": wp.player.team,
                              "positions": wp.player.positions,
                              "ownership_pct": wp.ownership_pct,
-                             "projected_ppr": projections.get(wp.player.name.strip().lower())}
+                             "projected_points": projections.get(wp.player.name.strip().lower())}
                             for wp in wps[:5]
                         ]
                         for slot, wps in candidates_by_slot.items() if wps

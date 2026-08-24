@@ -112,6 +112,41 @@ def test_illegal_roster_fetches_waivers_and_targets_open_slot():
     assert all(p["player"] != "Irrelevant WR" for p in by_slot.get("Quarterback", []))
 
 
+def test_f_league_waiver_targets_ranked_by_sfflf_points_estimate_when_available():
+    # Same shape as test_illegal_roster_fetches_waivers_and_targets_open_slot,
+    # but with FantasyPros configured -- f_league should rank by the sfflf
+    # scoring ESTIMATE (fd._fp_sfflf_points_by_name), not ownership_pct, and
+    # not by generic points_ppr (which doesn't represent sfflf's scoring).
+    roster = _legal_f_league_roster()
+    roster[0] = _starter("NotAQB", "WR")  # opens the Quarterback slot
+    team = Team(id="11", name="COWBOYS", roster=roster)
+
+    fake_wire = [
+        WaiverPlayer(player=Player(id="low_proj", name="Low Projection QB", position="QB"),
+                     ownership_pct=80.0),
+        WaiverPlayer(player=Player(id="high_proj", name="High Projection QB", position="QB"),
+                     ownership_pct=5.0),
+    ]
+    fake_sfflf_estimates = {"low projection qb": 40.0, "high projection qb": 95.0}
+
+    with patch.object(fd, "fetch_waiver_wire", return_value=fake_wire), \
+         patch.object(fd, "_fp_nfl_rankings_by_name", return_value={}), \
+         patch.object(fd, "_fp_client", object()), \
+         patch.object(fd, "_fp_sfflf_points_by_name", return_value=fake_sfflf_estimates):
+        result = fd.run_football_decisions(auth=None, league_id="sfflf",
+                                            league_config=_F_LEAGUE_CONFIG, team=team)
+
+    waiver_action = next(a for a in result["actions"] if a["type"] == "waiver_targets")
+    assert waiver_action["ranking_source"] == "fantasypros_estimated_sfflf_points"
+    by_slot = waiver_action["by_slot"]
+    names = [p["player"] for p in by_slot["Quarterback"]]
+    # Higher estimate first, despite lower ownership_pct -- proves this
+    # isn't just falling back to ownership sorting.
+    assert names == ["High Projection QB", "Low Projection QB"]
+    points = {p["player"]: p["projected_points"] for p in by_slot["Quarterback"]}
+    assert points == {"High Projection QB": 95.0, "Low Projection QB": 40.0}
+
+
 def test_waiver_fetch_failure_is_caught_and_omits_waiver_targets():
     roster = _legal_f_league_roster()
     roster[0] = _starter("NotAQB", "WR")

@@ -17,6 +17,7 @@ from sports.football.scoring import (
     score_standard_ppr,
     score_standard_ppr_defense,
     score_sfflf,
+    estimate_sfflf_points,
     HCFL05_PROFILE,
     ECFC_PROFILE,
 )
@@ -176,3 +177,50 @@ def test_score_player_rejects_unknown_profile():
     import pytest
     with pytest.raises(ValueError):
         score_player({}, "WR", "not_a_real_profile")
+
+
+# ---------------------------------------------------------------------------
+# estimate_sfflf_points() -- FantasyPros-projection-based estimate used to
+# rank f_league (sfflf) waiver candidates by its own scoring shape (added
+# 2026-08-23, see agent/football_decisions.py::_fp_sfflf_points_by_name())
+# ---------------------------------------------------------------------------
+
+def test_estimate_sfflf_points_qb_yardage_tier_and_td_count():
+    # 280 combined pass+rush yards -> tier(260-309 -> 6); 2 pass TDs * 6 base
+    # -- no long-TD bonus, unlike score_sfflf(), since season projections
+    # only give a TD count, not per-TD yardage.
+    stats = {"pass_yds": 280, "rush_yds": 0, "pass_tds": 2}
+    assert estimate_sfflf_points(stats, "QB") == 18.0
+
+
+def test_estimate_sfflf_points_rb_combines_rush_and_rec_yards():
+    # 200 rush + 50 rec = 250 combined -> tier(240-279 -> 15); 1 rush TD * 6
+    stats = {"rush_yds": 200, "rec_yds": 50, "rush_tds": 1}
+    assert estimate_sfflf_points(stats, "RB") == 21.0
+
+
+def test_estimate_sfflf_points_ignores_reception_count():
+    # Not PPR -- a huge projected reception count with no yards/TDs must
+    # not move the score at all.
+    stats = {"rec_rec": 90, "rush_yds": 0, "rec_yds": 0}
+    assert estimate_sfflf_points(stats, "RB") == 0.0
+
+
+def test_estimate_sfflf_points_two_point_conversions_flat_rate():
+    stats = {"2pt_tds": 2}
+    assert estimate_sfflf_points(stats, "WR") == 4.0  # 2 * profile's flat 2.0
+
+
+def test_estimate_sfflf_points_position_dependent_td_value_carries_through():
+    # Same position-dependent quirk as score_sfflf(): a WR passing TD
+    # (trick play) is worth 12, not the 6 a QB gets for the same stat.
+    stats = {"pass_tds": 1}
+    assert estimate_sfflf_points(stats, "WR") == 12.0
+
+
+def test_estimate_sfflf_points_returns_none_for_k_and_dst():
+    # FantasyPros' generic season projection doesn't carry the granular
+    # stats (FG-by-distance, sacks, points allowed, etc.) sfflf's real K/DST
+    # formula needs -- callers must fall back to ownership_pct for these.
+    assert estimate_sfflf_points({"points": 120}, "K") is None
+    assert estimate_sfflf_points({"points": 90}, "DST") is None

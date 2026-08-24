@@ -347,6 +347,70 @@ def score_sfflf(stats: dict, position: str) -> float:
     return pts
 
 
+def estimate_sfflf_points(stats: dict, position: str) -> float | None:
+    """Estimate an sfflf (F-League) fantasy-point total from a FantasyPros
+    season-long NFL projection stat line, for RANKING waiver-wire value --
+    not a promise of exact real scoring.
+
+    sfflf has no PPR-style flat-rate FantasyPros scoring format to project
+    against directly (score_sfflf() above is fundamentally tiered and
+    position-dependent, not a per-yard/per-reception rate), so this
+    reimplements sfflf's own SFFLF_PROFILE tiers/TD-value tables against
+    FantasyPros' season-projection stat fields instead of live weekly
+    box-score stats:
+      pass_yds, rush_yds, rec_yds -- combined per position (QB: pass+rush;
+        RB/WR/TE: rush+rec), run through the same yardage bonus tiers
+        score_sfflf() uses.
+      pass_tds, rush_tds, rec_tds -- each multiplied by that TD type's
+        base position-dependent value (profile["td_points"]).
+      2pt_tds -- flat 2 pts each, matches SFFLF_PROFILE's uniform
+        two_point rate across Pa2P/Re2P/Ru2P/Fum2PT.
+    rec_rec (reception count) is intentionally UNUSED -- sfflf scores 0
+    pts/reception, confirmed not PPR (see SFFLF_PROFILE["reception"]).
+
+    KNOWN, DELIBERATE GAP vs score_sfflf(): the real formula adds a long-TD
+    bonus (3-12 extra pts, depending on position/TD type/length) on top of
+    each TD's base value, keyed off that individual TD's own yardage.
+    FantasyPros' season projection only gives aggregate TD *counts*, not
+    per-TD yardage, so that bonus can't be reconstructed here and is
+    omitted entirely. This makes the estimate a systematic UNDERESTIMATE
+    of true sfflf points, biased somewhat against big-play/long-TD-prone
+    players -- fine for RANKING waiver-wire fill-in candidates against
+    each other (every candidate is underestimated the same way), but this
+    is not a real point projection and should never be presented as one.
+
+    position: "QB", "RB", "WR", or "TE" only -- returns None for anything
+    else (K, DST). FantasyPros' generic season projection doesn't carry
+    the granular stat categories sfflf's real K/DST formula needs
+    (made-FG-by-distance list, sacks, INTs, points allowed, etc.), and
+    guessing at those would be fabricating data, not estimating from it --
+    callers should fall back to ownership_pct for K/DST waiver ranking in
+    this league, same as before this function existed.
+    """
+    if position not in ("QB", "RB", "WR", "TE"):
+        return None
+
+    profile = SFFLF_PROFILE
+    pts = 0.0
+
+    if position == "QB":
+        combined_yards = stats.get("pass_yds", 0) + stats.get("rush_yds", 0)
+        pts += _tier_points(combined_yards, profile["pass_rush_yard_tiers"])
+    else:
+        combined_yards = stats.get("rush_yds", 0) + stats.get("rec_yds", 0)
+        tiers = profile["rush_rec_yard_tiers"].get(position, [])
+        pts += _tier_points(combined_yards, tiers)
+
+    td_points = profile["td_points"].get(position, {})
+    pts += stats.get("pass_tds", 0) * td_points.get("PaTD", 0.0)
+    pts += stats.get("rush_tds", 0) * td_points.get("RuTD", 0.0)
+    pts += stats.get("rec_tds", 0) * td_points.get("ReTD", 0.0)
+
+    pts += stats.get("2pt_tds", 0) * profile["two_point"]
+
+    return pts
+
+
 # ---------------------------------------------------------------------------
 # Dispatch
 # ---------------------------------------------------------------------------
