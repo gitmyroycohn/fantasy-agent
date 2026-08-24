@@ -73,9 +73,9 @@ from sports.football.waivers import (
     _PROJECTION_LEAGUES,
 )
 from sports.football.scoring import estimate_sfflf_points
-from sports.football.keepers import keeper_guidance, contract_years_to_acquired_seasons
+from sports.football.keepers import keeper_guidance, contract_years_to_acquired_seasons, KEEPER_POLICIES
 from cbs.waivers import fetch_waiver_wire
-from cbs.roster import fetch_contract_years
+from cbs.roster import fetch_contract_years, get_all_team_rosters
 from config.settings import FANTASYPROS_API_KEY
 from fantasypros.client import FantasyProsClient
 
@@ -254,6 +254,97 @@ def _east_coast_contract_data(auth, league_id, team_id, roster) -> dict[str, int
             "went unused this run (name mismatch between the CONTRACT "
             "scrape and the roster source)", len(matched), len(raw))
     return matched or None
+
+
+def league_keeper_report(auth, league_id, league_config, sport="football") -> dict:
+    """Keeper guidance for EVERY team in a football keeper league, not just
+    Christopher's own roster -- i.e. "what will each manager keep."
+
+    run_football_decisions()/keeper_guidance() already answer this
+    correctly for Christopher's own team (including the east_coast 3-year
+    contract check that excludes contract=0 players). This function reuses
+    that exact same per-team logic -- keeper_guidance(), the same contract
+    fetch/normalization as _east_coast_contract_data(), the same FantasyPros
+    ranking adapter -- just looped across every team cbs.roster.
+    get_all_team_rosters() returns for the league, instead of only the one
+    team_id in config/leagues.yaml.
+
+    league_id: the CBS league id (e.g. "sfflf", "ecfc") -- same argument
+               shape run_football_decisions() takes, NOT the internal id.
+    league_config: the full league dict from config/leagues.yaml (its "id"
+               key, e.g. "f_league", is what KEEPER_POLICIES/keeper_guidance
+               key off of).
+
+    Returns:
+        {"league": league_name, "internal_id": ..., "is_keeper_league": bool,
+         "policy_note": str, "teams": {team_id: {"team_name": ...,
+         "recommended_keeps": [...], "other_eligible": [...],
+         "contract_expired": [...], "ranking_source": ..., "note": ...}}}
+    is_keeper_league False (hard_chargers) returns an empty "teams" dict --
+    calling this on a non-keeper league is a valid no-op, not an error, so
+    callers can loop every football league without special-casing.
+
+    Every team's `note` carries forward keeper_guidance()'s own honest
+    degrade text (e.g. "no contract data supplied" for a team whose CONTRACT
+    column scrape failed or matched nothing) -- so a manager showing an
+    empty/wrong-looking keeper list is legible as "we don't have data for
+    them" rather than presented as a confident answer.
+    """
+    internal_id = league_config["id"]
+    league_name = league_config.get("name", internal_id)
+    policy = KEEPER_POLICIES.get(internal_id)
+    if policy is None:
+        raise ValueError(f"Unknown football league_id: {internal_id!r}")
+
+    if not policy["is_keeper_league"]:
+        return {
+            "league": league_name, "internal_id": internal_id,
+            "is_keeper_league": False, "policy_note": policy["note"],
+            "teams": {},
+        }
+
+    all_rosters = get_all_team_rosters(auth, league_id, sport)
+    rankings = _fp_nfl_rankings_by_name(_fp_client) if _fp_client else {}
+    ranking_source = "fantasypros_ecr" if rankings else None
+    has_contract_rule = internal_id in {"east_coast"}  # see keepers.py's _CONTRACT_LEAGUES
+
+    teams = {}
+    for team_id, info in all_rosters.items():
+        contract_data = None
+        if has_contract_rule:
+            # Same fetch + exact-name-normalization-against-this-roster
+            # logic as run_football_decisions() uses for Christopher's own
+            # team -- reused verbatim so a teammate's contract data is
+            # matched the same safe way (never a partial/wrong guess
+            # treated as complete; see _east_coast_contract_data()'s
+            # docstring).
+            contract_data = _east_coast_contract_data(
+                auth, league_id, team_id, info["roster"])
+
+        kg = keeper_guidance(
+            info["roster"], internal_id,
+            rankings=rankings or None,
+            ranking_source=ranking_source,
+            contract_data=contract_data,
+            current_season=_FOOTBALL_CURRENT_SEASON if contract_data else None,
+        )
+        teams[team_id] = {
+            "team_name":          info["name"],
+            "recommended_keeps":  kg.recommended_keeps,
+            "other_eligible":     kg.other_eligible,
+            "contract_expired":   kg.contract_expired,
+            "ranking_source":     kg.ranking_source,
+            "note":               kg.note,
+        }
+
+    return {
+        "league": league_name, "internal_id": internal_id,
+        "is_keeper_league": True,
+        "max_keepers": policy["max_keepers"],
+        "decided_by": policy["decided_by"],
+        "policy_note": policy["note"],
+        "teams": teams,
+    }
 
 
 def run_football_decisions(auth, league_id, league_config, team, sport="football") -> dict:

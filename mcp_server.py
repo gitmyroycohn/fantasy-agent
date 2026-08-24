@@ -11,6 +11,7 @@ Tools:
   list_league_teams         -- list team names in a league (helper for get_team_roster) [baseball + football]
   get_draft_board           -- live CBS draft order/results for a league [football only]
   get_fantasypros_draft_board -- FantasyPros value re-scored under each league's own rules [football only]
+  get_league_keepers        -- keeper guidance for EVERY manager in a keeper league, not just yours [football only]
   waiver_recommendations    -- top waiver wire adds [baseball only]
   roster_value_signals      -- buy-low / sell-high signals [baseball only]
 
@@ -64,7 +65,7 @@ from savant.client import SavantClient
 from agent.trade_eval import evaluate_trade, format_trade_result
 from agent.tradevalue import analyze_roster_value
 from agent.decisions import run_decisions, get_filtered_waiver_adds, trade_window_status
-from agent.football_decisions import run_football_decisions
+from agent.football_decisions import run_football_decisions, league_keeper_report
 from data.models import Team
 from mlb.clock import now_et, today_et
 
@@ -538,6 +539,94 @@ def get_fantasypros_draft_board(league_id: str = "all", top_n: int = 15) -> str:
     except Exception as e:
         logger.exception("get_fantasypros_draft_board failed")
         return f"Error building draft board: {e}"
+
+
+# ---------------------------------------------------------------------------
+# Tool: get_league_keepers
+# ---------------------------------------------------------------------------
+
+@mcp.tool()
+def get_league_keepers(league_id: str = "all") -> str:
+    """
+    Keeper guidance for EVERY team in a football keeper league -- what each
+    manager will likely keep, not just Christopher's own roster.
+
+    Reuses the same per-team policy logic daily_decisions applies to
+    Christopher's team (sports/football/keepers.py::keeper_guidance()) but
+    loops it across every roster in the league via
+    cbs.roster.get_all_team_rosters(), so you get a full league picture:
+    which players each team is expected to protect, who else is eligible,
+    and (east_coast only) which players are locked out because their
+    3-season contract has expired (CBS CONTRACT column = 0).
+
+    Ranking is by FantasyPros consensus ECR when FANTASYPROS_API_KEY is set
+    (best value kept), degrading to "no ranking signal, can't guess who
+    each manager keeps" if not -- this never fabricates a pick.
+
+    IMPORTANT caveat by league:
+      - east_coast: each manager decides their own keepers, so this is a
+        genuine prediction of individually-rational choices (best 3 by ECR,
+        contract-expired players excluded).
+      - f_league: keepers are actually chosen by that league's
+        COMMISSIONER, not each manager individually (Christopher isn't the
+        commissioner there and the real selection criteria aren't published
+        to him) -- treat f_league's output here as "who a manager would
+        rationally keep by value," not a forecast of the commissioner's
+        actual decision.
+      - hard_chargers: not a keeper league; reported as such with no team
+        breakdown.
+
+    Args:
+        league_id: League id from config (e.g. "hard_chargers", "f_league",
+                   "east_coast" -- see config/leagues.yaml's "id" field),
+                   or "all" for every football league.
+    """
+    try:
+        auth    = _get_auth()
+        leagues = _resolve_leagues(league_id, sports={"football"})
+        if not leagues:
+            return f"No football league found matching '{league_id}'."
+
+        out = []
+        for league_cfg, sport in leagues:
+            lid  = league_cfg["cbs_league_id"]
+            name = league_cfg.get("name", league_cfg.get("id", league_id))
+
+            report = league_keeper_report(auth, lid, league_cfg, sport)
+            out.append(f"=== {name} ===")
+
+            if not report["is_keeper_league"]:
+                out.append(f"  Not a keeper league. {report['policy_note']}")
+                out.append("")
+                continue
+
+            out.append(f"  Max keepers: {report['max_keepers']} "
+                       f"(decided by: {report['decided_by']})")
+            out.append(f"  {report['policy_note']}")
+
+            for tid, t in report["teams"].items():
+                out.append(f"\n  -- {t['team_name']} --")
+                if t["recommended_keeps"]:
+                    src = f" (by {t['ranking_source']})" if t["ranking_source"] else ""
+                    out.append(f"    Likely keeps{src}: {', '.join(t['recommended_keeps'])}")
+                else:
+                    out.append("    Likely keeps: none determined (no ranking signal)")
+                if t["other_eligible"]:
+                    out.append(f"    Other eligible: {', '.join(t['other_eligible'])}")
+                if t["contract_expired"]:
+                    out.append(f"    NOT keeper-eligible (contract expired): "
+                               f"{', '.join(t['contract_expired'])}")
+                if t["note"]:
+                    out.append(f"    Note: {t['note']}")
+            out.append("")
+
+        return _respond("\n".join(out))
+
+    except CBSAuthError as e:
+        return f"CBS auth error: {e}"
+    except Exception as e:
+        logger.exception("get_league_keepers failed")
+        return f"Error building league keeper report: {e}"
 
 
 # ---------------------------------------------------------------------------
@@ -1131,13 +1220,16 @@ def daily_decisions(league_id: str = "all") -> str:
     starting slots are open, free-agent targets for those slots sorted by
     ownership%, and keeper guidance (real per-league policy -- east_coast
     has a confirmed 3-keeper cap with no cost mechanic and will get ranked
-    keeper suggestions if FANTASYPROS_API_KEY is set; f_league is a keeper
-    league too but its cap isn't known/published, so you'll be told to ask
-    that league's commissioner instead of a guess; hard_chargers isn't a
-    keeper league at all). There is no performance-based scoring for
-    football yet otherwise (no live NFL stat feed to calibrate against) --
-    don't expect start/sit advice or ranked waiver adds the way baseball
-    gets them.
+    keeper suggestions if FANTASYPROS_API_KEY is set; f_league is also a
+    keeper league (confirmed 2-keeper cap, any position, no cost mechanic --
+    but selection is made by that league's commissioner, not Christopher, so
+    treat f_league keeper output here as a ranked recommendation, not what
+    will actually be kept); hard_chargers isn't a keeper league at all).
+    This tool only covers YOUR OWN roster -- use get_league_keepers for
+    keeper guidance across every manager in the league. There is no
+    performance-based scoring for football yet otherwise (no live NFL stat
+    feed to calibrate against) -- don't expect start/sit advice or ranked
+    waiver adds the way baseball gets them.
 
     Args:
         league_id: League id from config, or "all" for all leagues (baseball
