@@ -384,8 +384,21 @@ def _add_lineup_advice(actions, team, no_bench=False, league_cfg=None):
         # Independent of the probable-starters feed (can lag a real IL move)
         # and independent of CBS's own roster slot (only moves to IL when the
         # commissioner/manager does it manually there).
+        #
+        # P1 fix (2026-08-24): build il_norms via annotate_roster_injuries()
+        # instead of a bare set(fetch_active_il().keys()) so this tool uses
+        # the exact same, team-cross-checked IL check as hitting_matchups
+        # (see mlb/injuries.py::annotate_roster_injuries docstring) --
+        # previously the two tools' IL logic could disagree, and this raw
+        # form also carried the same name-only collision risk the Aug-15
+        # batch fixed elsewhere (two different players sharing a
+        # normalized name, one hurt, one on your roster and fine).
         try:
-            il_norms = set(fetch_active_il().keys())
+            active_il = fetch_active_il()
+            il_norms = {
+                _norm_name(flag["player_name"])
+                for flag in annotate_roster_injuries(team.roster, active_il)
+            }
         except Exception as e:
             logger.warning("fetch_active_il failed, IL cross-check skipped: %s", e)
             il_norms = set()

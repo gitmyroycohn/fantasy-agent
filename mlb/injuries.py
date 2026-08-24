@@ -20,8 +20,12 @@ fetch_active_roster_names()
     carry season stats -- from the waiver-wire candidate pool.
 
 annotate_roster_injuries(roster_slots, active_il)
-    → list of dicts: {player, slot, il_type, date}
-    Flags your CBS roster players found in the active IL.
+    → list of dicts: {player_name, slot, il_type, date, team}
+    Flags your CBS roster players found in the active IL. THE shared,
+    team-safe IL check -- see its docstring below (P1 fix, 2026-08-24).
+    Both daily_decisions (agent/decisions.py::_add_lineup_advice) and
+    hitting_matchups (mcp_server.py) route through this single function so
+    they can never disagree on a player's IL status again.
 """
 
 import logging
@@ -32,7 +36,7 @@ import requests
 
 import re
 
-from mlb.teams import norm_name as _norm_teams
+from mlb.teams import norm_name as _norm_teams, canonical_team as _canon_team
 from mlb.clock import today_et as _today_et  # noqa: F401 -- re-exported; see mlb/clock.py
 
 logger = logging.getLogger(__name__)
@@ -322,23 +326,51 @@ def annotate_roster_injuries(roster_slots, active_il: dict) -> list[dict]:
     """
     Cross-reference your CBS roster against active IL.
 
-    Returns list of {player_name, slot, il_type, date} for roster players
-    found in the MLB active IL that CBS may not yet have flagged.
+    Returns list of {player_name, slot, il_type, date, team} for roster
+    players found in the MLB active IL that CBS may not yet have flagged.
+
+    Bug fix (2026-08-24, P1): this is now the ONE shared IL check called by
+    both daily_decisions (agent/decisions.py::_add_lineup_advice, which
+    feeds sports.baseball.lineup_optimizer.optimize_daily_lineup's
+    il_players set) and the hitting_matchups MCP tool. Previously
+    hitting_matchups had no IL check at all -- it could recommend START for
+    a player confirmed on the 10-day IL (e.g. Juan Soto, IL since 7/25)
+    that daily_decisions correctly flagged, purely because the two tools
+    never shared this logic. They now both call this function.
+
+    Also cross-checks team (via canonical_team(), same helper used to close
+    the SF/TB/KC/SD abbreviation-alias bug and the Franklin Arias
+    lineup-status name-collision bug, 2026-08-13) before trusting a name
+    match: active_il (mlb.injuries.fetch_active_il()) is keyed by
+    norm_name only, so two different real players who share a normalized
+    name -- one actually hurt, one on your roster and fine -- could
+    otherwise cross-contaminate. A name match against a different team is
+    logged and excluded rather than trusted (same risk class as the
+    2026-08-15 bug batch; "unknown" is safer than a wrong guess here too).
     """
     flagged = []
     for slot in roster_slots:
         p = slot.player
         norm = _norm(p.name)
-        if norm in active_il:
-            entry = active_il[norm]
-            flagged.append({
-                "player_name": p.name,
-                "slot":        slot.slot,
-                "cbs_status":  p.status,
-                "il_type":     entry["il_type"],
-                "date":        entry["date"],
-                "team":        entry["team"],
-            })
+        entry = active_il.get(norm)
+        if not entry:
+            continue
+        il_team = entry.get("team")
+        if il_team and p.team and _canon_team(il_team) != _canon_team(p.team):
+            logger.warning(
+                "IL name match for %r spans different teams (IL entry: %s, "
+                "roster: %s) -- treating as a name collision, not flagging as IL",
+                p.name, il_team, p.team,
+            )
+            continue
+        flagged.append({
+            "player_name": p.name,
+            "slot":        slot.slot,
+            "cbs_status":  p.status,
+            "il_type":     entry["il_type"],
+            "date":        entry["date"],
+            "team":        entry["team"],
+        })
     return flagged
 
 

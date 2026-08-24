@@ -470,3 +470,76 @@ also had no GitHub push/API access** (see `claude/bug_tracker.md`'s status cavea
 exists locally on `fix/aug15-bug-batch` and was handed off as a git bundle + patch file rather
 than an actual pushed branch/PR. Recommend the same live-run confirmation Phase C recommended,
 now for this batch's changes too, once it's actually on `main`.
+
+## Aug 24 2026 bug batch (patch files, no push access this session — see Validation)
+
+### hitting_matchups had no IL check at all (P1)
+
+**Problem:** `hitting_matchups` (`mcp_server.py`) never imported or called anything from
+`mlb/injuries.py`. It scored every roster batter with a `p.team` regardless of injury status, so
+a player confirmed on the active IL (e.g. Juan Soto, 10-day IL, Grade 2 calf strain since 7/25)
+could still score high enough — including via the must-start floor for season OPS >= .850 — to
+be recommended `🟢 START`, while `daily_decisions` correctly flagged the same player via its own,
+separate IL cross-check in `agent/decisions.py::_add_lineup_advice`. The two tools never shared
+IL logic, so they could (and did) disagree.
+
+Digging further: `mlb/injuries.py::annotate_roster_injuries(roster_slots, active_il)` already
+existed as exactly the right shared primitive — cross-reference a CBS roster against
+`fetch_active_il()` — but was imported into `agent/decisions.py` and never actually called
+anywhere in the codebase. `daily_decisions`'s real IL protection came from a parallel, narrower
+path: `_add_lineup_advice` built a bare `set(fetch_active_il().keys())` and passed it straight
+into `optimize_daily_lineup(il_players=...)`, bypassing `annotate_roster_injuries` entirely.
+
+**Fix:** `annotate_roster_injuries()` is now the one shared IL check. It also now cross-checks
+team via `canonical_team()` before trusting a name match — `active_il` is keyed by norm_name
+only, so two different real players sharing a normalized name (one hurt, one on your roster and
+fine) could otherwise cross-contaminate, same risk class as the Franklin Arias bug (Phase C) and
+the Aug-15 batch. A name match on a different team is logged and excluded rather than trusted.
+`hitting_matchups` now calls `fetch_active_il()` once per invocation and
+`annotate_roster_injuries()` per league, excludes confirmed-IL players from matchup scoring
+entirely, and lists them under a new "🚫 On IL (excluded)" output line (mirroring the existing
+"Off today" line) instead of silently dropping them with no explanation. `_add_lineup_advice`
+now builds its `il_norms` set through the same function instead of the bare
+`set(fetch_active_il().keys())`.
+
+### waiver_recommendations stapled a batter's Statcast line onto an unrelated pitcher (P1)
+
+**Problem:** same risk class as the Aug-15 batch's name-collision fix (`mlb/stats.py`), but a new
+instance the Aug-15 fix never covered: `savant/client.py`'s three leaderboard loaders
+(`_load_bat_xstats`, `_load_pit_xstats`, `_load_bat_ev` — all three feed the free-agent waiver
+enrichment path via `agent/decisions.py::get_filtered_waiver_adds` -> `_sav_enrich` ->
+`enrich_with_savant`) each built a name-keyed dict with `result[key] = {...}` unconditionally per
+CSV row — last row silently wins on a name collision, with no signal anything went wrong. Live
+symptom: `waiver_recommendations` surfaced `Julio Rodriguez (HOU) [RP]` — a real, obscure Houston
+relief pitcher, correctly labeled by CBS's own free-agent data — enriched with the Seattle
+batting star's namesake Statcast line (xwOBA, Barrel%) stapled onto his entry, because both
+players normalize to the identical lookup key and the loader had no way to tell them apart.
+
+**Fix:** new `savant/client.py::_collision_safe_index()` helper, used by all three loaders.
+Disambiguates using Savant's own `player_id` column (the MLB-authoritative person id, already
+parsed elsewhere as `sv_mlb_id`) rather than team, since these leaderboard CSVs don't carry a
+team column. A normalized name backed by two or more distinct ids — or by any row with a
+missing/blank id, which can't prove the rows are the same person — is dropped from the lookup
+entirely; `batter_data()`/`pitcher_data()` fall through to `{}` for that name instead of risking
+attribution to the wrong player. Collisions are logged (`logger.warning`) with the excluded
+names so a real ambiguous-name miss is visible in Render logs rather than silent.
+
+### Validation
+
+Full suite: 178 collected, 176 passing, 2 pre-existing failures in
+`tests/test_football_decisions.py` (unrelated — confirmed present on `main` before this batch's
+changes via `git stash`; tracked separately, not touched by this batch). Added 9 new
+synthetic-fixture tests across 2 new test files: `tests/test_il_status_shared_check.py` (4 tests
+— confirmed-IL flagging, healthy-player non-flagging, cross-team name-collision rejection, CBS
+short-form team-alias matching) and `tests/test_savant_name_collision.py` (5 tests — collided
+batter name excluded from both the xStats and EV/Barrel lookups, unique names still resolve, a
+tagged-RP WaiverPlayer never picks up batter-only Statcast keys via `enrich_with_savant`, and a
+missing `player_id` is treated as ambiguous rather than assumed-safe). **This session also had no
+GitHub push/API access** (`git push --dry-run` was rejected: "gitmyroycohn/fantasy-agent is not
+in this session's authorized repository set") — changes were handed off as patch files
+(`soto_il_status_shared_check.patch`, `julio_rodriguez_savant_collision_fix.patch`) rather than a
+pushed branch/PR. Neither fix could be validated against live CBS/Savant data in this sandbox
+(no `CBS_COOKIE`, no egress to `statsapi.mlb.com`/`baseballsavant.mlb.com`) — recommend a live
+run once these land on `main` to confirm Soto (or whoever is on IL at deploy time) is excluded
+from `hitting_matchups` output and that `waiver_recommendations` no longer shows the
+Julio Rodriguez collision.

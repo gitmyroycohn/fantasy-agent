@@ -649,6 +649,7 @@ def hitting_matchups(
     from mlb.splits  import fetch_batter_splits, fetch_recent_form
     from mlb.parks   import park_label, park_factor as _pf
     from mlb.teams   import norm_name as _norm
+    from mlb.injuries import fetch_active_il, annotate_roster_injuries
 
     try:
         # --- resolve date ---
@@ -723,6 +724,20 @@ def hitting_matchups(
         splits = fetch_batter_splits()
         recent = fetch_recent_form(14)
 
+        # P1 fix (2026-08-24): cross-reference the live MLB injured list so
+        # this tool can never recommend START for a player who is actually
+        # hurt (e.g. Juan Soto, confirmed 10-day IL since 7/25, was
+        # recommended START here while daily_decisions correctly flagged
+        # him -- the two tools didn't share an IL check). Routes through
+        # mlb.injuries.annotate_roster_injuries(), the same team-safe check
+        # daily_decisions uses (see its docstring) -- fetched once here,
+        # cross-referenced per-league against each team's own roster below.
+        try:
+            active_il = fetch_active_il()
+        except Exception as e:
+            logger.warning("hitting_matchups: fetch_active_il failed, IL check skipped: %s", e)
+            active_il = {}
+
         auth    = _get_auth()
         leagues = _resolve_leagues(league_id)
         if not leagues:
@@ -744,8 +759,18 @@ def hitting_matchups(
             date_label = eval_date.isoformat()
             out.append(f"\n=== {name} | Hitting Matchups — {date_label} ===")
 
+            # P1 fix (2026-08-24): players confirmed on the active IL are
+            # excluded from scoring below rather than silently scored (and
+            # possibly floated to START by the must-start floor) as if
+            # healthy. See annotate_roster_injuries()'s docstring for why
+            # this is team-checked, not name-only.
+            il_flags = annotate_roster_injuries(roster, active_il)
+            il_norms = {_norm(f["player_name"]) for f in il_flags}
+            il_display = {_norm(f["player_name"]): f for f in il_flags}
+
             scored: list[dict] = []
             no_game: list[str] = []
+            on_il: list[str] = []
             pitchers_skipped  = 0
 
             for rs in roster:
@@ -756,6 +781,11 @@ def hitting_matchups(
                         set(p.positions) - _PITCHER_POS):
                     pitchers_skipped += 1
                     continue  # pure pitchers — skip
+
+                if _norm(p.name) in il_norms:
+                    il_type = il_display[_norm(p.name)].get("il_type", "IL")
+                    on_il.append(f"{p.name} ({il_type})")
+                    continue  # confirmed injured — never recommend START/SIT
 
                 cbs_team = (p.team or "").upper()
                 m = team_to_matchup.get(cbs_team)
@@ -895,6 +925,9 @@ def hitting_matchups(
 
             if no_game:
                 out.append(f"\n  Off today: {', '.join(no_game)}")
+
+            if on_il:
+                out.append(f"\n  🚫 On IL (excluded): {', '.join(on_il)}")
 
         return _respond("\n".join(out) if out else "No matchup data generated.")
 
