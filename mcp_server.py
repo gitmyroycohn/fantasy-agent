@@ -4,13 +4,15 @@ Fantasy Baseball Agent -- MCP Server
 Exposes the agent's capabilities as tools for Claude Projects / Claude Desktop.
 
 Tools:
-  evaluate_trade          -- evaluate a specific trade offer [baseball only]
-  daily_decisions         -- run full daily analysis for a league [baseball + football]
-  get_roster              -- your current roster for a league [baseball + football]
-  get_team_roster         -- ANY team's current roster, by name (trade research) [baseball + football]
-  list_league_teams       -- list team names in a league (helper for get_team_roster) [baseball + football]
-  waiver_recommendations  -- top waiver wire adds [baseball only]
-  roster_value_signals    -- buy-low / sell-high signals [baseball only]
+  evaluate_trade            -- evaluate a specific trade offer [baseball only]
+  daily_decisions           -- run full daily analysis for a league [baseball + football]
+  get_roster                -- your current roster for a league [baseball + football]
+  get_team_roster           -- ANY team's current roster, by name (trade research) [baseball + football]
+  list_league_teams         -- list team names in a league (helper for get_team_roster) [baseball + football]
+  get_draft_board           -- live CBS draft order/results for a league [football only]
+  get_fantasypros_draft_board -- FantasyPros value re-scored under each league's own rules [football only]
+  waiver_recommendations    -- top waiver wire adds [baseball only]
+  roster_value_signals      -- buy-low / sell-high signals [baseball only]
 
 Football support (added 2026-08-01) is intentionally partial -- see
 agent/football_decisions.py and sports/football/. Tools marked
@@ -57,6 +59,7 @@ from cbs.roster import get_roster as cbs_get_roster, get_all_team_rosters, resol
 from cbs.draft import fetch_draft_board, my_picks as _my_draft_picks
 from mlb.stats import enrich_roster
 from fantasypros.client import FantasyProsClient
+from fantasypros.draft_board import build_draft_board as _build_fp_draft_board
 from savant.client import SavantClient
 from agent.trade_eval import evaluate_trade, format_trade_result
 from agent.tradevalue import analyze_roster_value
@@ -451,6 +454,90 @@ def get_draft_board(league_id: str = "all") -> str:
     except Exception as e:
         logger.exception("get_draft_board failed")
         return f"Error fetching draft board: {e}"
+
+
+# ---------------------------------------------------------------------------
+# Tool: get_fantasypros_draft_board
+# ---------------------------------------------------------------------------
+
+@mcp.tool()
+def get_fantasypros_draft_board(league_id: str = "all", top_n: int = 15) -> str:
+    """
+    Build a scored draft board for a football league: FantasyPros consensus
+    ADP (realistic pick-availability order) cross-referenced with each
+    player's season projection, re-scored under THAT league's own scoring
+    rules (config/leagues.yaml's scoring_profile -- standard_ppr,
+    standard_ppr_strict, or sfflf_tiered's tiered/position-dependent
+    formula) instead of FantasyPros' generic points_ppr aggregate.
+
+    This is the VALUE side of draft prep -- who's actually worth taking
+    under this league's exact rules. Pair with get_draft_board (the pick
+    ORDER/live results) to know both what to take and when you're on the
+    clock. See fantasypros/draft_board.py's module docstring for the full
+    methodology and known limitations (K/DST aren't scored here; 2-point
+    conversion type isn't broken out by FantasyPros' projections).
+
+    Args:
+        league_id: League id from config (e.g. "hard_chargers", "f_league",
+                   "east_coast" -- see config/leagues.yaml's "id" field),
+                   or "all" for every football league.
+        top_n:     How many top-value players to list per league (default 15).
+
+    Returns each league's top-N players by league-specific value, plus the
+    biggest "boosts" (players this league's scoring likes more than the
+    generic PPR market does) and "penalties" (players the market
+    overvalues relative to this league's actual rules).
+    """
+    try:
+        leagues = _resolve_leagues(league_id, sports={"football"})
+        if not leagues:
+            return f"No football league found matching '{league_id}'."
+
+        fp_client = _get_fp()
+        out = []
+        for league_cfg, _sport in leagues:
+            name = league_cfg.get("name", league_cfg.get("id", league_id))
+            profile = league_cfg.get("scoring_profile", "?")
+            out.append(f"=== {name} (scoring_profile={profile}) ===")
+
+            rows = _build_fp_draft_board(league_cfg, fp_client)
+            scored = [r for r in rows if r["league_points"] is not None]
+            if not scored:
+                out.append("  No scored players -- FantasyPros data unavailable "
+                            "or no projections matched.")
+                out.append("")
+                continue
+
+            out.append(f"  Top {min(top_n, len(scored))} by {league_cfg.get('id')}-specific value:")
+            for r in scored[:top_n]:
+                delta = f" (ECR #{r['ecr_rank']}, {r['rank_delta']:+d})" if r["rank_delta"] else f" (ECR #{r['ecr_rank']})"
+                out.append(f"    #{r['league_rank']:<3} {r['name']:<26} "
+                           f"{r['position']:<3} {r['team']:<4} {r['league_points']:>6.1f} pts{delta}")
+
+            boosted = sorted([r for r in scored if r["rank_delta"] and r["rank_delta"] > 0],
+                             key=lambda r: -r["rank_delta"])[:8]
+            if boosted:
+                out.append("  Biggest boosts vs generic consensus:")
+                for r in boosted:
+                    out.append(f"    ECR #{r['ecr_rank']} -> #{r['league_rank']} "
+                               f"(+{r['rank_delta']})  {r['name']} ({r['position']}, {r['team']})")
+
+            penalized = sorted([r for r in scored if r["rank_delta"] and r["rank_delta"] < 0],
+                               key=lambda r: r["rank_delta"])[:8]
+            if penalized:
+                out.append("  Biggest penalties vs generic consensus:")
+                for r in penalized:
+                    out.append(f"    ECR #{r['ecr_rank']} -> #{r['league_rank']} "
+                               f"({r['rank_delta']})  {r['name']} ({r['position']}, {r['team']})")
+            out.append("")
+
+        return _respond("\n".join(out))
+
+    except RuntimeError as e:
+        return f"FantasyPros error: {e}"
+    except Exception as e:
+        logger.exception("get_fantasypros_draft_board failed")
+        return f"Error building draft board: {e}"
 
 
 # ---------------------------------------------------------------------------
