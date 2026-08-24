@@ -98,7 +98,8 @@ def _score_one(position: str, stats: dict, scoring_profile: str) -> float | None
     return None
 
 
-def build_draft_board(league_cfg: dict, fp_client, season: int = 2026) -> list[dict]:
+def build_draft_board(league_cfg: dict, fp_client, season: int = 2026,
+                       exclude_players: set[str] | None = None) -> list[dict]:
     """Build one league's draft board: FantasyPros consensus ADP (realistic
     pick-availability order) cross-referenced with each player's season
     projection, re-scored under this league's own scoring_profile.
@@ -108,6 +109,21 @@ def build_draft_board(league_cfg: dict, fp_client, season: int = 2026) -> list[d
                     list (must have a "scoring_profile" key).
         fp_client:  an authenticated FantasyProsClient.
         season:     NFL season year to project (default 2026).
+        exclude_players: player names to drop entirely before ranking --
+                    e.g. this league's predicted keepers (see
+                    agent/football_decisions.py::predicted_keepers()). A
+                    kept player doesn't re-enter the live draft pool, so
+                    excluding them here (rather than just flagging them)
+                    means league_rank/rank_delta for everyone else are
+                    computed against the ACTUAL available pool, not a pool
+                    that still counts players who can't be drafted.
+                    Name matching is case/whitespace-insensitive (same
+                    normalization as the FantasyPros<->projection join
+                    below); unmatched names are silently ignored rather than
+                    treated as an error, since a keeper name that doesn't
+                    match FantasyPros' naming is a data-quality note, not a
+                    reason to fail the whole board. Omit or pass None/empty
+                    for no filtering (the previous, unfiltered behavior).
 
     Returns a list of row dicts, sorted by ecr_rank ascending:
         ecr_rank, name, position, team,
@@ -133,9 +149,13 @@ def build_draft_board(league_cfg: dict, fp_client, season: int = 2026) -> list[d
     projections = fp_client.nfl_projections(position="ALL", season=season, scoring="PPR")
     proj_by_name = {_norm(p.get("name", "")): p for p in projections}
 
+    exclude_norm = {_norm(n) for n in (exclude_players or ())}
+
     rows = []
     for r in rankings:
         name = r.get("player_name", "")
+        if exclude_norm and _norm(name) in exclude_norm:
+            continue
         pos_rank = r.get("pos_rank", "")
         position = "".join(ch for ch in pos_rank if ch.isalpha()) if pos_rank else ""
         ecr_rank = r.get("rank_ecr")

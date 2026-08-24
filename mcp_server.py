@@ -65,7 +65,7 @@ from savant.client import SavantClient
 from agent.trade_eval import evaluate_trade, format_trade_result
 from agent.tradevalue import analyze_roster_value
 from agent.decisions import run_decisions, get_filtered_waiver_adds, trade_window_status
-from agent.football_decisions import run_football_decisions, league_keeper_report
+from agent.football_decisions import run_football_decisions, league_keeper_report, predicted_keepers
 from data.models import Team
 from mlb.clock import now_et, today_et
 
@@ -478,6 +478,14 @@ def get_fantasypros_draft_board(league_id: str = "all", top_n: int = 15) -> str:
     methodology and known limitations (K/DST aren't scored here; 2-point
     conversion type isn't broken out by FantasyPros' projections).
 
+    Keeper filtering: for a keeper league (f_league, east_coast), each
+    manager's predicted keepers (get_league_keepers) are excluded from this
+    board entirely before ranking -- a kept player doesn't re-enter the live
+    draft, so leaving them in would misrepresent both who's available and
+    everyone else's true league_rank. If the keeper lookup fails for a
+    league (e.g. a CBS fetch error), that league's board falls back to
+    unfiltered and says so, rather than silently guessing.
+
     Args:
         league_id: League id from config (e.g. "hard_chargers", "f_league",
                    "east_coast" -- see config/leagues.yaml's "id" field),
@@ -495,14 +503,24 @@ def get_fantasypros_draft_board(league_id: str = "all", top_n: int = 15) -> str:
             return f"No football league found matching '{league_id}'."
 
         fp_client = _get_fp()
+        auth = _get_auth()
         out = []
         for league_cfg, _sport in leagues:
             name = league_cfg.get("name", league_cfg.get("id", league_id))
             profile = league_cfg.get("scoring_profile", "?")
             out.append(f"=== {name} (scoring_profile={profile}) ===")
 
-            rows = _build_fp_draft_board(league_cfg, fp_client)
+            exclude = set()
+            try:
+                exclude = predicted_keepers(auth, league_cfg["cbs_league_id"], league_cfg)
+            except Exception as e:
+                out.append(f"  Keeper lookup failed ({e}) -- board built unfiltered.")
+
+            rows = _build_fp_draft_board(league_cfg, fp_client, exclude_players=exclude)
             scored = [r for r in rows if r["league_points"] is not None]
+            if exclude:
+                out.append(f"  Excluded {len(exclude)} predicted keeper(s): "
+                           f"{', '.join(sorted(exclude))}")
             if not scored:
                 out.append("  No scored players -- FantasyPros data unavailable "
                             "or no projections matched.")

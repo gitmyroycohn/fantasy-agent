@@ -347,6 +347,38 @@ def league_keeper_report(auth, league_id, league_config, sport="football") -> di
     }
 
 
+def predicted_keepers(auth, league_id, league_config, sport="football") -> set[str]:
+    """The flat, league-wide set of every manager's predicted keeper names.
+
+    Convenience wrapper around league_keeper_report() for callers that just
+    need "which players are off the board for this league's live draft" --
+    draft-board building (fantasypros/draft_board.py) and the draft guides
+    built from it, chiefly. A kept player doesn't re-enter that league's
+    draft pool, so any tool ranking/listing draft-available players should
+    exclude this set.
+
+    Deliberately uses ONLY each team's recommended_keeps (the top
+    max_keepers players by rank), not other_eligible -- other_eligible
+    players are NOT predicted to be kept (they lost the cutoff) and so are
+    legitimately still available in the draft. contract_expired players
+    (east_coast) are excluded from recommended_keeps already by
+    keeper_guidance() and so are correctly absent from this set too --
+    they're back in the draft pool, not kept.
+
+    Returns an empty set for a non-keeper league (hard_chargers), or for a
+    keeper league where no ranking signal was available to predict anyone's
+    keeps (see keeper_guidance()'s own degrade behavior) -- never a partial
+    or guessed set presented as complete.
+    """
+    report = league_keeper_report(auth, league_id, league_config, sport)
+    if not report["is_keeper_league"]:
+        return set()
+    names: set[str] = set()
+    for info in report["teams"].values():
+        names.update(info["recommended_keeps"])
+    return names
+
+
 def run_football_decisions(auth, league_id, league_config, team, sport="football") -> dict:
     """league_id is the CBS league id (e.g. "sfflf"); league_config is the
     full dict from config/leagues.yaml's football section, whose "id" key

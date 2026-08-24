@@ -18,6 +18,15 @@ Usage (run from the repo root):
     python build_draft_board.py f_league east_coast
 
 Writes one CSV per league: <league_id>_draft_board.csv (repo root).
+
+Keeper filtering (added 2026-08-24): for f_league/east_coast, each
+predicted keeper (agent/football_decisions.py::predicted_keepers()) is
+dropped from the board entirely before ranking, since a kept player never
+re-enters that league's live draft -- listing them as available/rankable
+would be wrong, not just imprecise. Requires CBS_COOKIE in .env (same auth
+daily_decisions uses); if it's not set, or the keeper lookup fails for a
+given league, that league's board is built unfiltered and a warning is
+printed -- filtering is best-effort, never silently assumed.
 """
 import sys
 import os
@@ -29,9 +38,11 @@ load_dotenv()
 
 import yaml
 
-from config.settings import FANTASYPROS_API_KEY
+from config.settings import FANTASYPROS_API_KEY, CBS_COOKIE
+from cbs.auth import CBSAuth
 from fantasypros.client import FantasyProsClient
 from fantasypros.draft_board import build_draft_board, write_draft_board_csv
+from agent.football_decisions import predicted_keepers
 
 
 def _load_football_leagues():
@@ -59,15 +70,31 @@ def main():
     client = FantasyProsClient(FANTASYPROS_API_KEY)
     repo_root = os.path.dirname(os.path.abspath(__file__))
 
+    auth = CBSAuth(CBS_COOKIE) if CBS_COOKIE else None
+    if auth is None:
+        print("CBS_COOKIE not set -- keeper filtering skipped for every league; "
+              "boards will include kept players as if they were draft-available.")
+
     for league_cfg in leagues:
         league_id = league_cfg.get("id", "?")
         name = league_cfg.get("name", league_id)
         profile = league_cfg.get("scoring_profile", "?")
         print(f"\n=== {name} ({league_id}) -- scoring_profile={profile} ===")
 
-        rows = build_draft_board(league_cfg, client)
+        exclude = set()
+        if auth is not None:
+            try:
+                exclude = predicted_keepers(auth, league_cfg["cbs_league_id"], league_cfg)
+            except Exception as e:
+                print(f"  Keeper lookup failed ({e}) -- board built unfiltered "
+                      f"for this league.")
+
+        rows = build_draft_board(league_cfg, client, exclude_players=exclude)
         scored = [r for r in rows if r["league_points"] is not None]
         print(f"Ranked: {len(rows)} players total, {len(scored)} scored (QB/RB/WR/TE with a projection)")
+        if exclude:
+            print(f"  Excluded {len(exclude)} predicted keeper(s) from the pool: "
+                  f"{', '.join(sorted(exclude))}")
 
         out_path = os.path.join(repo_root, f"{league_id}_draft_board.csv")
         write_draft_board_csv(rows, out_path)
