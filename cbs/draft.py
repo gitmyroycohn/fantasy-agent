@@ -29,6 +29,24 @@ Team names in the "Team" cell are plain text, not links -- there's no team
 ID in this markup, so callers that need a team ID must match the name
 against get_all_team_rosters()'s team map (name matching, not by id).
 
+BUG FOUND AND FIXED 2026-08-24 (pickslot_diag2.py, run against a live
+hard_chargers page by Christopher): the row for the *logged-in user's own
+team* does NOT use class="row1"/"row2" like every other row -- CBS
+highlights it with class="bgFan" instead (same 3-<td> structure
+otherwise). The original _ROW_RE only matched row[12], so it silently
+dropped the caller's own team from every single round, every league --
+for Christopher specifically, hard_chargers is a 14-team league
+(config/leagues.yaml) and his row (pick 14, "Stuck Pigs") was the one
+consistently missing, which is exactly why my_picks() found zero matches
+even though "Stuck Pigs" is unambiguously a real team (confirmed via
+cbs.roster.get_all_team_rosters(), a separate JSON-API data source).
+_ROW_RE now matches any class value on the <tr> (not just row1/row2),
+relying on the <td>x3 structure (vs. the label row's <th> cells and the
+subtitle row's single colspan=3 <td>) to correctly exclude non-pick rows
+-- so a future third highlight class CBS might introduce (e.g. for a pick
+on the clock during a live draft) will also parse correctly without
+another manual fix.
+
 CAVEAT (unverified): no league had completed even a single real pick as of
 2026-08-24, so the exact text format CBS puts in a filled "Player" cell
 (name / position / NFL team layout, any "*" auto-pick or "**" queued-pick
@@ -47,7 +65,7 @@ logger = logging.getLogger(__name__)
 _ROUND_RE = re.compile(
     r'<tr class="subtitle"><td colspan="3">Round\s+(\d+)</td></tr>', re.I)
 _ROW_RE = re.compile(
-    r'<tr class="row[12]"[^>]*>\s*'
+    r'<tr\s+class="[^"]*"[^>]*>\s*'
     r'<td[^>]*>\s*(\d+)\s*</td>\s*'
     r'<td[^>]*>(.*?)</td>\s*'
     r'<td[^>]*>(.*?)</td>\s*'
