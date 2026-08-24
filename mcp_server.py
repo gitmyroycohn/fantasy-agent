@@ -54,6 +54,7 @@ from mcp.server.fastmcp import FastMCP
 from config.settings import CBS_COOKIE, FANTASYPROS_API_KEY, DRY_RUN
 from cbs.auth import CBSAuth, CBSAuthError
 from cbs.roster import get_roster as cbs_get_roster, get_all_team_rosters, resolve_team_id
+from cbs.draft import fetch_draft_board, my_picks as _my_draft_picks
 from mlb.stats import enrich_roster
 from fantasypros.client import FantasyProsClient
 from savant.client import SavantClient
@@ -364,6 +365,92 @@ def list_league_teams(league_id: str) -> str:
     except Exception as e:
         logger.exception("list_league_teams failed")
         return f"Error listing teams: {e}"
+
+
+# ---------------------------------------------------------------------------
+# Tool: get_draft_board -- draft order (pre-draft) and draft results
+# (post-draft), for one league or all of them.
+# ---------------------------------------------------------------------------
+
+@mcp.tool()
+def get_draft_board(league_id: str = "all") -> str:
+    """
+    Get the draft order/pick slots for a league, or the pick-by-pick draft
+    results once that league's draft has started. Same underlying CBS page
+    serves both -- pre-draft, player cells are empty and this just shows
+    who picks when; once the draft starts/finishes, made picks show the
+    player taken.
+
+    Identifies your own team (from config/leagues.yaml's my_team_name) and
+    calls out every pick that belongs to you, with the overall pick number,
+    so you always know exactly when you're on the clock.
+
+    Args:
+        league_id: League id from config (e.g. "hard_chargers", "f_league",
+                   "east_coast" -- see config/leagues.yaml's "id" field,
+                   NOT the CBS league id), or "all" for every league.
+                   For "all", output is a compact per-league summary; for a
+                   single league_id, the full round-by-round board is shown.
+
+    NOTE: CBS doesn't expose the draft board via the api.cbssports.com JSON
+    API this repo otherwise uses (see cbs/draft.py docstring) -- this scrapes
+    the rendered HTML at /draft/results instead. The exact text format of a
+    made pick's player cell hasn't been confirmed against a real completed
+    pick as of this tool's introduction (2026-08-24, all 3 leagues still
+    pre-draft) -- treat player names in results as raw/unparsed until that's
+    verified against a live draft.
+    """
+    try:
+        auth    = _get_auth()
+        leagues = _resolve_leagues(league_id, sports=_FOOTBALL_AWARE_SPORTS)
+        if not leagues:
+            return f"No league found matching '{league_id}'."
+
+        out = []
+        for league_cfg, sport in leagues:
+            lid  = league_cfg["cbs_league_id"]
+            name = league_cfg.get("name", lid)
+            my_team = league_cfg.get("my_team_name")
+
+            board = fetch_draft_board(auth, lid, sport)
+            out.append(f"=== {name} ({board['status']}) ===")
+
+            if board["status"] == "unknown":
+                out.append("  Could not parse draft board -- CBS page layout "
+                            "may have changed.")
+                continue
+
+            mine = _my_draft_picks(board, my_team) if my_team else []
+            if my_team and not mine:
+                out.append(f"  WARNING: no picks matched my_team_name="
+                            f"'{my_team}' -- team may have been renamed on "
+                            f"CBS. Round 1 order: "
+                            f"{', '.join(board['team_order_round1'])}")
+
+            if league_id == "all" or len(leagues) > 1:
+                # Compact summary mode (used for "all", or any multi-match).
+                pos = board["team_order_round1"].index(my_team) + 1 if my_team in board["team_order_round1"] else "?"
+                out.append(f"  Pick position: {pos} of {len(board['team_order_round1'])}")
+                if mine:
+                    my_overalls = ", ".join(str(p["overall"]) for p in mine)
+                    out.append(f"  Your picks (overall #): {my_overalls}")
+            else:
+                # Single-league mode: full round-by-round board.
+                my_overalls = {p["overall"] for p in mine}
+                for rnd in board["rounds"]:
+                    out.append(f"  Round {rnd['round']}:")
+                    for p in rnd["picks"]:
+                        marker = " <-- YOU" if p["overall"] in my_overalls else ""
+                        player = f" -- {p['player_raw']}" if p["player_raw"] else ""
+                        out.append(f"    {p['overall']:>3} (R{rnd['round']}.{p['pick']:<2}) "
+                                   f"{p['team']}{player}{marker}")
+        return _respond("\n".join(out))
+
+    except CBSAuthError as e:
+        return f"CBS auth error: {e}"
+    except Exception as e:
+        logger.exception("get_draft_board failed")
+        return f"Error fetching draft board: {e}"
 
 
 # ---------------------------------------------------------------------------

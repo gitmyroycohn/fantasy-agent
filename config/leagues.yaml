@@ -225,8 +225,18 @@ football:
       waiver_min_days_on_wire: 1
     draft:
       format: "live_snake"
-      rounds: 16
-      scheduled: null  # not yet scheduled as of 2026-07-31
+      # CORRECTED 2026-08-24: was 16, but the live /draft/results board shows
+      # 19 rounds (matches roster.total_max: 19 = 10 starters + 9 bench).
+      # Also note: unlike f_league/hard_chargers, this league's round-2 order
+      # does NOT cleanly reverse round-1 (e.g. round 2 lists "Pain Inc." at
+      # both picks 4 and 5) and round 4 differs from round 2 -- this looks
+      # like CBS's default/unset placeholder order, not a commissioner-set
+      # manual order (no "Manual Draft Order Set" league-feed post seen for
+      # this league, unlike the other two). Re-check close to whenever this
+      # league's draft actually gets scheduled -- don't trust pick_position
+      # math off this order yet.
+      rounds: 19
+      scheduled: null  # not yet scheduled as of 2026-08-24 (page shows no date)
     playoffs:
       start_week: 15
       length_weeks: 3
