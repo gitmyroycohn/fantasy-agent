@@ -347,10 +347,14 @@ def score_sfflf(stats: dict, position: str) -> float:
     return pts
 
 
-def estimate_sfflf_points(stats: dict, position: str) -> float | None:
+_SFFLF_SEASON_GAMES = 17  # NFL regular-season length; see per-game-tier note below
+
+
+def estimate_sfflf_points(stats: dict, position: str,
+                          season_games: int = _SFFLF_SEASON_GAMES) -> float | None:
     """Estimate an sfflf (F-League) fantasy-point total from a FantasyPros
-    season-long NFL projection stat line, for RANKING waiver-wire value --
-    not a promise of exact real scoring.
+    season-long NFL projection stat line, for RANKING waiver-wire/draft
+    value -- not a promise of exact real scoring.
 
     sfflf has no PPR-style flat-rate FantasyPros scoring format to project
     against directly (score_sfflf() above is fundamentally tiered and
@@ -359,14 +363,43 @@ def estimate_sfflf_points(stats: dict, position: str) -> float | None:
     FantasyPros' season-projection stat fields instead of live weekly
     box-score stats:
       pass_yds, rush_yds, rec_yds -- combined per position (QB: pass+rush;
-        RB/WR/TE: rush+rec), run through the same yardage bonus tiers
-        score_sfflf() uses.
+        RB/WR/TE: rush+rec) -- see the PER-GAME TIER NOTE below for how
+        these are turned into points.
       pass_tds, rush_tds, rec_tds -- each multiplied by that TD type's
         base position-dependent value (profile["td_points"]).
       2pt_tds -- flat 2 pts each, matches SFFLF_PROFILE's uniform
         two_point rate across Pa2P/Re2P/Ru2P/Fum2PT.
     rec_rec (reception count) is intentionally UNUSED -- sfflf scores 0
     pts/reception, confirmed not PPR (see SFFLF_PROFILE["reception"]).
+
+    PER-GAME TIER NOTE (bug fix, 2026-08-24): SFFLF_PROFILE's yardage tiers
+    (e.g. QB 210-259 combined yards = 3pts, up through 560-609 = 24pts) are
+    real CBS single-GAME thresholds -- score_sfflf() applies them to one
+    scoring period's box score. Earlier versions of this function ran a
+    player's full SEASON yardage total (e.g. ~4750 combined for a starting
+    QB) directly through those same tiers via _tier_points(), which returns
+    0.0 for any value above the top tier's upper bound -- since every
+    realistic season total exceeds 609 (QB) / 399 (RB, WR) / 289 (TE), this
+    silently zeroed out ALL yardage value for every player, every position,
+    with no error or warning. Only TD counts and 2pt conversions were ever
+    actually scoring, which is why elite passers with modest rushing (high
+    TD counts) were showing implausibly large totals relative to true
+    workhorse rushers/receivers (high yardage, comparatively fewer TDs) --
+    caught by manually verifying scores against a hand-computed TD-only
+    total while building a draft guide, not by any test that existed
+    before.
+
+    Fix: assume the season yardage total is spread evenly across
+    `season_games` (default 17, a full NFL regular season), look up ONE
+    game's worth of tier points at that per-game rate, then multiply by
+    season_games to project a full-season total from that steady rate.
+    This is still an approximation, not real per-game data -- a player
+    with genuinely boom/bust weekly yardage (e.g. three 150-yard games and
+    fourteen 40-yard games) would cross tier boundaries differently in
+    reality than this smoothed model assumes, biasing the estimate in
+    either direction depending on that player's real week-to-week variance
+    -- but it is a materially better estimate than the previous silent
+    zero, which was wrong in the same direction for every player.
 
     KNOWN, DELIBERATE GAP vs score_sfflf(): the real formula adds a long-TD
     bonus (3-12 extra pts, depending on position/TD type/length) on top of
@@ -375,9 +408,9 @@ def estimate_sfflf_points(stats: dict, position: str) -> float | None:
     per-TD yardage, so that bonus can't be reconstructed here and is
     omitted entirely. This makes the estimate a systematic UNDERESTIMATE
     of true sfflf points, biased somewhat against big-play/long-TD-prone
-    players -- fine for RANKING waiver-wire fill-in candidates against
-    each other (every candidate is underestimated the same way), but this
-    is not a real point projection and should never be presented as one.
+    players -- fine for RANKING candidates against each other (every
+    candidate is underestimated the same way), but this is not a real
+    point projection and should never be presented as one.
 
     position: "QB", "RB", "WR", or "TE" only -- returns None for anything
     else (K, DST). FantasyPros' generic season projection doesn't carry
@@ -395,11 +428,13 @@ def estimate_sfflf_points(stats: dict, position: str) -> float | None:
 
     if position == "QB":
         combined_yards = stats.get("pass_yds", 0) + stats.get("rush_yds", 0)
-        pts += _tier_points(combined_yards, profile["pass_rush_yard_tiers"])
+        per_game_yards = combined_yards / season_games
+        pts += _tier_points(per_game_yards, profile["pass_rush_yard_tiers"]) * season_games
     else:
         combined_yards = stats.get("rush_yds", 0) + stats.get("rec_yds", 0)
+        per_game_yards = combined_yards / season_games
         tiers = profile["rush_rec_yard_tiers"].get(position, [])
-        pts += _tier_points(combined_yards, tiers)
+        pts += _tier_points(per_game_yards, tiers) * season_games
 
     td_points = profile["td_points"].get(position, {})
     pts += stats.get("pass_tds", 0) * td_points.get("PaTD", 0.0)
