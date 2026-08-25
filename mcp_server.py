@@ -58,6 +58,7 @@ from config.settings import CBS_COOKIE, FANTASYPROS_API_KEY, DRY_RUN
 from cbs.auth import CBSAuth, CBSAuthError
 from cbs.roster import get_roster as cbs_get_roster, get_all_team_rosters, resolve_team_id
 from cbs.draft import fetch_draft_board, my_picks as _my_draft_picks
+from cbs.settings import fetch_roster_rules, format_roster_rules
 from mlb.stats import enrich_roster
 from fantasypros.client import FantasyProsClient
 from fantasypros.draft_board import build_draft_board as _build_fp_draft_board
@@ -645,6 +646,56 @@ def get_league_keepers(league_id: str = "all") -> str:
     except Exception as e:
         logger.exception("get_league_keepers failed")
         return f"Error building league keeper report: {e}"
+
+
+# ---------------------------------------------------------------------------
+# Tool: get_roster_limits
+# ---------------------------------------------------------------------------
+
+@mcp.tool()
+def get_roster_limits(league_id: str = "all") -> str:
+    """
+    Real roster position limits for a football league -- straight from
+    CBS (league/rules JSON API), not guessed or left unconfirmed.
+
+    Confirmed live 2026-08-24 against a real CBS "ROSTER LIMITS" settings
+    screenshot for hard_chargers: exact match on every field. Prior to this
+    tool, draft guides either guessed generic industry-standard position
+    counts or flagged a league's exact starting-lineup shape (QB/RB/WR/TE/
+    FLEX min-max counts, bench size) as unconfirmed -- this fetches CBS's
+    actual settings directly (cbs/settings.py::fetch_roster_rules) so that
+    never has to happen again.
+
+    Returns each position's min/max ACTIVE (starting) slots -- note CBS
+    models flexible ranges (e.g. RB: min 1, max 4) plus dedicated flex
+    slots (e.g. RB-WR-TE: exactly 3), not fixed named slots -- along with
+    the league-wide Starters/Bench/Total counts.
+
+    Args:
+        league_id: League id from config (e.g. "hard_chargers", "f_league",
+                   "east_coast"), or "all" for every football league.
+    """
+    try:
+        auth    = _get_auth()
+        leagues = _resolve_leagues(league_id, sports={"football"})
+        if not leagues:
+            return f"No football league found matching '{league_id}'."
+
+        out = []
+        for league_cfg, sport in leagues:
+            lid  = league_cfg["cbs_league_id"]
+            name = league_cfg.get("name", league_cfg.get("id", league_id))
+            rules = fetch_roster_rules(auth, lid, sport)
+            out.append(format_roster_rules(rules, name))
+            out.append("")
+
+        return _respond("\n".join(out))
+
+    except CBSAuthError as e:
+        return f"CBS auth error: {e}"
+    except Exception as e:
+        logger.exception("get_roster_limits failed")
+        return f"Error fetching roster limits: {e}"
 
 
 # ---------------------------------------------------------------------------

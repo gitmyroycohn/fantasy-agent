@@ -145,7 +145,13 @@ football:
       starters: 9
       bench: 8
       max_qb: 3
-      # positions: QB1 RB1 WR1 TE1 RB-WR2 WR-TE1 K1 DST1 (9 starters)
+      # positions: QB1 RB1 WR1 TE1 RB-WR2 WR-TE1 K1 DST1 (9 starters).
+      # CONFIRMED via CBS league/rules API 2026-08-25 (cbs/settings.py::
+      # fetch_roster_rules) -- this had been an educated guess, now verified
+      # exact: QB min1/max1 (max_total 3, matching max_qb above), RB
+      # min1/max1, WR min1/max1, TE min1/max1, RB-WR flex min2/max2, WR-TE
+      # flex min1/max1, K min1/max1, DST min1/max1. Total roster range
+      # 17-27 (bench overflow allows stashing up to 3 QBs total).
     transactions:
       trade_deadline: "2026-11-22T23:59:00-05:00"
       trades_require_commish_approval: true
@@ -177,6 +183,17 @@ football:
       bench: 6
       # No IR/practice squad slots -- 15 total roster max, tightest of the 3.
       total_max: 15
+      # CONFIRMED via CBS league/rules API 2026-08-25 (cbs/settings.py::
+      # fetch_roster_rules), cross-checked against Christopher's own CBS
+      # "Roster Limits" settings-page screenshot -- exact match. QB min1/
+      # max1, RB min1/max4, WR min1/max4, TE min1/max4, RB-WR-TE flex
+      # min3/max3, K min1/max1, DST min1/max1. Since RB/WR/TE each require
+      # a minimum of 1 and the 9 starters are fixed, this resolves to
+      # exactly 1 QB, 1 RB, 1 WR, 1 TE, 3 FLEX(RB/WR/TE), 1 K, 1 DST --
+      # a flex-heavy build. Previously flagged "structurally ambiguous"
+      # after a roster-page scrape looked contradictory; the scrape data
+      # was actually correct, it was just misread (see get_roster_limits
+      # MCP tool -- don't re-guess this, it's fetchable live).
     transactions:
       trade_deadline: "2026-11-19T23:59:00-05:00"
       trades_require_commish_approval: true
@@ -218,6 +235,18 @@ football:
       bench: 9
       total_max: 19
       wild_card_slots: 1
+      # CONFIRMED via CBS league/rules API 2026-08-25 (cbs/settings.py::
+      # fetch_roster_rules). Unlike hard_chargers, min_active is 0 for
+      # every position here (a team CAN start fewer than the max at a
+      # position, not forced to fill every slot) -- max_active: QB1, RB2,
+      # WR3, TE1, RB-WR-TE flex 1, K1, DST1 (sums to 10, matches starters).
+      # CBS's "Total Players" cap here is actually 28, not 19 -- the extra
+      # 9 is IR/injured-reserve headroom (max_total per position: QB6/
+      # RB10/WR9/TE8/flex15/K6/DST6) that doesn't count against the
+      # active 19-man (10 starter + 9 bench) roster. total_max: 19 above
+      # still correctly describes the draftable roster (the 19-round draft
+      # fills starters+bench only, not IR) -- this note just explains why
+      # CBS's own API reports a higher ceiling.
     transactions:
       trade_deadline: "2026-11-14T23:59:00-05:00"
       trades_require_commish_approval: false  # trades process immediately in this league
