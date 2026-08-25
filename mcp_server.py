@@ -66,7 +66,10 @@ from savant.client import SavantClient
 from agent.trade_eval import evaluate_trade, format_trade_result
 from agent.tradevalue import analyze_roster_value
 from agent.decisions import run_decisions, get_filtered_waiver_adds, trade_window_status
-from agent.football_decisions import run_football_decisions, league_keeper_report, predicted_keepers
+from agent.football_decisions import (
+    run_football_decisions, league_keeper_report, predicted_keepers,
+    save_manual_keepers, clear_manual_keepers,
+)
 from data.models import Team
 from mlb.clock import now_et, today_et
 
@@ -696,6 +699,87 @@ def get_roster_limits(league_id: str = "all") -> str:
     except Exception as e:
         logger.exception("get_roster_limits failed")
         return f"Error fetching roster limits: {e}"
+
+
+# ---------------------------------------------------------------------------
+# Tool: set_manual_keepers / clear_manual_keepers
+# ---------------------------------------------------------------------------
+
+@mcp.tool()
+def set_manual_keepers(league_id: str, team_name: str, players: list[str]) -> str:
+    """
+    Manually record a team's REAL keeper selections, entered directly in
+    chat -- for when keeper selection can't be predicted from a roster
+    (e.g. f_league, where the COMMISSIONER picks each team's keepers, and
+    the real picks may not be known/published until draft day itself).
+
+    Once set, this OVERRIDES the algorithmic keeper prediction for that
+    team everywhere it's used -- get_league_keepers' report, and the
+    keeper-exclusion filter on get_fantasypros_draft_board's value board
+    (predicted_keepers()) -- so the draft guide and available-player list
+    reflect the real, confirmed keepers instead of a guess.
+
+    Args:
+        league_id:  Exact league id from config (e.g. "f_league") -- NOT
+                    "all"; a team belongs to one specific league.
+        team_name:  Team name exactly as CBS reports it (e.g. "COWBOYS") --
+                    use get_league_keepers or list_league_teams first if
+                    unsure of the exact spelling.
+        players:    List of player names this team is keeping. Pass an
+                    empty list to record "confirmed: keeping nobody" (that
+                    is a real, meaningful answer, distinct from having no
+                    override on file at all).
+
+    Durability note: this writes to config/manual_keepers.yaml on
+    whichever server is running this tool. If you're talking to the
+    LIVE deployed agent (not a coding session), the change is only
+    guaranteed to last until the next deploy unless it also gets
+    committed to git afterward.
+    """
+    try:
+        leagues = _resolve_leagues(league_id, sports={"football"})
+        if not leagues:
+            return f"No football league found matching '{league_id}'."
+        if len(leagues) > 1:
+            return (f"'{league_id}' matched multiple leagues -- pass one "
+                    f"specific league id (not 'all') when setting manual keepers.")
+        league_cfg, _sport = leagues[0]
+        save_manual_keepers(league_cfg["id"], team_name, players)
+        kept = ", ".join(players) if players else "(nobody)"
+        return (f"Saved: {team_name} ({league_cfg.get('name', league_cfg['id'])}) "
+               f"keeping {kept}. This now overrides the algorithmic prediction "
+               f"for this team in get_league_keepers and the draft-board "
+               f"keeper filter.")
+    except Exception as e:
+        logger.exception("set_manual_keepers failed")
+        return f"Error saving manual keepers: {e}"
+
+
+@mcp.tool()
+def clear_manual_keepers_tool(league_id: str, team_name: str = "") -> str:
+    """
+    Remove a manually-entered keeper override -- e.g. to undo a wrong
+    entry, or once you'd rather see the algorithmic prediction again.
+
+    Args:
+        league_id:  Exact league id from config (e.g. "f_league").
+        team_name:  Team to clear. Leave blank to clear EVERY manual
+                    override for this league at once.
+    """
+    try:
+        leagues = _resolve_leagues(league_id, sports={"football"})
+        if not leagues:
+            return f"No football league found matching '{league_id}'."
+        if len(leagues) > 1:
+            return (f"'{league_id}' matched multiple leagues -- pass one "
+                    f"specific league id (not 'all').")
+        league_cfg, _sport = leagues[0]
+        clear_manual_keepers(league_cfg["id"], team_name or None)
+        target = team_name or "every team in this league"
+        return f"Cleared manual keeper override for {target} ({league_cfg.get('name', league_cfg['id'])})."
+    except Exception as e:
+        logger.exception("clear_manual_keepers_tool failed")
+        return f"Error clearing manual keepers: {e}"
 
 
 # ---------------------------------------------------------------------------

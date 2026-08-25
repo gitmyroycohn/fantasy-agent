@@ -4,6 +4,7 @@ with HTML scraping of the league subdomain as a fallback.
 """
 
 import logging
+import re
 from bs4 import BeautifulSoup
 from data.models import Player, RosterSlot
 from cbs.auth import CBSAuth, CBSAPIError
@@ -125,20 +126,92 @@ def _slots_from_team_payload(team: dict, pos_index: dict | None = None) -> list[
     return slots
 
 
+def fetch_league_team_ids(auth: CBSAuth, league_id: str,
+                          sport: str = "football") -> dict[str, str]:
+    """
+    Scrape the league's /details/teams-managers page for the real
+    team_id -> team_name mapping.
+
+    CBS team ids are NOT sequential 1..N and NOT stable/contiguous within
+    a league -- an old team no longer active in the league can still hold
+    an id that isn't in play anymore (confirmed live 2026-08-25 for
+    f_league: the 10 active teams use ids {1,2,4,5,6,7,8,9,10,11} -- id 3
+    is skipped, an inactive former team, per Christopher). Never assume a
+    contiguous range or loop 1..num_teams.
+
+    Discovered/confirmed this way because league/rosters (no team_id) for
+    football only ever returns the CALLING USER's own team, not the whole
+    league the way it apparently does for baseball -- get_all_team_rosters
+    needs this real id list to loop per-team for football instead.
+    """
+    r = auth.fetch_league_page(league_id, sport, "/details/teams-managers")
+    soup = BeautifulSoup(r.text, "html.parser")
+    teams: dict[str, str] = {}
+    for a in soup.select('a[href*="/teams/"]'):
+        m = re.search(r"/teams/(\d+)", a.get("href", ""))
+        if not m:
+            continue
+        name = a.get_text(strip=True)
+        if not name:
+            continue
+        teams[m.group(1)] = name
+    if not teams:
+        logger.warning("fetch_league_team_ids: no team links found on "
+                       "%s/details/teams-managers -- returning {}", league_id)
+    else:
+        logger.info("fetch_league_team_ids: %d real team ids found for %s",
+                    len(teams), league_id)
+    return teams
+
+
 def get_all_team_rosters(auth: CBSAuth, league_id: str,
                          sport: str = "baseball") -> dict[str, dict]:
     """
-    Fetch every team's roster in the league with a single API call.
+    Fetch every team's roster in the league.
 
-    The league/rosters endpoint already returns all teams -- get_roster()
-    just filters it down to one. This skips the filter and keeps everyone,
-    so callers can look up any team on demand (e.g. for trade research)
-    without one API round-trip per team.
+    For baseball, a single league/rosters call (no team_id) returns every
+    team -- get_roster() just filters it down to one, and this originally
+    relied on the same assumption.
+
+    BUG FOUND AND FIXED 2026-08-25 (rosters_diag.py/rosters_diag2.py/
+    rosters_diag3.py, run against a live f_league by Christopher): for
+    football, league/rosters without team_id -- and even WITH team_id set
+    to the caller's own id -- only ever returns the CALLING USER's own
+    team (confirmed: hard_chargers' list_league_teams and f_league's
+    get_league_keepers both silently returned just 1 team). It's NOT a
+    filter-down-from-everyone behavior; football's batch mode just doesn't
+    return the league. What DOES work (confirmed 10/10 for f_league):
+    passing team_id set to each OTHER real team's id returns that team's
+    actual roster correctly. So for football this fetches the real
+    team-id list via fetch_league_team_ids() (never assume a range -- CBS
+    ids aren't contiguous) and loops one league/rosters call per team.
 
     Returns {team_id: {"name": team_name, "roster": [RosterSlot, ...]}}
     """
     data = auth.api_get("league/rosters", league_id, sport)
     teams = (data.get("body", {}) or {}).get("rosters", {}).get("teams", [])
+
+    if sport == "football" or len(teams) <= 1:
+        team_ids = fetch_league_team_ids(auth, league_id, sport)
+        if team_ids:
+            fetched = []
+            for tid in team_ids:
+                try:
+                    d = auth.api_get("league/rosters", league_id, sport, team_id=tid)
+                except CBSAPIError as e:
+                    logger.warning("get_all_team_rosters: league/rosters "
+                                   "failed for team_id=%s in %s (%s) -- skipping",
+                                   tid, league_id, e)
+                    continue
+                fetched.extend(
+                    (d.get("body", {}) or {}).get("rosters", {}).get("teams", []))
+            if fetched:
+                teams = fetched
+            else:
+                logger.warning("get_all_team_rosters: per-team loop for %s "
+                               "found %d team ids but fetched 0 rosters -- "
+                               "falling back to the single-call result (%d team(s))",
+                               league_id, len(team_ids), len(teams))
 
     # ENH 2: same full-eligibility lookup as get_roster(), shared across
     # every team in this response (single players/list call, cached).

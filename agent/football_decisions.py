@@ -66,6 +66,9 @@ a report, never submits a roster move.
 """
 
 import logging
+from pathlib import Path
+
+import yaml
 
 from sports.football.roster_rules import validate_roster
 from sports.football.waivers import (
@@ -82,6 +85,89 @@ from fantasypros.client import FantasyProsClient
 logger = logging.getLogger(__name__)
 
 _fp_client = FantasyProsClient(FANTASYPROS_API_KEY) if FANTASYPROS_API_KEY else None
+
+# -- manual keeper overrides -------------------------------------------------
+# See config/manual_keepers.yaml's own docstring for the full rationale:
+# keeper SELECTION for a commissioner-set league (f_league) isn't something
+# a roster scrape can predict, and the real picks may not be known until
+# draft day. This lets a manually-confirmed answer, once known, take
+# priority over the algorithmic guess -- entered either by editing that
+# file directly or via the set_manual_keepers/clear_manual_keepers MCP
+# tools (mcp_server.py).
+MANUAL_KEEPERS_PATH = (
+    Path(__file__).resolve().parent.parent / "config" / "manual_keepers.yaml"
+)
+
+
+def _load_manual_keepers(internal_league_id: str) -> dict[str, list[str]]:
+    """{team_name: [player names]} of manually-confirmed keepers for this
+    league, keyed by team name exactly as CBS reports it. Returns {} if the
+    file is missing, malformed, or has no entries for this league -- never
+    raises and never fabricates an override; an empty result just means
+    "no manual override on file, use the algorithmic prediction."
+    """
+    try:
+        with open(MANUAL_KEEPERS_PATH) as f:
+            data = yaml.safe_load(f) or {}
+    except FileNotFoundError:
+        return {}
+    except Exception as e:
+        logger.warning("manual_keepers.yaml failed to parse (%s) -- "
+                       "ignoring manual overrides this run", e)
+        return {}
+    return (data.get("leagues") or {}).get(internal_league_id) or {}
+
+
+def save_manual_keepers(internal_league_id: str, team_name: str,
+                        players: list[str]) -> None:
+    """Write/replace one team's manually-confirmed keeper list.
+
+    Best-effort, not necessarily durable: this writes to
+    config/manual_keepers.yaml on whatever filesystem this process is
+    running on. Editing it via Claude in a coding session and committing
+    the change to git is durable (same as every other config file in this
+    repo); calling this from the LIVE deployed MCP server (e.g. Render) is
+    only durable if that file also gets committed/pushed afterward --
+    Render's free tier filesystem does not survive a redeploy. Callers on
+    a live server should treat this as "good for the rest of this
+    session/until the next deploy" unless they know the change has also
+    been committed.
+
+    players=[] is a valid, meaningful entry (confirmed: keeping nobody) --
+    distinct from no entry at all.
+    """
+    try:
+        with open(MANUAL_KEEPERS_PATH) as f:
+            data = yaml.safe_load(f) or {}
+    except FileNotFoundError:
+        data = {}
+    data.setdefault("leagues", {}).setdefault(internal_league_id, {})[team_name] = list(players)
+    with open(MANUAL_KEEPERS_PATH, "w") as f:
+        yaml.safe_dump(data, f, default_flow_style=False, sort_keys=False)
+    logger.info("save_manual_keepers: %s / %r -> %d player(s)",
+               internal_league_id, team_name, len(players))
+
+
+def clear_manual_keepers(internal_league_id: str, team_name: str | None = None) -> None:
+    """Remove one team's manual override (team_name given), or every
+    manual override for the league (team_name=None) -- e.g. once real
+    keepers are locked in via CBS and the manual entry is no longer
+    needed, or to undo a wrong entry. No-op (not an error) if there was
+    nothing to remove."""
+    try:
+        with open(MANUAL_KEEPERS_PATH) as f:
+            data = yaml.safe_load(f) or {}
+    except FileNotFoundError:
+        return
+    leagues = data.get("leagues") or {}
+    if internal_league_id not in leagues:
+        return
+    if team_name is None:
+        del leagues[internal_league_id]
+    else:
+        leagues[internal_league_id].pop(team_name, None)
+    with open(MANUAL_KEEPERS_PATH, "w") as f:
+        yaml.safe_dump(data, f, default_flow_style=False, sort_keys=False)
 
 # east_coast's fantasy football season year, for the 3-year-contract math
 # (sports/football/keepers.py::contract_years_to_acquired_seasons()) --
@@ -307,9 +393,26 @@ def league_keeper_report(auth, league_id, league_config, sport="football") -> di
     rankings = _fp_nfl_rankings_by_name(_fp_client) if _fp_client else {}
     ranking_source = "fantasypros_ecr" if rankings else None
     has_contract_rule = internal_id in {"east_coast"}  # see keepers.py's _CONTRACT_LEAGUES
+    manual = _load_manual_keepers(internal_id)
 
     teams = {}
     for team_id, info in all_rosters.items():
+        # Manual override takes priority whenever present, no matter what
+        # the algorithmic prediction would say -- see config/
+        # manual_keepers.yaml's docstring. This matters most for f_league,
+        # where keepers are picked by the COMMISSIONER and may simply not
+        # be predictable from roster/ranking data at all.
+        if info["name"] in manual:
+            teams[team_id] = {
+                "team_name":         info["name"],
+                "recommended_keeps": list(manual[info["name"]]),
+                "other_eligible":    [],
+                "contract_expired":  [],
+                "ranking_source":    "confirmed manually",
+                "note":              "Manually entered -- not a prediction.",
+            }
+            continue
+
         contract_data = None
         if has_contract_rule:
             # Same fetch + exact-name-normalization-against-this-roster

@@ -1,0 +1,25 @@
+# Manually-confirmed keeper selections.
+#
+# Entered via chat -- either by editing this file directly, or via the
+# set_manual_keepers / clear_manual_keepers MCP tools (see mcp_server.py) --
+# and takes priority over algorithmic keeper prediction wherever a team has
+# an entry here. See agent/football_decisions.py::league_keeper_report().
+#
+# Why this exists: keeper SELECTION isn't always something that can be
+# predicted from a roster. f_league's keepers are chosen by the
+# COMMISSIONER (not each manager individually), and the real picks may not
+# be known/published until the day of the draft -- there's no roster
+# signal to guess them from ahead of time. Rather than present a guess as
+# if it were the real thing, this lets the real answer be entered directly
+# once it's known, and the agent uses it verbatim (never overrides a
+# manual entry with its own guess).
+#
+# Structure: internal league id (config/leagues.yaml's "id" field, e.g.
+# "f_league", NOT the CBS league id) -> team name (as CBS reports it,
+# e.g. "COWBOYS") -> list of player names, exactly as they should be
+# excluded from that league's draft board.
+#
+# A team with no entry here just means "no manual override on file yet --
+# fall back to the algorithmic prediction." An empty list ([]) is NOT the
+# same as no entry -- it means "confirmed: this team is keeping nobody."
+leagues: {}
