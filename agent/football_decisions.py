@@ -188,10 +188,22 @@ def _fp_nfl_rankings_by_name(client) -> dict[str, float]:
     across a few plausible field names because no network access existed
     to check it; that guess happened to match reality, so no behavior
     changed here, only the docstring and the removal of the now-unneeded
-    fallback keys. Note: type="WW" (waiver wire) rankings come back empty
-    for Christopher's API key -- that ranking type is gated behind
-    FantasyPros' premium tier (confirmed via the response's own
-    "tier":"premium" flag) -- but type="ROS", used here, is not affected.
+    fallback keys.
+
+    CORRECTED 2026-08-25: type="WW" (waiver wire) rankings come back with
+    0 players -- this was previously attributed to FantasyPros' premium
+    tier gating the endpoint (the response carries a "tier":"premium"
+    field). That diagnosis doesn't hold up: Christopher upgraded to
+    FantasyPros' HOF plan and re-checked (fp_hof_diag.py) -- WW still
+    returns 0 players, while ROS/ADP both return real data (530/681
+    players) with the SAME "tier":"premium" field present on every
+    response type, working or not. That field is evidently a static
+    label, not a live access gate. The far more likely explanation:
+    it's preseason (week 1 hasn't happened), and "waiver wire" rankings
+    are a during-season product with nothing to rank yet -- WW's own
+    response even carries a stale "last_updated":"1/01" vs. ROS/ADP's
+    current "8/25"/"8/26". Worth re-checking once the season is
+    underway; type="ROS", used here, was never affected either way.
     Still degrades to an empty dict (never a fabricated ranking) on any
     fetch error, same safe-failure pattern as the rest of this module.
     """
