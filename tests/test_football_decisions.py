@@ -52,15 +52,26 @@ _EAST_COAST_CONFIG = {
 }
 
 
-def test_legal_roster_produces_no_waiver_fetch():
+def test_legal_roster_with_no_projection_signal_produces_no_waiver_targets():
+    # 2026-09-02: a legal/full roster USED TO skip the free-agent fetch
+    # entirely (gated on unfilled_slots). It no longer does -- a full
+    # roster still checks for upgrade candidates over current starters --
+    # but with no FantasyPros projections available (the only signal
+    # upgrade candidates can honestly use, see
+    # sports/football/waivers.py::find_upgrade_candidates()), there's
+    # nothing to recommend, so still no waiver_targets action.
     roster = _legal_f_league_roster()
     team = Team(id="11", name="COWBOYS", roster=roster)
 
-    with patch.object(fd, "fetch_waiver_wire") as mock_fetch, \
+    fake_wire = [WaiverPlayer(player=Player(id="fa", name="Some FA", position="QB"),
+                              ownership_pct=10.0)]
+
+    with patch.object(fd, "get_football_free_agents",
+                      return_value=(fake_wire, "cbs_live")) as mock_fetch, \
          patch.object(fd, "_fp_nfl_rankings_by_name", return_value={}):
         result = fd.run_football_decisions(auth=None, league_id="sfflf",
                                             league_config=_F_LEAGUE_CONFIG, team=team)
-        mock_fetch.assert_not_called()
+        mock_fetch.assert_called_once()
 
     assert result["league"] == "F-League"
     assert result["format"] == "H2H Points"
@@ -94,7 +105,8 @@ def test_illegal_roster_fetches_waivers_and_targets_open_slot():
                      ownership_pct=1.0),
     ]
 
-    with patch.object(fd, "fetch_waiver_wire", return_value=fake_wire) as mock_fetch, \
+    with patch.object(fd, "get_football_free_agents",
+                      return_value=(fake_wire, "cbs_live")) as mock_fetch, \
          patch.object(fd, "_fp_nfl_rankings_by_name", return_value={}):
         result = fd.run_football_decisions(auth=None, league_id="sfflf",
                                             league_config=_F_LEAGUE_CONFIG, team=team)
@@ -103,6 +115,7 @@ def test_illegal_roster_fetches_waivers_and_targets_open_slot():
     actions = result["actions"]
     types = [a["type"] for a in actions]
     assert types == ["roster_legality", "waiver_targets", "keeper_guidance"]
+    assert actions[1]["fa_source"] == "cbs_live"
     assert actions[0]["legal"] is False
 
     by_slot = actions[1]["by_slot"]
@@ -129,7 +142,7 @@ def test_f_league_waiver_targets_ranked_by_sfflf_points_estimate_when_available(
     ]
     fake_sfflf_estimates = {"low projection qb": 40.0, "high projection qb": 95.0}
 
-    with patch.object(fd, "fetch_waiver_wire", return_value=fake_wire), \
+    with patch.object(fd, "get_football_free_agents", return_value=(fake_wire, "cbs_live")), \
          patch.object(fd, "_fp_nfl_rankings_by_name", return_value={}), \
          patch.object(fd, "_fp_client", object()), \
          patch.object(fd, "_fp_sfflf_points_by_name", return_value=fake_sfflf_estimates):
@@ -147,18 +160,26 @@ def test_f_league_waiver_targets_ranked_by_sfflf_points_estimate_when_available(
     assert points == {"High Projection QB": 95.0, "Low Projection QB": 40.0}
 
 
-def test_waiver_fetch_failure_is_caught_and_omits_waiver_targets():
+def test_both_free_agent_sources_unavailable_reports_explicitly():
+    # 2026-09-02: when CBS's connector is down AND the FantasyPros fallback
+    # also can't be built, this should say so explicitly (a distinct
+    # "waiver_targets_unavailable" action) rather than silently omitting
+    # any mention of it -- Christopher hit exactly this live and wanted a
+    # clear signal, not silence.
     roster = _legal_f_league_roster()
     roster[0] = _starter("NotAQB", "WR")
     team = Team(id="11", name="COWBOYS", roster=roster)
 
-    with patch.object(fd, "fetch_waiver_wire", side_effect=RuntimeError("CBS API down")), \
+    with patch.object(fd, "get_football_free_agents",
+                      return_value=([], "unavailable")), \
          patch.object(fd, "_fp_nfl_rankings_by_name", return_value={}):
         result = fd.run_football_decisions(auth=None, league_id="sfflf",
                                             league_config=_F_LEAGUE_CONFIG, team=team)
 
     types = [a["type"] for a in result["actions"]]
-    assert types == ["roster_legality", "keeper_guidance"]  # no waiver_targets, but no crash
+    assert types == ["roster_legality", "waiver_targets_unavailable", "keeper_guidance"]
+    unavailable = next(a for a in result["actions"] if a["type"] == "waiver_targets_unavailable")
+    assert "reason" in unavailable
 
 
 def test_east_coast_keeper_guidance_uses_fp_rankings_when_available():
@@ -297,7 +318,7 @@ def test_print_decisions_renders_roster_legality_waiver_targets_and_keepers(caps
     out = capsys.readouterr().out
     assert "ILLEGAL" in out
     assert "unfilled Quarterback slot" in out
-    assert "Open-Slot Waiver Targets" in out
+    assert "Waiver Targets" in out
     assert "Sleeper QB" in out
     assert "Recommended keeps (via fantasypros_ecr): Jalen Hurts, Stefon Diggs, Tony Pollard" in out
     assert "Other eligible: Jake Ferguson" in out

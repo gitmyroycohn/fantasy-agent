@@ -203,15 +203,25 @@ def _print_decisions(result, dry_run):
             by_slot = action.get("by_slot", {})
             if by_slot:
                 ranking_source = action.get("ranking_source", "ownership_pct")
-                print(f"\n  --- Open-Slot Waiver Targets (ranked by {ranking_source}) ---")
+                print(f"\n  --- Waiver Targets (ranked by {ranking_source}) ---")
+                if action.get("fa_source") == "fantasypros_fallback":
+                    print("  ⚠️  CBS's live free-agent connector was down -- this pool is "
+                         "FantasyPros-derived (no real ownership% available).")
                 for slot, players in by_slot.items():
                     print(f"  {slot}:")
                     for p in players:
                         pos = "/".join(p.get("positions", []))
                         proj = p.get("projected_points")
                         proj_str = f", proj {proj:.1f} pts" if proj is not None else ""
+                        upgrade = p.get("upgrade_over")
+                        fit_str = (f"upgrade over {upgrade[0]} (+{upgrade[1]:.1f} pts)"
+                                  if upgrade else "open slot")
                         print(f"    + {p['player']} ({p.get('team','?')}) [{pos}] "
-                              f"owned {p.get('ownership_pct', 0):.1f}%{proj_str}")
+                              f"-- {fit_str}, owned {p.get('ownership_pct', 0):.1f}%{proj_str}")
+
+        elif atype == "waiver_targets_unavailable":
+            print(f"\n  --- Waiver Targets ---")
+            print(f"  ⚠️  {action.get('reason', 'Free agents unavailable.')}")
 
         elif atype == "keeper_guidance":
             # Football only (agent/football_decisions.py / sports/football/keepers.py).

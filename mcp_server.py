@@ -74,6 +74,7 @@ from agent.football_decisions import (
 )
 from cbs.waivers import fetch_waiver_wire
 from cbs.players_cache import CBSConnectorUnavailable
+from agent.football_free_agents import get_football_free_agents
 from sports.football.roster_rules import open_slots
 from sports.football.waivers import rank_waiver_recommendations, UPGRADE_MIN_POINT_EDGE
 from data.models import Team
@@ -975,9 +976,17 @@ def football_waiver_recommendations(
     -- it compares free agents to current starters, not bench players
     against each other, and doesn't simulate multi-move roster changes.
 
-    Degrades honestly on a CBS outage: if the free-agent fetch (players/list)
-    doesn't respond after retries, this returns an explicit "connector may
-    be down" message rather than hanging or guessing at stale data.
+    Degrades honestly on a CBS outage, in two steps (2026-09-02): if the
+    live CBS free-agent fetch (players/list) doesn't respond after
+    retries, this automatically falls back to a FantasyPros-derived pool
+    (FantasyPros' projected players minus everyone actually rostered in
+    the league, via cbs.roster.get_all_team_rosters -- a different,
+    separately-reliable CBS path) rather than returning nothing. That
+    fallback is clearly labeled in the output (source: FantasyPros, no
+    real ownership% available) so it's never mistaken for CBS's live
+    pool. Only if BOTH sources fail does this report an explicit
+    "unavailable" message instead of hanging or guessing at stale data.
+    See agent/football_free_agents.py for the full trade-offs.
 
     Args:
         league_id: "f_league", "hard_chargers", "east_coast", or "all".
@@ -1011,16 +1020,13 @@ def football_waiver_recommendations(
 
             slots_open = open_slots(roster, internal_id)
 
-            try:
-                waivers = fetch_waiver_wire(auth, lid, sport, position="all", limit=300)
-            except CBSConnectorUnavailable as e:
-                logger.warning("football_waiver_recommendations: connector unavailable for %s: %s", lid, e)
-                out.append("  ⚠️  CBS free-agent connector may be down (players/list "
-                           "did not respond after retries) -- try again shortly.")
-                continue
-            except Exception as e:
-                logger.exception("football_waiver_recommendations: unexpected fetch failure for %s", lid)
-                out.append(f"  Free agents unavailable: {e}")
+            waivers, fa_source = get_football_free_agents(auth, lid, sport, _fp_client)
+
+            if fa_source == "unavailable":
+                out.append("  ⚠️  Free agents unavailable: CBS's connector may be down "
+                           "(players/list did not respond after retries) AND the "
+                           "FantasyPros fallback couldn't be built either (no API key "
+                           "configured, or its own fetch failed) -- try again shortly.")
                 continue
 
             if not waivers:
@@ -1033,6 +1039,11 @@ def football_waiver_recommendations(
             else:
                 projections = _fp_nfl_projections_by_name(_fp_client) if _fp_client else {}
                 ranking_source = "fantasypros_projected_ppr" if projections else "ownership_pct"
+
+            if fa_source == "fantasypros_fallback":
+                out.append("  ⚠️  CBS's live free-agent connector didn't respond -- this pool is "
+                           "built from FantasyPros' projected players instead (not CBS's full "
+                           "player universe, and ownership% isn't available this way).")
 
             recs = rank_waiver_recommendations(
                 roster, waivers, internal_id,

@@ -73,6 +73,7 @@ import yaml
 from sports.football.roster_rules import validate_roster
 from sports.football.waivers import (
     find_waiver_candidates_for_open_slots,
+    rank_waiver_recommendations,
     _PROJECTION_LEAGUES,
 )
 from sports.football.scoring import estimate_sfflf_points
@@ -80,6 +81,7 @@ from sports.football.keepers import keeper_guidance, contract_years_to_acquired_
 from cbs.waivers import fetch_waiver_wire
 from cbs.players_cache import CBSConnectorUnavailable
 from cbs.roster import fetch_contract_years, get_all_team_rosters
+from agent.football_free_agents import get_football_free_agents
 from config.settings import FANTASYPROS_API_KEY
 from fantasypros.client import FantasyProsClient
 
@@ -515,54 +517,68 @@ def run_football_decisions(auth, league_id, league_config, team, sport="football
         "unfilled_slots":    validation.unfilled_slots,
     })
 
-    if validation.unfilled_slots:
-        waivers = []
-        try:
-            waivers = fetch_waiver_wire(auth, league_id, sport, position="all", limit=300)
-        except CBSConnectorUnavailable as e:
-            # players/list never answered after retries -- say so explicitly
-            # rather than silently showing no waiver targets, so this reads
-            # as "CBS may be down" and not "no free agents exist."
-            logger.warning("Football waiver-wire connector unavailable for %s: %s", league_id, e)
-            actions.append({
-                "type":   "waiver_targets_unavailable",
-                "reason": "CBS free-agent connector may be down (players/list "
-                          "did not respond after retries) -- try again shortly.",
-            })
-        except Exception as e:
-            logger.warning("Football waiver-wire fetch failed for %s: %s", league_id, e)
+    # 2026-09-02: this used to only run at all when validation.unfilled_slots
+    # was non-empty, and only ever looked for free agents eligible for a
+    # currently-EMPTY slot. Christopher correctly flagged both limits after
+    # testing live: a fully-legal, fully-started roster (the normal case
+    # once the season's under way) got literally nothing back. Now this
+    # always runs and includes upgrade-over-current-starter candidates too
+    # (see sports/football/waivers.py::rank_waiver_recommendations() /
+    # find_upgrade_candidates()), and the free-agent fetch itself falls back
+    # to a FantasyPros-derived pool when CBS's connector is down instead of
+    # just reporting failure (see agent/football_free_agents.py).
+    waivers, fa_source = get_football_free_agents(auth, league_id, sport, _fp_client)
 
-        if waivers:
-            if internal_id == "f_league":
-                projections = _fp_sfflf_points_by_name(_fp_client) if _fp_client else {}
-                ranking_source_label = "fantasypros_estimated_sfflf_points"
-            else:
-                projections = _fp_nfl_projections_by_name(_fp_client) if _fp_client else {}
-                ranking_source_label = "fantasypros_projected_ppr"
-            use_projections = bool(projections) and internal_id in _PROJECTION_LEAGUES
-            candidates_by_slot = find_waiver_candidates_for_open_slots(
-                team.roster, waivers, internal_id, projections=projections or None)
-            if any(candidates_by_slot.values()):
-                actions.append({
-                    "type": "waiver_targets",
-                    # Ranked by FantasyPros points_ppr for hard_chargers/
-                    # east_coast, or by an sfflf-scoring estimate for
-                    # f_league (see sports/football/waivers.py and
-                    # _fp_sfflf_points_by_name()) when available; any
-                    # league with no projections data falls back to
-                    # ownership_pct ascending. Capped at 5 per slot.
-                    "ranking_source": ranking_source_label if use_projections else "ownership_pct",
-                    "by_slot": {
-                        slot: [
-                            {"player": wp.player.name, "team": wp.player.team,
-                             "positions": wp.player.positions,
-                             "ownership_pct": wp.ownership_pct,
-                             "projected_points": projections.get(wp.player.name.strip().lower())}
-                            for wp in wps[:5]
-                        ]
-                        for slot, wps in candidates_by_slot.items() if wps
-                    },
-                })
+    if fa_source == "unavailable":
+        actions.append({
+            "type":   "waiver_targets_unavailable",
+            "reason": "CBS's free-agent connector may be down (players/list did not "
+                      "respond after retries) AND the FantasyPros fallback couldn't be "
+                      "built either (no API key configured, or its own fetch failed) -- "
+                      "try again shortly.",
+        })
+    elif waivers:
+        if internal_id == "f_league":
+            projections = _fp_sfflf_points_by_name(_fp_client) if _fp_client else {}
+            ranking_source_label = "fantasypros_estimated_sfflf_points"
+        else:
+            projections = _fp_nfl_projections_by_name(_fp_client) if _fp_client else {}
+            ranking_source_label = "fantasypros_projected_ppr"
+        use_projections = bool(projections) and internal_id in _PROJECTION_LEAGUES
+
+        recs = rank_waiver_recommendations(
+            team.roster, waivers, internal_id,
+            projections=projections or None, limit=25)
+
+        if recs:
+            by_slot: dict[str, list] = {}
+            for r in recs:
+                wp = r["player"]
+                entry = {
+                    "player": wp.player.name, "team": wp.player.team,
+                    "positions": wp.player.positions,
+                    "ownership_pct": wp.ownership_pct,
+                    "projected_points": r["projected_points"],
+                    "upgrade_over": r["upgrade_over"],  # (occupant_name, point_edge) or None
+                }
+                for slot in r["slots"]:
+                    by_slot.setdefault(slot, []).append(entry)
+            actions.append({
+                "type": "waiver_targets",
+                # Ranked by FantasyPros points_ppr for hard_chargers/
+                # east_coast, or by an sfflf-scoring estimate for f_league
+                # (see sports/football/waivers.py and
+                # _fp_sfflf_points_by_name()) when available; any league
+                # with no projections data falls back to ownership_pct
+                # ascending. Capped at 5 per slot for display.
+                "ranking_source": ranking_source_label if use_projections else "ownership_pct",
+                # "cbs_live" (normal) or "fantasypros_fallback" (CBS's
+                # connector was down -- see agent/football_free_agents.py
+                # for what that trade-off means: no real ownership%, and a
+                # ~600-player pool instead of CBS's full universe).
+                "fa_source": fa_source,
+                "by_slot": {slot: entries[:5] for slot, entries in by_slot.items()},
+            })
 
     rankings = _fp_nfl_rankings_by_name(_fp_client) if _fp_client else {}
 
