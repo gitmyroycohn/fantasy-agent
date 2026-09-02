@@ -75,7 +75,7 @@ from agent.football_decisions import (
 from cbs.waivers import fetch_waiver_wire
 from cbs.players_cache import CBSConnectorUnavailable
 from sports.football.roster_rules import open_slots
-from sports.football.waivers import rank_waiver_recommendations
+from sports.football.waivers import rank_waiver_recommendations, UPGRADE_MIN_POINT_EDGE
 from data.models import Team
 from mlb.clock import now_et, today_et
 
@@ -957,12 +957,23 @@ def football_waiver_recommendations(
     per-play PPR formats, so candidates are ranked by FantasyPros' points_ppr
     projection directly. Any league falls back to ownership_pct (ascending
     -- lower-owned = more likely worth grabbing) whenever no projection is
-    available. Recommendations are filtered to slots the team's roster
-    actually has OPEN right now (e.g. "you have an open FLEX"), not a flat
-    best-players-available list -- see sports/football/roster_rules.py::
-    open_slots(). If every starting slot is already filled, this reports
-    that rather than suggesting bench upgrades (no lineup-optimizer swap
-    logic here, by design -- see the enhancement order's "Non-goals").
+    available.
+
+    Two kinds of recommendation, both surfaced (2026-09-02: a fully-legal,
+    fully-started roster used to get NOTHING back from this tool, which is
+    the common case once the season's under way, not an edge case -- fixed
+    by adding the second tier below rather than only ever gap-filling):
+      1. GAP fills -- a free agent eligible for a starting slot that's
+         currently EMPTY (sports/football/roster_rules.py::open_slots()).
+      2. UPGRADES -- a free agent who projects ahead of whoever's currently
+         STARTING at a slot, by at least sports/football/waivers.py::
+         UPGRADE_MIN_POINT_EDGE points (sports/football/waivers.py::
+         find_upgrade_candidates()). Only ever shown when a real projection
+         is available for BOTH players -- never guessed off ownership_pct.
+    Each recommendation line says which case it is. Still not a full
+    lineup optimizer (see the 2026-08-31 enhancement order's "Non-goals")
+    -- it compares free agents to current starters, not bench players
+    against each other, and doesn't simulate multi-move roster changes.
 
     Degrades honestly on a CBS outage: if the free-agent fetch (players/list)
     doesn't respond after retries, this returns an explicit "connector may
@@ -999,10 +1010,6 @@ def football_waiver_recommendations(
                 continue
 
             slots_open = open_slots(roster, internal_id)
-            if not slots_open:
-                out.append("  No open starting slots -- roster is full. "
-                           "(This tool targets slot gaps, not bench upgrades.)")
-                continue
 
             try:
                 waivers = fetch_waiver_wire(auth, lid, sport, position="all", limit=300)
@@ -1032,18 +1039,33 @@ def football_waiver_recommendations(
                 projections=projections or None, position=position, limit=limit)
 
             if not recs:
-                out.append(f"  No candidates eligible for the open slot(s): {', '.join(slots_open)}"
-                           + (f" matching position={position.upper()}" if position else ""))
+                if slots_open:
+                    out.append(f"  No candidates eligible for the open slot(s): {', '.join(slots_open)}"
+                               + (f" matching position={position.upper()}" if position else ""))
+                elif not projections:
+                    out.append("  Roster is full and no FantasyPros projection signal is available "
+                               "to compare free agents against your current starters "
+                               "(set FANTASYPROS_API_KEY, or check ownership_pct manually).")
+                else:
+                    out.append("  Roster is full -- no free agent currently projects "
+                               f"{UPGRADE_MIN_POINT_EDGE}+ points ahead of your starters at any slot"
+                               + (f" matching position={position.upper()}" if position else "") + ".")
                 continue
 
-            out.append(f"  Open slots: {', '.join(slots_open)}  (ranked by: {ranking_source})")
+            status_line = (f"  Open slots: {', '.join(slots_open)}" if slots_open
+                          else "  No open slots -- showing upgrade candidates vs. current starters")
+            out.append(f"{status_line}  (ranked by: {ranking_source})")
             for r in recs:
                 wp = r["player"]
-                slots_str = "/".join(sorted(set(r["slots"])))
                 pts = r["projected_points"]
                 pts_str = f"  proj={pts:.1f}" if pts is not None else ""
+                if r["upgrade_over"]:
+                    occ_name, edge = r["upgrade_over"]
+                    fit_str = f"-> upgrade over {occ_name} (+{edge:.1f} pts) at {'/'.join(sorted(set(r['slots'])))}"
+                else:
+                    fit_str = f"-> {'/'.join(sorted(set(r['slots'])))} (open)"
                 out.append(f"  + {wp.player.name} ({wp.player.team}) [{wp.player.position}] "
-                           f"-> {slots_str}  own={wp.ownership_pct:.1f}%{pts_str}")
+                           f"{fit_str}  own={wp.ownership_pct:.1f}%{pts_str}")
 
         return _respond("\n".join(out) if out else "No football leagues matched.")
 

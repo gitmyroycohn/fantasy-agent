@@ -210,3 +210,34 @@ def open_slots(roster: list, league_id: str) -> list[str]:
     starters = [rs for rs in roster if rs.is_starting]
     _, unfilled = _match_slots(starters, LEAGUE_STARTING_SLOTS[league_id])
     return [label for label, _ in unfilled]
+
+
+def slot_occupants(roster: list, league_id: str) -> dict[str, list]:
+    """Which RosterSlot(s) currently fill each starting slot, using the same
+    greedy most-restrictive-first matching as validate_roster()/
+    open_slots() (see the ordering note on LEAGUE_STARTING_SLOTS for why
+    that's safe here). A slot with an empty list is unfilled -- same
+    information open_slots() reports, just keyed to who's actually there
+    instead of just who's missing.
+
+    Added for sports/football/waivers.py::find_upgrade_candidates() -- a
+    fully-legal, fully-started roster (the normal case once the season's
+    under way) has no open_slots() gaps at all, but that doesn't mean
+    there's nothing worth grabbing off waivers; this is what lets that
+    comparison happen against whoever's actually starting."""
+    starters = [rs for rs in roster if rs.is_starting]
+    slots = LEAGUE_STARTING_SLOTS[league_id]
+    remaining: dict[str, int] = {s.label: s.count for s in slots}
+    assigned: dict[str, list] = {s.label: [] for s in slots}
+    used_ids: set[int] = set()
+    for slot in slots:
+        for rs in starters:
+            if remaining[slot.label] <= 0:
+                break
+            if id(rs) in used_ids:
+                continue
+            if set(rs.player.eligible_positions) & slot.eligible_positions:
+                assigned[slot.label].append(rs)
+                used_ids.add(id(rs))
+                remaining[slot.label] -= 1
+    return assigned
