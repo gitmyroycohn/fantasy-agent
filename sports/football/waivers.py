@@ -40,7 +40,17 @@ from sports.football.roster_rules import (
     LEAGUE_ROSTER_LIMITS,
     LEAGUE_STARTING_SLOTS,
     open_slots,
+    slot_occupants,
 )
+
+# Minimum projected-point edge a free agent must have over the CURRENT
+# starter at a slot to be worth surfacing as an upgrade suggestion --
+# avoids noise from trivial/within-projection-error point differences.
+# Only ever applied when a real projections signal exists for both players
+# (see find_upgrade_candidates()) -- never estimated off ownership_pct,
+# since there's no honest way to say a free agent's ownership beats a
+# rostered starter's actual production outlook.
+UPGRADE_MIN_POINT_EDGE = 1.0
 
 # Leagues where a real (non-ownership) FantasyPros-derived signal exists
 # for ranking waiver candidates. The signal itself differs per league --
@@ -116,40 +126,95 @@ def find_waiver_candidates_for_open_slots(roster: list, waiver_wire: list,
     return result
 
 
+def find_upgrade_candidates(roster: list, waiver_wire: list, league_id: str,
+                           projections: dict[str, float] | None = None
+                           ) -> dict[str, list[tuple]]:
+    """Free agents who project AHEAD of whoever is currently STARTING at an
+    eligible slot -- added 2026-09-02 after Christopher reported that a
+    fully-legal, fully-started roster (9/9 starters, 8/8 bench -- the
+    normal state once the season's under way, not the exception) got ZERO
+    waiver recommendations from find_waiver_candidates_for_open_slots()'s
+    gap-only filtering, which he correctly flagged as not how a waiver
+    tool should behave. That function's open-slot filtering stays useful
+    (a bye-week/injury gap is real), it just isn't the only case that
+    matters -- most real usage is "is anyone out there better than my
+    weakest starter," not "is a slot literally empty."
+
+    Only produced when a real projections signal is available for BOTH the
+    current starter and the free agent -- never estimated off
+    ownership_pct, since there's no honest way to say a free agent's
+    ownership beats a rostered starter's actual production outlook. A slot
+    whose starter has no projection match is skipped rather than guessed.
+    Requires at least UPGRADE_MIN_POINT_EDGE points of projected edge to
+    filter out noise-level differences.
+
+    Returns {slot_label: [(WaiverPlayer, occupant_RosterSlot, point_edge), ...]}
+    sorted by point_edge descending, for slots that ARE currently filled
+    (an unfilled slot is open_slots()/find_waiver_candidates_for_open_slots()'s
+    job, not this one's -- no overlap between the two).
+    """
+    if not projections or league_id not in _PROJECTION_LEAGUES:
+        return {}
+
+    occupants = slot_occupants(roster, league_id)
+    slots_def = {s.label: s for s in LEAGUE_STARTING_SLOTS[league_id]}
+
+    result: dict[str, list[tuple]] = {}
+    for slot_label, occupant_slots in occupants.items():
+        if not occupant_slots:
+            continue  # unfilled -- not this function's concern
+        eligible = slots_def[slot_label].eligible_positions
+        candidates = []
+        for occ in occupant_slots:
+            occ_pts = projections.get(_norm(occ.player.name))
+            if occ_pts is None:
+                continue
+            for wp in waiver_wire:
+                if not (set(wp.player.eligible_positions) & eligible):
+                    continue
+                fa_pts = projections.get(_norm(wp.player.name))
+                if fa_pts is None:
+                    continue
+                edge = fa_pts - occ_pts
+                if edge >= UPGRADE_MIN_POINT_EDGE:
+                    candidates.append((wp, occ, edge))
+        if candidates:
+            candidates.sort(key=lambda t: -t[2])
+            result[slot_label] = candidates
+    return result
+
+
 def rank_waiver_recommendations(roster: list, waiver_wire: list, league_id: str,
                                 projections: dict[str, float] | None = None,
                                 position: str | None = None,
                                 limit: int = 10) -> list[dict]:
     """Flat, ranked waiver-recommendation list for the football_waiver_
-    recommendations MCP tool (2026-08-31 enhancement order).
+    recommendations MCP tool (2026-08-31 enhancement order, extended
+    2026-09-02 to cover upgrade candidates -- see find_upgrade_candidates()
+    docstring for why gap-filling alone wasn't enough).
 
-    Built on top of find_waiver_candidates_for_open_slots() rather than a
-    separate ranking path -- that function already does the two things the
-    ticket asked for: (1) real per-league scoring-format-aware ranking
-    (FantasyPros points_ppr for hard_chargers/east_coast's per-play PPR
-    formats, the sfflf-scoring estimate for f_league's non-PPR tiered
-    format, both via agent/football_decisions.py's projection adapters --
-    see that module and sports/football/scoring.py::estimate_sfflf_points())
-    and (2) filtering to slots the roster actually has OPEN, not a flat
-    best-players-available list. This just flattens that {slot: [...]}
-    result into one ranked list, dedupes a player who's eligible for more
-    than one open slot (e.g. an open WR and an open FLEX), and applies the
-    optional position filter / limit the tool's contract asks for.
+    Merges two tiers, both scoring-format-aware via the same projections
+    map: (1) find_waiver_candidates_for_open_slots() for slots that are
+    currently EMPTY, and (2) find_upgrade_candidates() for free agents who
+    project ahead of whoever's currently STARTING at a filled slot. A
+    player showing up in both (rare -- would need to be both slot-eligible
+    for an open gap AND a projected upgrade over a different filled slot)
+    is deduped to one entry carrying whichever detail applies.
 
-    NOTE on scope: like find_waiver_candidates_for_open_slots(), this only
-    targets currently-EMPTY starting slots, not upgrade-over-a-worse-
-    starter swaps -- consistent with this project's documented non-goal of
-    a full lineup optimizer for football (2026-08-31 enhancement order,
-    "Non-goals" section).
+    Args mirror find_waiver_candidates_for_open_slots(); position/limit
+    are this function's own filter/cap on the flattened, merged result.
 
     Returns a list of dicts (already sorted, already limited):
         {"player": WaiverPlayer, "slots": [slot_label, ...],
-         "projected_points": float | None}
-    projected_points is None wherever no projection is available for that
-    player -- never fabricated, same "no fabricated projections" rule
+         "projected_points": float | None,
+         "upgrade_over": (occupant_name, point_edge) | None}
+    projected_points/upgrade_over are None wherever no real signal is
+    available -- never fabricated, same rule
     _fp_nfl_projections_by_name()/_fp_sfflf_points_by_name() already follow.
     """
     by_slot = find_waiver_candidates_for_open_slots(
+        roster, waiver_wire, league_id, projections=projections)
+    upgrades_by_slot = find_upgrade_candidates(
         roster, waiver_wire, league_id, projections=projections)
 
     use_projections = bool(projections) and league_id in _PROJECTION_LEAGUES
@@ -157,20 +222,37 @@ def rank_waiver_recommendations(roster: list, waiver_wire: list, league_id: str,
 
     by_player: dict[str, dict] = {}
     order: list[str] = []
+
+    def _entry(wp):
+        pid = wp.player.id or wp.player.name
+        if pid not in by_player:
+            by_player[pid] = {
+                "player": wp,
+                "slots": [],
+                "projected_points": (projections.get(_norm(wp.player.name))
+                                      if use_projections else None),
+                "upgrade_over": None,
+            }
+            order.append(pid)
+        return by_player[pid]
+
     for slot_label, candidates in by_slot.items():
         for wp in candidates:
             if req_pos and req_pos not in wp.player.eligible_positions:
                 continue
-            pid = wp.player.id or wp.player.name
-            if pid not in by_player:
-                by_player[pid] = {
-                    "player": wp,
-                    "slots": [],
-                    "projected_points": (projections.get(_norm(wp.player.name))
-                                          if use_projections else None),
-                }
-                order.append(pid)
-            by_player[pid]["slots"].append(slot_label)
+            entry = _entry(wp)
+            if slot_label not in entry["slots"]:
+                entry["slots"].append(slot_label)
+
+    for slot_label, candidates in upgrades_by_slot.items():
+        for wp, occ, edge in candidates:
+            if req_pos and req_pos not in wp.player.eligible_positions:
+                continue
+            entry = _entry(wp)
+            if slot_label not in entry["slots"]:
+                entry["slots"].append(slot_label)
+            if entry["upgrade_over"] is None or edge > entry["upgrade_over"][1]:
+                entry["upgrade_over"] = (occ.player.name, edge)
 
     def _sort_key(pid):
         entry = by_player[pid]
