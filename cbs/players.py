@@ -26,6 +26,7 @@ players), extend cbs_probe.py to confirm before trusting it further.
 import logging
 
 from cbs.auth import CBSAuth, CBSAPIError
+from cbs.players_cache import get_players_list
 
 logger = logging.getLogger(__name__)
 
@@ -33,10 +34,14 @@ logger = logging.getLogger(__name__)
 # data/models.py's _CBS_OF_MAP and cbs/waivers.py's _CBS_OF_NORM.
 _CBS_OF_MAP = {"LF": "OF", "CF": "OF", "RF": "OF"}
 
-# Process-local cache: (league_id, sport) -> {player_id: [positions]}.
-# players/list returns the league's full ~8000+ player universe in one call
-# (see cbs/waivers.py) -- caching avoids re-fetching it once per roster call
-# within the same run (my roster + every opponent roster for trade scans).
+# Process-local cache of the DERIVED {player_id: [positions]} index, keyed
+# by (league_id, sport). Separate from cbs/players_cache.py's cache of the
+# RAW players/list response, which this now sources from instead of calling
+# auth.api_get() directly -- that's what lets this call site and
+# cbs/waivers.py's free-agent lookup share one CBS fetch per league/run
+# instead of each hitting players/list independently (see that module's
+# docstring for why avoiding a duplicate call matters for football, whose
+# players/list has timed out in production).
 _cache: dict[tuple, dict[str, list[str]]] = {}
 
 
@@ -58,7 +63,7 @@ def fetch_position_eligibility_index(auth: CBSAuth, league_id: str,
         return _cache[key]
 
     try:
-        data = auth.api_get("players/list", league_id, sport)
+        raw = get_players_list(auth, league_id, sport)
     except CBSAPIError as e:
         logger.warning(
             "fetch_position_eligibility_index: players/list failed for %s (%s) -- "
@@ -67,7 +72,6 @@ def fetch_position_eligibility_index(auth: CBSAuth, league_id: str,
         )
         return {}
 
-    raw = (data.get("body", {}) or {}).get("players", []) or []
     index: dict[str, list[str]] = {}
     for p in raw:
         pid = str(p.get("id", ""))

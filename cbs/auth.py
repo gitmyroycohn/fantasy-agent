@@ -159,16 +159,26 @@ class CBSAuth:
     # -- API ----------------------------------------------------------------
 
     def api_get(self, endpoint: str, league_id: str,
-                sport: str = "baseball", **params) -> dict:
+                sport: str = "baseball", timeout: int | None = None,
+                **params) -> dict:
         """GET an api.cbssports.com/fantasy endpoint as JSON.
-        endpoint e.g. 'league/rosters', 'league/details'."""
+        endpoint e.g. 'league/rosters', 'league/details'.
+
+        timeout: per-call override of the module-default TIMEOUT (seconds).
+        Added for cbs/players_cache.py's retry ladder against players/list,
+        which has been observed to time out at the default 15s far more
+        often for football leagues than baseball's identical call (see
+        logs/latest_output.md 2026-08-25 and the 2026-08-31 waiver-
+        recommendations enhancement order) -- callers that need a longer
+        ceiling on a known-slow endpoint can request one without changing
+        the default for every other call site."""
         token, needs_league = self.get_token(league_id, sport)
         q = {"version": "3.0", "access_token": token,
              "response_format": "JSON", **params}
         if needs_league:
             q["league_id"] = league_id
         r = self.get_session().get(f"{API_BASE}/{endpoint.strip('/')}",
-                                   params=q, timeout=TIMEOUT)
+                                   params=q, timeout=timeout or TIMEOUT)
         try:
             data = r.json()
         except Exception:

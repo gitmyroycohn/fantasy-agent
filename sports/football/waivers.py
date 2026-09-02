@@ -116,6 +116,74 @@ def find_waiver_candidates_for_open_slots(roster: list, waiver_wire: list,
     return result
 
 
+def rank_waiver_recommendations(roster: list, waiver_wire: list, league_id: str,
+                                projections: dict[str, float] | None = None,
+                                position: str | None = None,
+                                limit: int = 10) -> list[dict]:
+    """Flat, ranked waiver-recommendation list for the football_waiver_
+    recommendations MCP tool (2026-08-31 enhancement order).
+
+    Built on top of find_waiver_candidates_for_open_slots() rather than a
+    separate ranking path -- that function already does the two things the
+    ticket asked for: (1) real per-league scoring-format-aware ranking
+    (FantasyPros points_ppr for hard_chargers/east_coast's per-play PPR
+    formats, the sfflf-scoring estimate for f_league's non-PPR tiered
+    format, both via agent/football_decisions.py's projection adapters --
+    see that module and sports/football/scoring.py::estimate_sfflf_points())
+    and (2) filtering to slots the roster actually has OPEN, not a flat
+    best-players-available list. This just flattens that {slot: [...]}
+    result into one ranked list, dedupes a player who's eligible for more
+    than one open slot (e.g. an open WR and an open FLEX), and applies the
+    optional position filter / limit the tool's contract asks for.
+
+    NOTE on scope: like find_waiver_candidates_for_open_slots(), this only
+    targets currently-EMPTY starting slots, not upgrade-over-a-worse-
+    starter swaps -- consistent with this project's documented non-goal of
+    a full lineup optimizer for football (2026-08-31 enhancement order,
+    "Non-goals" section).
+
+    Returns a list of dicts (already sorted, already limited):
+        {"player": WaiverPlayer, "slots": [slot_label, ...],
+         "projected_points": float | None}
+    projected_points is None wherever no projection is available for that
+    player -- never fabricated, same "no fabricated projections" rule
+    _fp_nfl_projections_by_name()/_fp_sfflf_points_by_name() already follow.
+    """
+    by_slot = find_waiver_candidates_for_open_slots(
+        roster, waiver_wire, league_id, projections=projections)
+
+    use_projections = bool(projections) and league_id in _PROJECTION_LEAGUES
+    req_pos = position.strip().upper() if position else None
+
+    by_player: dict[str, dict] = {}
+    order: list[str] = []
+    for slot_label, candidates in by_slot.items():
+        for wp in candidates:
+            if req_pos and req_pos not in wp.player.eligible_positions:
+                continue
+            pid = wp.player.id or wp.player.name
+            if pid not in by_player:
+                by_player[pid] = {
+                    "player": wp,
+                    "slots": [],
+                    "projected_points": (projections.get(_norm(wp.player.name))
+                                          if use_projections else None),
+                }
+                order.append(pid)
+            by_player[pid]["slots"].append(slot_label)
+
+    def _sort_key(pid):
+        entry = by_player[pid]
+        pts = entry["projected_points"]
+        # projected candidates first (best points first), then unprojected
+        # candidates by ownership_pct ascending -- same fallback rule as
+        # find_waiver_candidates_for_open_slots().
+        return (0, -pts) if pts is not None else (1, entry["player"].ownership_pct)
+
+    order.sort(key=_sort_key)
+    return [by_player[pid] for pid in order[:limit]]
+
+
 def roster_has_room_for_add(roster: list, league_id: str) -> bool:
     """True if adding one more player wouldn't push the roster past its
     total-player limit. False means the caller must drop someone first --

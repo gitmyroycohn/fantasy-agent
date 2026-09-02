@@ -13,6 +13,7 @@ Tools:
   get_fantasypros_draft_board -- FantasyPros value re-scored under each league's own rules [football only]
   get_league_keepers        -- keeper guidance for EVERY manager in a keeper league, not just yours [football only]
   waiver_recommendations    -- top waiver wire adds [baseball only]
+  football_waiver_recommendations -- top waiver wire adds, scoring-format-aware [football only]
   roster_value_signals      -- buy-low / sell-high signals [baseball only]
 
 Football support (added 2026-08-01) is intentionally partial -- see
@@ -69,7 +70,12 @@ from agent.decisions import run_decisions, get_filtered_waiver_adds, trade_windo
 from agent.football_decisions import (
     run_football_decisions, league_keeper_report, predicted_keepers,
     save_manual_keepers, clear_manual_keepers,
+    _fp_client, _fp_nfl_projections_by_name, _fp_sfflf_points_by_name,
 )
+from cbs.waivers import fetch_waiver_wire
+from cbs.players_cache import CBSConnectorUnavailable
+from sports.football.roster_rules import open_slots
+from sports.football.waivers import rank_waiver_recommendations
 from data.models import Team
 from mlb.clock import now_et, today_et
 
@@ -920,6 +926,132 @@ def waiver_recommendations(
     except Exception as e:
         logger.exception("waiver_recommendations failed")
         return f"Error fetching waiver recommendations: {e}"
+
+
+# ---------------------------------------------------------------------------
+# Tool: football_waiver_recommendations
+# ---------------------------------------------------------------------------
+
+@mcp.tool()
+def football_waiver_recommendations(
+    league_id: str = "all",
+    position: str | None = None,
+    limit: int = 10,
+) -> str:
+    """
+    Get ranked waiver-wire / free-agent recommendations for a football
+    league (2026-08-31 enhancement order).
+
+    waiver_recommendations (above) is baseball-only and never resolves a
+    football league_id -- this is the football equivalent, built for
+    football's own scoring formats and roster shapes rather than baseball's
+    category-fit signals.
+
+    Accepts all three football league_ids: "f_league", "hard_chargers",
+    "east_coast" (or "all" for every configured football league).
+
+    Ranking is scoring-format-aware, not one undifferentiated list across
+    leagues: f_league is non-PPR/tiered, so candidates are ranked by an
+    estimate of f_league's own scoring (sports/football/scoring.py::
+    estimate_sfflf_points()); hard_chargers and east_coast are both real
+    per-play PPR formats, so candidates are ranked by FantasyPros' points_ppr
+    projection directly. Any league falls back to ownership_pct (ascending
+    -- lower-owned = more likely worth grabbing) whenever no projection is
+    available. Recommendations are filtered to slots the team's roster
+    actually has OPEN right now (e.g. "you have an open FLEX"), not a flat
+    best-players-available list -- see sports/football/roster_rules.py::
+    open_slots(). If every starting slot is already filled, this reports
+    that rather than suggesting bench upgrades (no lineup-optimizer swap
+    logic here, by design -- see the enhancement order's "Non-goals").
+
+    Degrades honestly on a CBS outage: if the free-agent fetch (players/list)
+    doesn't respond after retries, this returns an explicit "connector may
+    be down" message rather than hanging or guessing at stale data.
+
+    Args:
+        league_id: "f_league", "hard_chargers", "east_coast", or "all".
+        position:  Optional position filter, e.g. "QB", "RB", "WR", "TE",
+                    "K", "DST". Leave blank for all positions.
+        limit:     Maximum recommendations to return per league. Default 10.
+    """
+    try:
+        auth    = _get_auth()
+        leagues = _resolve_leagues(league_id, sports={"football"})
+        if not leagues:
+            return f"No football league found matching '{league_id}'."
+
+        out = []
+        for league_cfg, sport in leagues:
+            lid         = league_cfg["cbs_league_id"]
+            tid         = str(league_cfg["cbs_team_id"])
+            name        = league_cfg.get("name", lid)
+            internal_id = league_cfg.get("id", lid)
+
+            header = [name]
+            if position:
+                header.append(f"position={position.upper()}")
+            out.append(f"\n=== {' | '.join(header)} -- Waiver Recommendations ===")
+
+            try:
+                roster = cbs_get_roster(auth, lid, tid, sport)
+            except Exception as e:
+                out.append(f"  Roster unavailable: {e}")
+                continue
+
+            slots_open = open_slots(roster, internal_id)
+            if not slots_open:
+                out.append("  No open starting slots -- roster is full. "
+                           "(This tool targets slot gaps, not bench upgrades.)")
+                continue
+
+            try:
+                waivers = fetch_waiver_wire(auth, lid, sport, position="all", limit=300)
+            except CBSConnectorUnavailable as e:
+                logger.warning("football_waiver_recommendations: connector unavailable for %s: %s", lid, e)
+                out.append("  ⚠️  CBS free-agent connector may be down (players/list "
+                           "did not respond after retries) -- try again shortly.")
+                continue
+            except Exception as e:
+                logger.exception("football_waiver_recommendations: unexpected fetch failure for %s", lid)
+                out.append(f"  Free agents unavailable: {e}")
+                continue
+
+            if not waivers:
+                out.append("  No free agents found.")
+                continue
+
+            if internal_id == "f_league":
+                projections = _fp_sfflf_points_by_name(_fp_client) if _fp_client else {}
+                ranking_source = "fantasypros_estimated_sfflf_points" if projections else "ownership_pct"
+            else:
+                projections = _fp_nfl_projections_by_name(_fp_client) if _fp_client else {}
+                ranking_source = "fantasypros_projected_ppr" if projections else "ownership_pct"
+
+            recs = rank_waiver_recommendations(
+                roster, waivers, internal_id,
+                projections=projections or None, position=position, limit=limit)
+
+            if not recs:
+                out.append(f"  No candidates eligible for the open slot(s): {', '.join(slots_open)}"
+                           + (f" matching position={position.upper()}" if position else ""))
+                continue
+
+            out.append(f"  Open slots: {', '.join(slots_open)}  (ranked by: {ranking_source})")
+            for r in recs:
+                wp = r["player"]
+                slots_str = "/".join(sorted(set(r["slots"])))
+                pts = r["projected_points"]
+                pts_str = f"  proj={pts:.1f}" if pts is not None else ""
+                out.append(f"  + {wp.player.name} ({wp.player.team}) [{wp.player.position}] "
+                           f"-> {slots_str}  own={wp.ownership_pct:.1f}%{pts_str}")
+
+        return _respond("\n".join(out) if out else "No football leagues matched.")
+
+    except CBSAuthError as e:
+        return f"CBS auth error: {e}"
+    except Exception as e:
+        logger.exception("football_waiver_recommendations failed")
+        return f"Error fetching football waiver recommendations: {e}"
 
 
 # ---------------------------------------------------------------------------
