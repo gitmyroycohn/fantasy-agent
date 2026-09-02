@@ -14,6 +14,7 @@ import logging
 from bs4 import BeautifulSoup
 from data.models import Player, WaiverPlayer
 from cbs.auth import CBSAuth, CBSAPIError
+from cbs.players_cache import get_players_list, CBSConnectorUnavailable
 
 logger = logging.getLogger(__name__)
 
@@ -31,9 +32,19 @@ def _norm_pos(p: str) -> str:
 def get_available_players(auth: CBSAuth, league_id: str,
                           sport: str = "baseball",
                           position: str = "all") -> list[WaiverPlayer]:
-    """Free agents in the league. API first, HTML fallback."""
+    """Free agents in the league. API first, HTML fallback.
+
+    CBSConnectorUnavailable (players/list never answered after retries) is
+    deliberately NOT caught here and propagates to the caller: falling back
+    to the HTML scrape in that case would mean guessing at free agents from
+    an unvalidated code path while CBS may genuinely be down, which is worse
+    than an honest "connector may be down" failure. A real CBSAPIError
+    (CBS answered with an explicit error, e.g. a bad token) still falls
+    back to HTML as before -- that's not a connectivity problem."""
     try:
         return _available_from_api(auth, league_id, sport, position)
+    except CBSConnectorUnavailable:
+        raise
     except CBSAPIError as e:
         logger.warning("JSON API free agents failed (%s) — trying HTML", e)
         return _available_from_html(auth, league_id, sport)
@@ -53,8 +64,14 @@ def _available_from_api(auth: CBSAuth, league_id: str, sport: str,
     # (~8400 records); owned players carry owned_by_team_id, so free agents
     # are simply the records without it. on_waivers=1 means claimable via
     # waivers rather than immediate add.
-    data = auth.api_get("players/list", league_id, sport)
-    raw = (data.get("body", {}) or {}).get("players", []) or []
+    #
+    # Goes through cbs/players_cache.py rather than a direct auth.api_get()
+    # call: that module adds retry/backoff + a short-TTL cache shared with
+    # cbs/roster.py's position-eligibility lookup, which used to hit this
+    # same endpoint a second, uncached time every run. See that module's
+    # docstring for why football's identical-shaped call to this endpoint
+    # has timed out in production while baseball's has not.
+    raw = get_players_list(auth, league_id, sport)
 
     # Log CBS field keys from first player to diagnose ownership field name
     if raw:

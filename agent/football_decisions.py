@@ -78,6 +78,7 @@ from sports.football.waivers import (
 from sports.football.scoring import estimate_sfflf_points
 from sports.football.keepers import keeper_guidance, contract_years_to_acquired_seasons, KEEPER_POLICIES
 from cbs.waivers import fetch_waiver_wire
+from cbs.players_cache import CBSConnectorUnavailable
 from cbs.roster import fetch_contract_years, get_all_team_rosters
 from config.settings import FANTASYPROS_API_KEY
 from fantasypros.client import FantasyProsClient
@@ -515,11 +516,21 @@ def run_football_decisions(auth, league_id, league_config, team, sport="football
     })
 
     if validation.unfilled_slots:
+        waivers = []
         try:
             waivers = fetch_waiver_wire(auth, league_id, sport, position="all", limit=300)
+        except CBSConnectorUnavailable as e:
+            # players/list never answered after retries -- say so explicitly
+            # rather than silently showing no waiver targets, so this reads
+            # as "CBS may be down" and not "no free agents exist."
+            logger.warning("Football waiver-wire connector unavailable for %s: %s", league_id, e)
+            actions.append({
+                "type":   "waiver_targets_unavailable",
+                "reason": "CBS free-agent connector may be down (players/list "
+                          "did not respond after retries) -- try again shortly.",
+            })
         except Exception as e:
             logger.warning("Football waiver-wire fetch failed for %s: %s", league_id, e)
-            waivers = []
 
         if waivers:
             if internal_id == "f_league":
