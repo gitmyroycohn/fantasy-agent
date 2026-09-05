@@ -1,20 +1,20 @@
 ================================================
-  FANTASY AGENT  --  Fri Sep 4, 2026  11:55 AM ET
+  FANTASY AGENT  --  Sat Sep 5, 2026  10:46 AM ET
 ================================================
 
 
 [ PINS & PILLS  |  H2H Categories ]
-  Matchup : Week 21 vs Captain Jack: 3-8-1
-  Target  : WHIP, ERA, W, R +4 more
+  Matchup : Week 21 vs Captain Jack: 3-9-0
+  Target  : WHIP, ERA, HR, W +5 more
   Stream SP: Ryan Gusto (MIA) [2-START]  ERA 3.86  K/9 7.58
   ** Submit adds before Monday scoring period lock. **
   Also    : Cade Smith, Hagen Smith
-  Top Add  : Blaze Alexander (BAL) [3B]  helps RBI
-  Also     : Jose Altuve (2B), Nick Allen (SS)
+  Top Add  : Blaze Alexander (BAL) [3B]  helps HR, RBI
+  Also     : Jose Altuve (2B), Luisangel Acuna (2B)
 
 [ CASEY STENGEL  |  NL-Only Roto ]
   Top Add  : Jose Alvarado (PHI) [RP]  helps K, S
-  Also     : Logan Allen (RP), Tyler Alexander (RP)
+  Also     : Tyler Alexander (RP), Adael Amador (2B)
   Standings: Period 24: 38 roto pts - winning 5 cats, losing 5
   Weakest  : RBI, SB, HR, ERA
 
@@ -42,61 +42,61 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   Lineup: 18/34 starting
   Free agents visible: 8179
 
-  FP projections (SP wire): 94/96 matched
-  Schedule (3 periods): P22(7d):26x2+
-  FP projections (all wire): 18/18 matched
-  Savant pitcher xStats: 842 players
-  Savant batter xStats: 648 players
+  FP projections (SP wire): 95/97 matched
+  Schedule (3 periods): P22(7d):27x2+
+  FP projections (all wire): 17/17 matched
+  Savant pitcher xStats: 845 players
+  Savant batter xStats: 649 players
   Savant EV/Barrel: 470 players
-  Savant xStats (all wire): 18/18 matched
+  Savant xStats (all wire): 17/17 matched
   Format: H2H Categories
 
   ⚠ CHURN GUARD: 5 moves recommended -- showing top 3 per section. Prioritize ruthlessly; avoid making all moves at once.
-  Matchup: Week 21 vs Captain Jack: 3-8-1
-  All categories (12): H W (107.0-98.0) | HR T (12.0-12.0) | OPS W (0.7578-0.7209) | R L (50.0-55.0) | RBI L (39.0-52.0) | SB L (4.0-12.0) | ERA L (5.276-4.571) | INNdGS L (60.0-74.67) | K L (93.0-123.0) | S W (5.0-2.0) | W L (5.0-8.0) | WHIP L (1.3362-1.2937)
-  Priority categories (losing, easiest first): WHIP, ERA, W, R, SB, RBI, INNdGS, K
+  Matchup: Week 21 vs Captain Jack: 3-9-0
+  All categories (12): H W (117.0-106.0) | HR L (14.0-15.0) | OPS W (0.758-0.7282) | R L (57.0-61.0) | RBI L (48.0-58.0) | SB L (6.0-13.0) | ERA L (5.212-4.632) | INNdGS L (60.17-74.67) | K L (100.0-135.0) | S W (6.0-2.0) | W L (6.0-9.0) | WHIP L (1.3271-1.3015)
+  Priority categories (losing, easiest first): WHIP, ERA, HR, W, R, SB, RBI, INNdGS, K
   Streaming SP (Submit adds before Monday scoring period lock.):
-   + Ryan Gusto (MIA) [2-START] [NEW] score=13.24 *** 2-START PERIOD *** | ERA 3.86, K/9 7.58, WHIP 1.33 | helps: ERA, K, W, WHIP
-   + Cade Smith (NYY) [day 20] score=10.76 ERA 2.36, K/9 12.69, WHIP 1.08 | helps: ERA, K, W, WHIP
-   + Hagen Smith (CHW) [day 7] score=10.46 ERA 0.82, K/9 13.09, WHIP 1.18 | helps: ERA, K, W, WHIP
-   + Didier Fuentes (ATL) [day 19] score=10.1 ERA 2.35, K/9 11.59, WHIP 1.13 | helps: ERA, K, W, WHIP
-   + Alex McFarlane (PHI) [day 3] score=8.82 ERA 0.87, K/9 8.71, WHIP 0.97 | helps: ERA, K, W, WHIP
+   + Ryan Gusto (MIA) [2-START] [day 2] score=13.24 *** 2-START PERIOD *** | ERA 3.86, K/9 7.58, WHIP 1.33 | helps: ERA, K, W, WHIP
+   + Cade Smith (NYY) [day 21] score=10.82 ERA 2.32, K/9 12.77, WHIP 1.08 | helps: ERA, K, W, WHIP
+   + Hagen Smith (CHW) [day 8] score=10.53 ERA 0.69, K/9 13.15, WHIP 1.15 | helps: ERA, K, W, WHIP
+   + Didier Fuentes (ATL) [day 20] score=9.99 ERA 2.27, K/9 11.37, WHIP 1.09 | helps: ERA, K, W, WHIP
+   + Alex McFarlane (PHI) [day 4] score=8.86 ERA 0.79, K/9 8.74, WHIP 0.97 | helps: ERA, K, W, WHIP
   Waiver adds (5 suggestions) (top 3 shown -- 2 more suppressed):
-   + Blaze Alexander (BAL) [3B] [day 19] helps: RBI [Brl%=6.4 | xwOBA=0.356]
-   + Jose Altuve (HOU) [2B] [day 21] helps: R, SB [Brl%=4.7 | xwOBA=0.273]
-   + Nick Allen (HOU) [SS] [day 40] helps: R, SB [Brl%=1.9 | xwOBA=0.252]
+   + Blaze Alexander (BAL) [3B] [day 20] helps: HR, RBI [Brl%=6.3 | xwOBA=0.357]
+   + Jose Altuve (HOU) [2B] [day 22] helps: R, SB [Brl%=4.6 | xwOBA=0.272]
+   + Luisangel Acuna (CHW) [2B] [day 51] helps: R, SB [Brl%=3.2 | xwOBA=0.265]
 
   --- Closer Monkey News ---
-  [LEDGER] Closer Monkey’s Leverage Ledger | 9.4.2026
+  [LEDGER] Closer Monkey’s Leverage Ledger | 9.5.2026
     Closer Monkey - Instant emails for every closer change. Closer depth charts to keep you ahead.
-    Thursday’s 9-game slate resulted in five wins, five saves, two losses, and one blown save by relievers. Here are the saves in condensed form: There have been 1,085 saves this season by 241 different pitchers. For perspective, this season has already set an MLB record for the number of pitchers with at le
-    https://closermonkey.com/2026/09/04/closer-monkeys-leverage-ledger-9-4-2026/
+    Friday’s 16-game slate resulted in seven wins, 11 saves, five losses, and five blown saves by relievers. Here are the saves in condensed form: There have been 1,096 saves this season by 242 different pitchers. For perspective, this season has already set an MLB record for the number of pitchers with at l
+    https://closermonkey.com/2026/09/05/closer-monkeys-leverage-ledger-9-5-2026/
 
   --- Injury Report (last 7 days) ---
   ★ YOUR ROSTER PLAYERS:
     ✅ Juan Soto (New York Mets) — Activated from 10-Day IL [8/29]
-  🚑 Placed (22): Ke'Bryan Hayes (Cincinnati Reds), Blaze Jordan (St. Louis Cardinals), Sam Hentges (San Francisco Giants), George Klassen (Los Angeles Angels), Byron Buxton (Minnesota Twins), Emerson Hancock (Seattle Mariners), Gavin Sheets (San Diego Padres), JJ Wetherholt (St. Louis Cardinals)
-  ✅ Activated (37): Wade Meckler (Los Angeles Angels), José Suarez (Athletics), Matt Shaw (Chicago Cubs), Blaze Alexander (Baltimore Orioles), Max Fried (New York Yankees), Garrett Whitlock (Boston Red Sox), Samad Taylor (San Diego Padres), Trevor Story (Boston Red Sox)
+  🚑 Placed (24): Sam Hentges (San Francisco Giants), Gavin Sheets (San Diego Padres), George Klassen (Los Angeles Angels), Byron Buxton (Minnesota Twins), Emerson Hancock (Seattle Mariners), JJ Wetherholt (St. Louis Cardinals), Luis Rengifo (San Diego Padres), Bryse Wilson (Milwaukee Brewers)
+  ✅ Activated (38): Garrett Whitlock (Boston Red Sox), Max Fried (New York Yankees), Trevor Story (Boston Red Sox), Samad Taylor (San Diego Padres), Roman Anthony (Boston Red Sox), Ketel Marte (Arizona Diamondbacks), Abner Uribe (Milwaukee Brewers), Cooper Criswell (Seattle Mariners)
 
   Trade deadline (2026-08-03) has passed for this league -- trade signals and trade board are suppressed for the rest of the season.
 
-  --- Daily Lineup (Fri Sep 4, 30 MLB teams playing) ---
+  --- Daily Lineup (Sat Sep 5, 30 MLB teams playing) ---
   SPs starting today (1):
-    [                  active] Nick Martinez (TB)
+    [                  active] Zack Wheeler (PHI)
   SPs on a team playing today, NOT yet confirmed starting (8):
+    Nick Martinez (TB) TB has a game -- probable starters not yet posted
     Sandy Alcantara (MIA) MIA has a game -- probable starters not yet posted
-    Jake Bennett (BOS) BOS has a game -- probable starters not yet posted
-    Logan Henderson (MIL) MIL has a game -- probable starters not yet posted
     Yoshinobu Yamamoto (LAD) LAD has a game -- probable starters not yet posted
-    Zack Wheeler (PHI) PHI has a game -- probable starters not yet posted
     Jose Soriano (TOR) TOR has a game -- probable starters not yet posted
     Logan Webb (SF) SF has a game -- probable starters not yet posted
     Kyle Harrison (MIL) MIL has a game -- probable starters not yet posted
+    Jake Bennett (BOS) BOS has a game -- probable starters not yet posted
+    Logan Henderson (MIL) MIL has a game -- probable starters not yet posted
   On injured list - do not activate (3):
     🚑 Maikel Garcia (KC) Currently on the MLB injured list -- ignore any start/activate recommendation
     🚑 Joe Musgrove (SD) Currently on the MLB injured list -- ignore any start/activate recommendation
     🚑 Leo De Vries (ATH) Currently on the MLB injured list -- ignore any start/activate recommendation
-  Batters with games today: 18 (1 confirmed in posted lineup, 17 expected -- lineup not posted yet)
+  Batters with games today: 18 (0 confirmed in posted lineup, 18 expected -- lineup not posted yet)
 
   DRY_RUN=True -- no submissions made.
 
@@ -112,30 +112,30 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   Lineup: 24/31 starting
   Free agents visible: 8234
 
-  FP projections (roto wire): 21/21 matched
-  Savant xStats (roto wire): 21/21 matched
+  FP projections (roto wire): 20/20 matched
+  Savant xStats (roto wire): 20/20 matched
   CM depth chart: 30 teams loaded
   Format: NL-Only Rotisserie
 
   ⚠ CHURN GUARD: 6 moves recommended -- showing top 3 per section. Prioritize ruthlessly; avoid making all moves at once.
   Waiver adds (5 suggestions) (top 3 shown -- 2 more suppressed):
-   + Jose Alvarado (PHI) [RP] [day 80] helps: K, S [xERA=3.92]
-   + Logan Allen (ARI) [RP] [day 20] helps: K, S [xERA=3.71]
-   + Tyler Alexander (PHI) [RP] [day 80] helps: K, S [xERA=3.35]
+   + Jose Alvarado (PHI) [RP] [day 81] helps: K, S [xERA=3.92]
+   + Tyler Alexander (PHI) [RP] [day 81] helps: K, S [CM: 2nd-in-line | Mostly Linear] [xERA=3.30]
+   + Adael Amador (COL) [2B] [day 10] helps: SB [xwOBA=0.282]
 
   --- Drop Candidates ---
   MONITOR (1) -- borderline:
-   WATCH Kodai Senga (NYM) [SP] [NEW]
-         Borderline: ERA 7.36, WHIP 1.64 => consider Andrew Alvarez
+   WATCH Kodai Senga (NYM) [SP] [day 2]
+         Borderline: ERA 7.23, WHIP 1.63 => consider Andrew Alvarez
   Standings: Period 24: 38 roto pts - winning 5 cats, losing 5
-  All categories (10): BA rank=4 | HR rank=7 | R rank=4 | RBI rank=6 | SB rank=6 | ERA rank=8 | K rank=4 | S rank=8 | W rank=1 | WHIP rank=3
+  All categories (10): BA rank=4 | HR rank=7 | R rank=4 | RBI rank=5 | SB rank=6 | ERA rank=8 | K rank=4 | S rank=8 | W rank=2 | WHIP rank=3
   Weakest categories: RBI, SB, HR, ERA, S
 
   --- Closer Monkey News ---
-  [LEDGER] Closer Monkey’s Leverage Ledger | 9.4.2026
+  [LEDGER] Closer Monkey’s Leverage Ledger | 9.5.2026
     Closer Monkey - Instant emails for every closer change. Closer depth charts to keep you ahead.
-    Thursday’s 9-game slate resulted in five wins, five saves, two losses, and one blown save by relievers. Here are the saves in condensed form: There have been 1,085 saves this season by 241 different pitchers. For perspective, this season has already set an MLB record for the number of pitchers with at le
-    https://closermonkey.com/2026/09/04/closer-monkeys-leverage-ledger-9-4-2026/
+    Friday’s 16-game slate resulted in seven wins, 11 saves, five losses, and five blown saves by relievers. Here are the saves in condensed form: There have been 1,096 saves this season by 242 different pitchers. For perspective, this season has already set an MLB record for the number of pitchers with at l
+    https://closermonkey.com/2026/09/05/closer-monkeys-leverage-ledger-9-5-2026/
 
   --- Injury Report (last 7 days) ---
   ★ YOUR ROSTER PLAYERS:
@@ -145,21 +145,21 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
     ✅ Justin Wrobleski (Los Angeles Dodgers) — Activated from 15-Day IL [9/1]
     ✅ Will Smith (Los Angeles Dodgers) — Activated from 60-Day IL [9/1]
     ✅ Dalton Rushing (Los Angeles Dodgers) — Activated from 10-Day IL [9/1]
-  🚑 Placed (20): Ke'Bryan Hayes (Cincinnati Reds), Blaze Jordan (St. Louis Cardinals), Sam Hentges (San Francisco Giants), George Klassen (Los Angeles Angels), Byron Buxton (Minnesota Twins), Emerson Hancock (Seattle Mariners), Gavin Sheets (San Diego Padres), Luis Rengifo (San Diego Padres)
-  ✅ Activated (35): Wade Meckler (Los Angeles Angels), José Suarez (Athletics), Matt Shaw (Chicago Cubs), Blaze Alexander (Baltimore Orioles), Max Fried (New York Yankees), Juan Soto (New York Mets), Garrett Whitlock (Boston Red Sox), Samad Taylor (San Diego Padres)
+  🚑 Placed (22): Sam Hentges (San Francisco Giants), Gavin Sheets (San Diego Padres), George Klassen (Los Angeles Angels), Byron Buxton (Minnesota Twins), Emerson Hancock (Seattle Mariners), Luis Rengifo (San Diego Padres), Bryse Wilson (Milwaukee Brewers), Willson Contreras (Boston Red Sox)
+  ✅ Activated (36): Juan Soto (New York Mets), Garrett Whitlock (Boston Red Sox), Max Fried (New York Yankees), Trevor Story (Boston Red Sox), Samad Taylor (San Diego Padres), Roman Anthony (Boston Red Sox), Ketel Marte (Arizona Diamondbacks), Abner Uribe (Milwaukee Brewers)
 
   Trade deadline (2026-07-31) has passed for this league -- trade signals and trade board are suppressed for the rest of the season.
 
-  --- Daily Lineup (Fri Sep 4, 30 MLB teams playing) ---
+  --- Daily Lineup (Sat Sep 5, 30 MLB teams playing) ---
   SPs pitching today (1):
-    Shota Imanaga (CHC)
+    Robbie Ray (SD)
   SPs on a team playing today, NOT yet confirmed starting (6):
-    Robbie Ray (SD) SD has a game -- probable starters not yet posted
     Casey Mize (SD) SD has a game -- probable starters not yet posted
     Logan Webb (SF) SF has a game -- probable starters not yet posted
     Kyle Harrison (MIL) MIL has a game -- probable starters not yet posted
     Kodai Senga (NYM) NYM has a game -- probable starters not yet posted
     Logan Henderson (MIL) MIL has a game -- probable starters not yet posted
+    Shota Imanaga (CHC) CHC has a game -- probable starters not yet posted
   On injured list - do not activate (4):
     🚑 JJ Wetherholt (STL) Currently on the MLB injured list -- ignore any start/activate recommendation
     🚑 Xavier Edwards (MIA) Currently on the MLB injured list -- ignore any start/activate recommendation
@@ -178,7 +178,7 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   RB-WR Saquon Barkley (PHI)
   ... and 12 more
   Lineup: 9/17 starting
-  Free agents visible: 4734
+  Free agents visible: 4733
 
   Format: H2H Points
   Roster: legal (9/9 starters filled)
@@ -187,7 +187,7 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   Keeper league -- max 2, selected by: commissioner, deadline: ?
   Max 2 keepers, any position, no cost mechanic -- confirmed by Christopher directly (CBS's public rules page doesn't publish this; he isn't f_league's commissioner). Selection deadline isn't visible to him -- ask the commissioner if that date matters for planning.
   Recommended keeps (via fantasypros_ecr): Trey McBride, Saquon Barkley
-  Other eligible: Drake Maye, Jeremiyah Love, Davante Adams, Parker Washington, Rome Odunze, Bhayshul Tuten, TreVeyon Henderson, Jordan Addison, Rachaad White, Jacory Croskey-Merritt, Dallas Goedert, Cam Ward, Tyler Loop, Steelers, Deebo Samuel
+  Other eligible: Drake Maye, Jeremiyah Love, Davante Adams, Rome Odunze, Parker Washington, Bhayshul Tuten, TreVeyon Henderson, Jordan Addison, Rachaad White, Jacory Croskey-Merritt, Dallas Goedert, Cam Ward, Tyler Loop, Steelers, Deebo Samuel
 
   DRY_RUN=True -- no submissions made.
 
