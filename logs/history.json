@@ -3,13 +3,13 @@
     "waiver_adds": {
       "Luisangel Acuna": {
         "first": "2026-06-17",
-        "last": "2026-09-10",
-        "n": 55
+        "last": "2026-09-11",
+        "n": 56
       },
       "Nick Allen": {
         "first": "2026-06-17",
-        "last": "2026-09-10",
-        "n": 45
+        "last": "2026-09-11",
+        "n": 46
       },
       "Jose Alvarado": {
         "first": "2026-06-22",
@@ -28,8 +28,8 @@
       },
       "Andrew Abbott": {
         "first": "2026-07-21",
-        "last": "2026-08-31",
-        "n": 14
+        "last": "2026-09-11",
+        "n": 15
       },
       "Andrew Alvarez": {
         "first": "2026-07-28",
@@ -48,8 +48,8 @@
       },
       "Jose Altuve": {
         "first": "2026-08-05",
-        "last": "2026-09-10",
-        "n": 26
+        "last": "2026-09-11",
+        "n": 27
       },
       "Tyler Alexander": {
         "first": "2026-08-22",
@@ -68,8 +68,8 @@
       },
       "Adael Amador": {
         "first": "2026-09-09",
-        "last": "2026-09-10",
-        "n": 2
+        "last": "2026-09-11",
+        "n": 3
       }
     },
     "streaming_sp": {
@@ -80,13 +80,13 @@
       },
       "Cade Smith": {
         "first": "2026-08-16",
-        "last": "2026-09-10",
-        "n": 26
+        "last": "2026-09-11",
+        "n": 27
       },
       "Didier Fuentes": {
         "first": "2026-08-17",
-        "last": "2026-09-10",
-        "n": 25
+        "last": "2026-09-11",
+        "n": 26
       },
       "Trevor Williams": {
         "first": "2026-08-17",
@@ -95,8 +95,8 @@
       },
       "Tyler Wells": {
         "first": "2026-08-17",
-        "last": "2026-09-07",
-        "n": 11
+        "last": "2026-09-11",
+        "n": 12
       },
       "Luis Medina": {
         "first": "2026-08-18",
@@ -115,8 +115,8 @@
       },
       "Hagen Smith": {
         "first": "2026-08-29",
-        "last": "2026-09-10",
-        "n": 13
+        "last": "2026-09-11",
+        "n": 14
       },
       "Alex McFarlane": {
         "first": "2026-09-02",
@@ -130,8 +130,8 @@
       },
       "Daniel Espino": {
         "first": "2026-09-10",
-        "last": "2026-09-10",
-        "n": 1
+        "last": "2026-09-11",
+        "n": 2
       }
     },
     "drop_candidates": {
@@ -154,13 +154,13 @@
     "waiver_adds": {
       "Jose Alvarado": {
         "first": "2026-06-17",
-        "last": "2026-09-10",
-        "n": 86
+        "last": "2026-09-11",
+        "n": 87
       },
       "Tyler Alexander": {
         "first": "2026-06-17",
-        "last": "2026-09-10",
-        "n": 86
+        "last": "2026-09-11",
+        "n": 87
       },
       "Kevin Alcantara": {
         "first": "2026-06-26",
@@ -169,8 +169,8 @@
       },
       "Adael Amador": {
         "first": "2026-08-16",
-        "last": "2026-09-10",
-        "n": 15
+        "last": "2026-09-11",
+        "n": 16
       },
       "Logan Allen": {
         "first": "2026-08-16",
@@ -179,8 +179,8 @@
       },
       "Zach Agnos": {
         "first": "2026-08-16",
-        "last": "2026-09-10",
-        "n": 22
+        "last": "2026-09-11",
+        "n": 23
       },
       "Andrew Alvarez": {
         "first": "2026-08-28",
@@ -189,16 +189,16 @@
       },
       "Philip Abner": {
         "first": "2026-09-08",
-        "last": "2026-09-10",
-        "n": 3
+        "last": "2026-09-11",
+        "n": 4
       }
     },
     "streaming_sp": {},
     "drop_candidates": {
       "Kodai Senga": {
         "first": "2026-09-04",
-        "last": "2026-09-10",
-        "n": 7,
+        "last": "2026-09-11",
+        "n": 8,
         "sev": "monitor"
       }
     },
