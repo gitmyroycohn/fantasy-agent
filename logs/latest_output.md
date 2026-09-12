@@ -1,16 +1,17 @@
 ================================================
-  FANTASY AGENT  --  Fri Sep 11, 2026  11:58 AM ET
+  FANTASY AGENT  --  Sat Sep 12, 2026  11:05 AM ET
 ================================================
 
 
 [ PINS & PILLS  |  H2H Categories ]
-  Matchup : Week 22 vs Isotopes: 6-6-0
-  Target  : WHIP, OPS, HR, H +2 more
+  Matchup : Week 22 vs Isotopes: 6-5-1
+  Target  : OPS, HR, SB, RBI +1 more
   Stream SP: Hagen Smith (CHW)  ERA 0.5  K/9 13.0
   ** Submit adds before Monday scoring period lock. **
-  Also    : Cade Smith, Didier Fuentes
+  Also    : Daniel Espino, Cade Smith
   Top Add  : Jose Altuve (HOU) [2B]  helps SB, R
   Also     : Nick Allen (SS), Luisangel Acuna (2B)
+  DROP     : Thomas Saggese
 
 [ CASEY STENGEL  |  NL-Only Roto ]
   Top Add  : Jose Alvarado (PHI) [RP]  helps K, S
@@ -35,52 +36,60 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
      C Drake Baldwin (ATL)
     1B Sal Stewart (CIN)
     2B Bo Bichette (NYM)
-    3B Zack Gelof (ATH)
-    SS Jeremy Pena (HOU)
+    3B Thomas Saggese (STL)
+    SS Bobby Witt (KC)
   ... and 30 more
   Stats enriched: 30/35 roster players
   Lineup: 18/35 starting
   Free agents visible: 8181
 
-  FP projections (SP wire): 95/98 matched
+  FP projections (SP wire): 97/99 matched
   Schedule (3 periods): P22(7d):28x2+
   FP projections (all wire): 18/18 matched
   Savant pitcher xStats: 850 players
-  Savant batter xStats: 652 players
-  Savant EV/Barrel: 475 players
+  Savant batter xStats: 653 players
+  Savant EV/Barrel: 476 players
   Savant xStats (all wire): 18/18 matched
   Format: H2H Categories
 
-  ⚠ CHURN GUARD: 5 moves recommended -- showing top 3 per section. Prioritize ruthlessly; avoid making all moves at once.
-  Matchup: Week 22 vs Isotopes: 6-6-0
-  All categories (12): H L (24.0-27.0) | HR L (3.0-4.0) | OPS L (0.5718-0.7996) | R L (15.0-23.0) | RBI W (15.0-14.0) | SB L (3.0-7.0) | ERA W (3.515-3.682) | INNdGS W (54.0-6.0) | K W (48.0-13.0) | S W (2.0-1.0) | W W (4.0-0.0) | WHIP L (1.0118-0.8182)
-  Priority categories (losing, easiest first): WHIP, OPS, HR, H, SB, R
+  ⚠ CHURN GUARD: 6 moves recommended -- showing top 3 per section. Prioritize ruthlessly; avoid making all moves at once.
+  Matchup: Week 22 vs Isotopes: 6-5-1
+  All categories (12): H T (38.0-38.0) | HR L (3.0-7.0) | OPS L (0.6179-0.8789) | R L (18.0-33.0) | RBI L (17.0-26.0) | SB L (3.0-7.0) | ERA W (3.45-3.892) | INNdGS W (54.0-35.67) | K W (51.0-42.0) | S W (3.0-1.0) | W W (5.0-2.0) | WHIP W (1.0167-1.1892)
+  Priority categories (losing, easiest first): OPS, HR, SB, RBI, R
   Streaming SP (Submit adds before Monday scoring period lock.):
-   + Hagen Smith (CHW) [day 14] score=3.3 ERA 0.5, K/9 13.0, WHIP 0.94 | helps: WHIP
-   + Cade Smith (NYY) [day 27] score=2.81 ERA 2.22, K/9 13.15, WHIP 1.05 | helps: WHIP
-   + Didier Fuentes (ATL) [day 26] score=2.46 ERA 2.31, K/9 11.53, WHIP 1.06 | helps: WHIP
-   + Daniel Espino (CLE) [day 2] score=2.28 ERA 2.7, K/9 16.2, WHIP 1.3 | helps: WHIP
-   + Tyler Wells (TB) [day 12] score=1.89 ERA 2.44, K/9 8.87, WHIP 0.9 | helps: WHIP
-  Waiver adds (5 suggestions) (top 3 shown -- 2 more suppressed):
-   + Jose Altuve (HOU) [2B] [day 27] helps: SB, R [Brl%=4.4 | xwOBA=0.274]
-   + Nick Allen (HOU) [SS] [day 46] helps: SB, R [Brl%=1.9 | xwOBA=0.252]
-   + Luisangel Acuna (CHW) [2B] [day 56] helps: SB, R [Brl%=3.2 | xwOBA=0.265]
+   + Hagen Smith (CHW) [day 15] score=2.3 ERA 0.5, K/9 13.0, WHIP 0.94
+   + Daniel Espino (CLE) [day 3] score=2.28 ERA 2.7, K/9 16.2, WHIP 1.3
+   + Cade Smith (NYY) [day 28] score=1.79 ERA 2.18, K/9 12.95, WHIP 1.05
+   + Garrett Stallings (MIL) [NEW] score=1.65 ERA 0.0, K/9 9.0, WHIP 0.64
+   + Didier Fuentes (ATL) [day 27] score=1.47 ERA 2.27, K/9 11.5, WHIP 1.08
+  Waiver adds (4 suggestions) (top 3 shown -- 1 more suppressed):
+   + Jose Altuve (HOU) [2B] [day 28] helps: SB, R [Brl%=4.3 | xwOBA=0.273]
+   + Nick Allen (HOU) [SS] [day 47] helps: SB, R [Brl%=1.8 | xwOBA=0.249]
+   + Luisangel Acuna (CHW) [2B] [day 57] helps: SB, R [Brl%=3.1 | xwOBA=0.266]
+
+  --- Drop Candidates ---
+  CUT (1) -- below replacement level:
+   DROP Thomas Saggese (STL) [2B] [active] [day 2]
+        Below replacement: HR 4, R 21, RBI 12, SB 3 => add Jose Altuve
+  MONITOR (1) -- borderline:
+   WATCH Joshua Baez (STL) [OF] [day 5]
+         Borderline: R 18, RBI 18, SB 2
 
   --- Closer Monkey News ---
-  [LEDGER] Closer Monkey’s Leverage Ledger | 9.11.2026
+  [LEDGER] Closer Monkey’s Leverage Ledger | 9.12.2026
     Closer Monkey - Instant emails for every closer change. Closer depth charts to keep you ahead.
-    On this 25th remembrance of 9/11, I remember what would have been my first active day of classes as a Physical Education teacher in Syracuse. However, the strike of the second tower occurred right before my students arrived for class. Parents were coming to pick up their kids as I had them sitting in the
-    https://closermonkey.com/2026/09/11/closer-monkeys-leverage-ledger-9-11-2026/
+    Friday’s slate resulted in seven wins (one accompanied by a blown save), eight saves, six losses, and eight blown saves by relievers. Here are the saves in condensed form: There have been 1,150 saves this season by 246 different pitchers. For perspective, this season has already set an MLB record for the
+    https://closermonkey.com/2026/09/12/closer-monkeys-leverage-ledger-9-12-2026/
 
   --- Injury Report (last 7 days) ---
   ★ YOUR ROSTER PLAYERS:
     🚑 Braxton Ashcraft (Pittsburgh Pirates) — Placed on 15-Day IL [9/7]
-  🚑 Placed (24): Manuel Rodríguez (Tampa Bay Rays), Shane McClanahan (Tampa Bay Rays), Jesus Rodriguez (San Francisco Giants), Steven Okert (Houston Astros), Colin Holderman (Cleveland Guardians), Willi Castro (Colorado Rockies), Garrett Cleavinger (Tampa Bay Rays), J.T. Ginn (Athletics)
-  ✅ Activated (25): Andre Pallante (St. Louis Cardinals), Slade Cecconi (Cleveland Guardians), Tommy Troy (Arizona Diamondbacks), Kyle Teel (Chicago White Sox), Cole Sulser (Tampa Bay Rays), Jameson Taillon (Toronto Blue Jays), Konnor Griffin (Pittsburgh Pirates), Bobby Miller (Los Angeles Dodgers)
+  🚑 Placed (21): Willi Castro (Colorado Rockies), J.T. Ginn (Athletics), Garrett Cleavinger (Tampa Bay Rays), Trent Grisham (New York Yankees), Jameson Taillon (Toronto Blue Jays), Ceddanne Rafaela (Boston Red Sox), Mike Burrows (Houston Astros), Dalton Rushing (Los Angeles Dodgers)
+  ✅ Activated (18): Bobby Miller (Los Angeles Dodgers), Brant Hurter (Detroit Tigers), Graham Ashcraft (Cincinnati Reds), Robert Garcia (Texas Rangers), Nick Pivetta (San Diego Padres), Joe Ryan (Minnesota Twins), Chris Murphy (Chicago White Sox), Ke'Bryan Hayes (Cincinnati Reds)
 
   Trade deadline (2026-08-03) has passed for this league -- trade signals and trade board are suppressed for the rest of the season.
 
-  --- Daily Lineup (Fri Sep 11, 30 MLB teams playing) ---
+  --- Daily Lineup (Sat Sep 12, 30 MLB teams playing) ---
   SPs starting today: none confirmed yet
   SPs on a team playing today, NOT yet confirmed starting (10):
     Zack Wheeler (PHI) PHI has a game -- probable starters not yet posted
@@ -93,12 +102,14 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
     Logan Webb (SF) SF has a game -- probable starters not yet posted
     Logan Henderson (MIL) MIL has a game -- probable starters not yet posted
     Yoshinobu Yamamoto (LAD) LAD has a game -- probable starters not yet posted
+  NOT in today's posted lineup (1):
+    [     already benched] Charlie Condon (COL) Not in COL's official posted lineup today (CBS shows active)
   On injured list - do not activate (4):
     🚑 Maikel Garcia (KC) Currently on the MLB injured list -- ignore any start/activate recommendation
     🚑 Joe Musgrove (SD) Currently on the MLB injured list -- ignore any start/activate recommendation
     🚑 Braxton Ashcraft (PIT) Currently on the MLB injured list -- ignore any start/activate recommendation
     🚑 Leo De Vries (ATH) Currently on the MLB injured list -- ignore any start/activate recommendation
-  Batters with games today: 18 (1 confirmed in posted lineup, 17 expected -- lineup not posted yet)
+  Batters with games today: 17 (2 confirmed in posted lineup, 15 expected -- lineup not posted yet)
 
   DRY_RUN=True -- no submissions made.
 
@@ -112,7 +123,7 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   ... and 23 more
   Stats enriched: 27/28 roster players
   Lineup: 24/28 starting
-  Free agents visible: 8235
+  Free agents visible: 8238
 
   FP projections (roto wire): 21/21 matched
   Savant xStats (roto wire): 21/21 matched
@@ -121,46 +132,46 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
 
   ⚠ CHURN GUARD: 6 moves recommended -- showing top 3 per section. Prioritize ruthlessly; avoid making all moves at once.
   Waiver adds (5 suggestions) (top 3 shown -- 2 more suppressed):
-   + Jose Alvarado (PHI) [RP] [day 87] helps: K, S [xERA=3.92]
-   + Tyler Alexander (PHI) [RP] [day 87] helps: K, S [xERA=3.11]
-   + Adael Amador (COL) [2B] [day 16] helps: SB [xwOBA=0.268]
+   + Jose Alvarado (PHI) [RP] [day 88] helps: K, S [xERA=3.87]
+   + Tyler Alexander (PHI) [RP] [day 88] helps: K, S [xERA=3.11]
+   + Adael Amador (COL) [2B] [day 17] helps: SB [xwOBA=0.270]
 
   --- Drop Candidates ---
   MONITOR (1) -- borderline:
-   WATCH Kodai Senga (NYM) [SP] [day 8]
+   WATCH Kodai Senga (NYM) [SP] [day 9]
          Borderline: ERA 7.14, WHIP 1.60 => consider Andrew Alvarez
   Standings: Period 25: 37 roto pts - winning 4 cats, losing 6
   All categories (10): BA rank=4 | HR rank=7 | R rank=5 | RBI rank=6 | SB rank=6 | ERA rank=8 | K rank=4 | S rank=8 | W rank=2 | WHIP rank=3
   Weakest categories: R, RBI, SB, HR, ERA
 
   --- Closer Monkey News ---
-  [LEDGER] Closer Monkey’s Leverage Ledger | 9.11.2026
+  [LEDGER] Closer Monkey’s Leverage Ledger | 9.12.2026
     Closer Monkey - Instant emails for every closer change. Closer depth charts to keep you ahead.
-    On this 25th remembrance of 9/11, I remember what would have been my first active day of classes as a Physical Education teacher in Syracuse. However, the strike of the second tower occurred right before my students arrived for class. Parents were coming to pick up their kids as I had them sitting in the
-    https://closermonkey.com/2026/09/11/closer-monkeys-leverage-ledger-9-11-2026/
+    Friday’s slate resulted in seven wins (one accompanied by a blown save), eight saves, six losses, and eight blown saves by relievers. Here are the saves in condensed form: There have been 1,150 saves this season by 246 different pitchers. For perspective, this season has already set an MLB record for the
+    https://closermonkey.com/2026/09/12/closer-monkeys-leverage-ledger-9-12-2026/
 
   --- Injury Report (last 7 days) ---
-  🚑 Placed (25): Manuel Rodríguez (Tampa Bay Rays), Shane McClanahan (Tampa Bay Rays), Jesus Rodriguez (San Francisco Giants), Steven Okert (Houston Astros), Colin Holderman (Cleveland Guardians), Willi Castro (Colorado Rockies), Garrett Cleavinger (Tampa Bay Rays), J.T. Ginn (Athletics)
-  ✅ Activated (25): Andre Pallante (St. Louis Cardinals), Slade Cecconi (Cleveland Guardians), Tommy Troy (Arizona Diamondbacks), Kyle Teel (Chicago White Sox), Cole Sulser (Tampa Bay Rays), Jameson Taillon (Toronto Blue Jays), Konnor Griffin (Pittsburgh Pirates), Bobby Miller (Los Angeles Dodgers)
+  🚑 Placed (22): Willi Castro (Colorado Rockies), J.T. Ginn (Athletics), Garrett Cleavinger (Tampa Bay Rays), Trent Grisham (New York Yankees), Jameson Taillon (Toronto Blue Jays), Ceddanne Rafaela (Boston Red Sox), Mike Burrows (Houston Astros), Dalton Rushing (Los Angeles Dodgers)
+  ✅ Activated (18): Bobby Miller (Los Angeles Dodgers), Brant Hurter (Detroit Tigers), Graham Ashcraft (Cincinnati Reds), Robert Garcia (Texas Rangers), Nick Pivetta (San Diego Padres), Joe Ryan (Minnesota Twins), Chris Murphy (Chicago White Sox), Ke'Bryan Hayes (Cincinnati Reds)
 
   Trade deadline (2026-07-31) has passed for this league -- trade signals and trade board are suppressed for the rest of the season.
 
-  --- Daily Lineup (Fri Sep 11, 30 MLB teams playing) ---
-  SPs pitching today (2):
-    Robbie Ray (SD)
-    Shota Imanaga (CHC)
-  SPs on a team playing today, NOT yet confirmed starting (5):
+  --- Daily Lineup (Sat Sep 12, 30 MLB teams playing) ---
+  SPs pitching today: none confirmed yet
+  SPs on a team playing today, NOT yet confirmed starting (7):
+    Robbie Ray (SD) SD has a game -- probable starters not yet posted
     Casey Mize (SD) SD has a game -- probable starters not yet posted
     Logan Webb (SF) SF has a game -- probable starters not yet posted
     Kyle Harrison (MIL) MIL has a game -- probable starters not yet posted
     Kodai Senga (NYM) NYM has a game -- probable starters not yet posted
     Logan Henderson (MIL) MIL has a game -- probable starters not yet posted
+    Shota Imanaga (CHC) CHC has a game -- probable starters not yet posted
   On injured list - do not activate (4):
     🚑 JJ Wetherholt (STL) Currently on the MLB injured list -- ignore any start/activate recommendation
     🚑 Xavier Edwards (MIA) Currently on the MLB injured list -- ignore any start/activate recommendation
     🚑 Casey Schmitt (SF) Currently on the MLB injured list -- ignore any start/activate recommendation
     🚑 Jett Williams (MIL) Currently on the MLB injured list -- ignore any start/activate recommendation
-  Batters with games today: 14 (0 confirmed in posted lineup)
+  Batters with games today: 14 (2 confirmed in posted lineup)
 
   DRY_RUN=True -- no submissions made.
 
