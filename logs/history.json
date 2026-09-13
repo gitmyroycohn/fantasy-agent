@@ -3,13 +3,13 @@
     "waiver_adds": {
       "Luisangel Acuna": {
         "first": "2026-06-17",
-        "last": "2026-09-12",
-        "n": 57
+        "last": "2026-09-13",
+        "n": 58
       },
       "Nick Allen": {
         "first": "2026-06-17",
-        "last": "2026-09-12",
-        "n": 47
+        "last": "2026-09-13",
+        "n": 48
       },
       "Jose Alvarado": {
         "first": "2026-06-22",
@@ -23,8 +23,8 @@
       },
       "Bryan Abreu": {
         "first": "2026-06-27",
-        "last": "2026-09-04",
-        "n": 20
+        "last": "2026-09-13",
+        "n": 21
       },
       "Andrew Abbott": {
         "first": "2026-07-21",
@@ -48,8 +48,8 @@
       },
       "Jose Altuve": {
         "first": "2026-08-05",
-        "last": "2026-09-12",
-        "n": 28
+        "last": "2026-09-13",
+        "n": 29
       },
       "Tyler Alexander": {
         "first": "2026-08-22",
@@ -68,8 +68,8 @@
       },
       "Adael Amador": {
         "first": "2026-09-09",
-        "last": "2026-09-12",
-        "n": 4
+        "last": "2026-09-13",
+        "n": 5
       }
     },
     "streaming_sp": {
@@ -80,13 +80,13 @@
       },
       "Cade Smith": {
         "first": "2026-08-16",
-        "last": "2026-09-12",
-        "n": 28
+        "last": "2026-09-13",
+        "n": 29
       },
       "Didier Fuentes": {
         "first": "2026-08-17",
-        "last": "2026-09-12",
-        "n": 27
+        "last": "2026-09-13",
+        "n": 28
       },
       "Trevor Williams": {
         "first": "2026-08-17",
@@ -100,8 +100,8 @@
       },
       "Luis Medina": {
         "first": "2026-08-18",
-        "last": "2026-09-10",
-        "n": 15
+        "last": "2026-09-13",
+        "n": 16
       },
       "Spencer Miles": {
         "first": "2026-08-25",
@@ -115,8 +115,8 @@
       },
       "Hagen Smith": {
         "first": "2026-08-29",
-        "last": "2026-09-12",
-        "n": 15
+        "last": "2026-09-13",
+        "n": 16
       },
       "Alex McFarlane": {
         "first": "2026-09-02",
@@ -130,8 +130,8 @@
       },
       "Daniel Espino": {
         "first": "2026-09-10",
-        "last": "2026-09-12",
-        "n": 3
+        "last": "2026-09-13",
+        "n": 4
       },
       "Garrett Stallings": {
         "first": "2026-09-12",
@@ -142,14 +142,14 @@
     "drop_candidates": {
       "Thomas Saggese": {
         "first": "2026-09-06",
-        "last": "2026-09-12",
-        "n": 2,
+        "last": "2026-09-13",
+        "n": 3,
         "sev": "cut"
       },
       "Joshua Baez": {
         "first": "2026-09-06",
-        "last": "2026-09-12",
-        "n": 5,
+        "last": "2026-09-13",
+        "n": 6,
         "sev": "monitor"
       }
     },
@@ -163,13 +163,13 @@
     "waiver_adds": {
       "Jose Alvarado": {
         "first": "2026-06-17",
-        "last": "2026-09-12",
-        "n": 88
+        "last": "2026-09-13",
+        "n": 89
       },
       "Tyler Alexander": {
         "first": "2026-06-17",
-        "last": "2026-09-12",
-        "n": 88
+        "last": "2026-09-13",
+        "n": 89
       },
       "Kevin Alcantara": {
         "first": "2026-06-26",
@@ -178,8 +178,8 @@
       },
       "Adael Amador": {
         "first": "2026-08-16",
-        "last": "2026-09-12",
-        "n": 17
+        "last": "2026-09-13",
+        "n": 18
       },
       "Logan Allen": {
         "first": "2026-08-16",
@@ -188,8 +188,8 @@
       },
       "Zach Agnos": {
         "first": "2026-08-16",
-        "last": "2026-09-12",
-        "n": 24
+        "last": "2026-09-13",
+        "n": 25
       },
       "Andrew Alvarez": {
         "first": "2026-08-28",
@@ -198,16 +198,16 @@
       },
       "Philip Abner": {
         "first": "2026-09-08",
-        "last": "2026-09-12",
-        "n": 5
+        "last": "2026-09-13",
+        "n": 6
       }
     },
     "streaming_sp": {},
     "drop_candidates": {
       "Kodai Senga": {
         "first": "2026-09-04",
-        "last": "2026-09-12",
-        "n": 9,
+        "last": "2026-09-13",
+        "n": 10,
         "sev": "monitor"
       }
     },
