@@ -3,18 +3,18 @@
     "waiver_adds": {
       "Luisangel Acuna": {
         "first": "2026-06-17",
-        "last": "2026-09-13",
-        "n": 58
+        "last": "2026-09-14",
+        "n": 59
       },
       "Nick Allen": {
         "first": "2026-06-17",
-        "last": "2026-09-13",
-        "n": 48
+        "last": "2026-09-14",
+        "n": 49
       },
       "Jose Alvarado": {
         "first": "2026-06-22",
-        "last": "2026-08-24",
-        "n": 25
+        "last": "2026-09-14",
+        "n": 26
       },
       "Elvis Alvarado": {
         "first": "2026-06-24",
@@ -23,18 +23,13 @@
       },
       "Bryan Abreu": {
         "first": "2026-06-27",
-        "last": "2026-09-13",
-        "n": 21
+        "last": "2026-09-14",
+        "n": 22
       },
       "Andrew Abbott": {
         "first": "2026-07-21",
         "last": "2026-09-11",
         "n": 15
-      },
-      "Andrew Alvarez": {
-        "first": "2026-07-28",
-        "last": "2026-08-23",
-        "n": 6
       },
       "Blaze Alexander": {
         "first": "2026-08-04",
@@ -48,8 +43,8 @@
       },
       "Jose Altuve": {
         "first": "2026-08-05",
-        "last": "2026-09-13",
-        "n": 29
+        "last": "2026-09-14",
+        "n": 30
       },
       "Tyler Alexander": {
         "first": "2026-08-22",
@@ -80,13 +75,13 @@
       },
       "Cade Smith": {
         "first": "2026-08-16",
-        "last": "2026-09-13",
-        "n": 29
+        "last": "2026-09-14",
+        "n": 30
       },
       "Didier Fuentes": {
         "first": "2026-08-17",
-        "last": "2026-09-13",
-        "n": 28
+        "last": "2026-09-14",
+        "n": 29
       },
       "Trevor Williams": {
         "first": "2026-08-17",
@@ -115,8 +110,8 @@
       },
       "Hagen Smith": {
         "first": "2026-08-29",
-        "last": "2026-09-13",
-        "n": 16
+        "last": "2026-09-14",
+        "n": 17
       },
       "Alex McFarlane": {
         "first": "2026-09-02",
@@ -130,26 +125,37 @@
       },
       "Daniel Espino": {
         "first": "2026-09-10",
-        "last": "2026-09-13",
-        "n": 4
+        "last": "2026-09-14",
+        "n": 5
       },
       "Garrett Stallings": {
         "first": "2026-09-12",
         "last": "2026-09-12",
+        "n": 1
+      },
+      "Jackson Jobe": {
+        "first": "2026-09-14",
+        "last": "2026-09-14",
         "n": 1
       }
     },
     "drop_candidates": {
       "Thomas Saggese": {
         "first": "2026-09-06",
-        "last": "2026-09-13",
-        "n": 3,
+        "last": "2026-09-14",
+        "n": 4,
         "sev": "cut"
       },
       "Joshua Baez": {
         "first": "2026-09-06",
-        "last": "2026-09-13",
-        "n": 6,
+        "last": "2026-09-14",
+        "n": 7,
+        "sev": "monitor"
+      },
+      "Max Clark": {
+        "first": "2026-09-14",
+        "last": "2026-09-14",
+        "n": 1,
         "sev": "monitor"
       }
     },
@@ -163,13 +169,13 @@
     "waiver_adds": {
       "Jose Alvarado": {
         "first": "2026-06-17",
-        "last": "2026-09-13",
-        "n": 89
+        "last": "2026-09-14",
+        "n": 90
       },
       "Tyler Alexander": {
         "first": "2026-06-17",
-        "last": "2026-09-13",
-        "n": 89
+        "last": "2026-09-14",
+        "n": 90
       },
       "Kevin Alcantara": {
         "first": "2026-06-26",
@@ -188,26 +194,26 @@
       },
       "Zach Agnos": {
         "first": "2026-08-16",
-        "last": "2026-09-13",
-        "n": 25
+        "last": "2026-09-14",
+        "n": 26
       },
       "Andrew Alvarez": {
         "first": "2026-08-28",
-        "last": "2026-09-07",
-        "n": 8
+        "last": "2026-09-14",
+        "n": 9
       },
       "Philip Abner": {
         "first": "2026-09-08",
-        "last": "2026-09-13",
-        "n": 6
+        "last": "2026-09-14",
+        "n": 7
       }
     },
     "streaming_sp": {},
     "drop_candidates": {
       "Kodai Senga": {
         "first": "2026-09-04",
-        "last": "2026-09-13",
-        "n": 10,
+        "last": "2026-09-14",
+        "n": 11,
         "sev": "monitor"
       }
     },
