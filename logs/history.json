@@ -3,53 +3,38 @@
     "waiver_adds": {
       "Luisangel Acuna": {
         "first": "2026-06-17",
-        "last": "2026-09-02",
-        "n": 48
+        "last": "2026-09-16",
+        "n": 61
       },
       "Nick Allen": {
         "first": "2026-06-17",
-        "last": "2026-09-02",
-        "n": 38
+        "last": "2026-09-16",
+        "n": 51
       },
       "Jose Alvarado": {
         "first": "2026-06-22",
-        "last": "2026-08-24",
-        "n": 25
+        "last": "2026-09-14",
+        "n": 26
       },
       "Elvis Alvarado": {
         "first": "2026-06-24",
-        "last": "2026-08-24",
-        "n": 21
+        "last": "2026-09-08",
+        "n": 22
       },
       "Bryan Abreu": {
         "first": "2026-06-27",
-        "last": "2026-09-02",
-        "n": 18
-      },
-      "Keegan Akin": {
-        "first": "2026-07-21",
-        "last": "2026-08-14",
-        "n": 19
+        "last": "2026-09-14",
+        "n": 22
       },
       "Andrew Abbott": {
         "first": "2026-07-21",
-        "last": "2026-08-31",
-        "n": 14
-      },
-      "Andrew Alvarez": {
-        "first": "2026-07-28",
-        "last": "2026-08-23",
-        "n": 6
-      },
-      "Franco Aleman": {
-        "first": "2026-07-29",
-        "last": "2026-08-13",
-        "n": 8
+        "last": "2026-09-16",
+        "n": 17
       },
       "Blaze Alexander": {
         "first": "2026-08-04",
-        "last": "2026-09-02",
-        "n": 17
+        "last": "2026-09-09",
+        "n": 23
       },
       "Kevin Alcantara": {
         "first": "2026-08-04",
@@ -58,110 +43,60 @@
       },
       "Jose Altuve": {
         "first": "2026-08-05",
-        "last": "2026-09-02",
-        "n": 19
-      },
-      "Adael Amador": {
-        "first": "2026-08-16",
-        "last": "2026-08-16",
-        "n": 1
-      },
-      "Travis Adams": {
-        "first": "2026-08-19",
-        "last": "2026-08-19",
-        "n": 1
-      },
-      "Tyler Alexander": {
-        "first": "2026-08-22",
-        "last": "2026-08-24",
-        "n": 2
+        "last": "2026-09-16",
+        "n": 32
       },
       "Logan Allen": {
         "first": "2026-08-26",
         "last": "2026-08-29",
         "n": 4
+      },
+      "Garrett Acton": {
+        "first": "2026-09-05",
+        "last": "2026-09-06",
+        "n": 2
+      },
+      "Adael Amador": {
+        "first": "2026-09-09",
+        "last": "2026-09-13",
+        "n": 5
+      },
+      "Mason Adams": {
+        "first": "2026-09-15",
+        "last": "2026-09-16",
+        "n": 2
       }
     },
     "streaming_sp": {
-      "Mick Abel": {
-        "first": "2026-06-25",
-        "last": "2026-08-14",
-        "n": 43
-      },
-      "Andrew Alvarez": {
-        "first": "2026-08-04",
-        "last": "2026-08-14",
-        "n": 11
-      },
-      "Hunter Dobbins": {
-        "first": "2026-08-13",
-        "last": "2026-08-16",
-        "n": 4
-      },
-      "Gabriel Hughes": {
-        "first": "2026-08-13",
-        "last": "2026-08-15",
-        "n": 3
-      },
-      "Dean Kremer": {
-        "first": "2026-08-13",
-        "last": "2026-08-15",
-        "n": 2
-      },
-      "Cody Bradford": {
-        "first": "2026-08-14",
-        "last": "2026-08-15",
-        "n": 2
-      },
-      "Jake Irvin": {
-        "first": "2026-08-15",
-        "last": "2026-08-15",
-        "n": 1
-      },
-      "Patrick Sandoval": {
-        "first": "2026-08-16",
-        "last": "2026-08-16",
-        "n": 1
-      },
-      "Blade Tidwell": {
-        "first": "2026-08-16",
-        "last": "2026-08-16",
-        "n": 1
-      },
       "Gerardo Carrillo": {
         "first": "2026-08-16",
-        "last": "2026-09-02",
-        "n": 12
+        "last": "2026-09-07",
+        "n": 15
       },
       "Cade Smith": {
         "first": "2026-08-16",
-        "last": "2026-09-02",
-        "n": 18
+        "last": "2026-09-16",
+        "n": 32
       },
       "Didier Fuentes": {
         "first": "2026-08-17",
-        "last": "2026-09-02",
-        "n": 17
+        "last": "2026-09-14",
+        "n": 29
       },
       "Trevor Williams": {
         "first": "2026-08-17",
-        "last": "2026-09-01",
-        "n": 9
+        "last": "2026-09-09",
+        "n": 11
       },
       "Tyler Wells": {
         "first": "2026-08-17",
-        "last": "2026-08-27",
-        "n": 10
+        "last": "2026-09-11",
+        "n": 12
       },
       "Luis Medina": {
         "first": "2026-08-18",
-        "last": "2026-08-31",
-        "n": 12
-      },
-      "Spencer Miles": {
-        "first": "2026-08-25",
-        "last": "2026-08-25",
-        "n": 1
+        "last": "2026-09-13",
+        "n": 16
       },
       "Victor Mederos": {
         "first": "2026-08-27",
@@ -170,86 +105,114 @@
       },
       "Hagen Smith": {
         "first": "2026-08-29",
-        "last": "2026-09-02",
-        "n": 5
+        "last": "2026-09-16",
+        "n": 19
       },
       "Alex McFarlane": {
         "first": "2026-09-02",
-        "last": "2026-09-02",
-        "n": 1
+        "last": "2026-09-06",
+        "n": 5
+      },
+      "Ryan Gusto": {
+        "first": "2026-09-04",
+        "last": "2026-09-05",
+        "n": 2
+      },
+      "Daniel Espino": {
+        "first": "2026-09-10",
+        "last": "2026-09-16",
+        "n": 7
+      },
+      "Garrett Stallings": {
+        "first": "2026-09-12",
+        "last": "2026-09-16",
+        "n": 3
+      },
+      "Jackson Jobe": {
+        "first": "2026-09-14",
+        "last": "2026-09-16",
+        "n": 3
       }
     },
-    "drop_candidates": {},
-    "recently_dropped": {}
+    "drop_candidates": {
+      "Thomas Saggese": {
+        "first": "2026-09-06",
+        "last": "2026-09-14",
+        "n": 4,
+        "sev": "cut"
+      },
+      "Joshua Baez": {
+        "first": "2026-09-06",
+        "last": "2026-09-14",
+        "n": 7,
+        "sev": "monitor"
+      },
+      "Max Clark": {
+        "first": "2026-09-14",
+        "last": "2026-09-14",
+        "n": 1,
+        "sev": "monitor"
+      }
+    },
+    "recently_dropped": {
+      "Thomas Saggese": {
+        "flagged": "2026-09-12"
+      }
+    }
   },
   "baberuthdivingclubformen": {
     "waiver_adds": {
       "Jose Alvarado": {
         "first": "2026-06-17",
-        "last": "2026-09-02",
-        "n": 78
+        "last": "2026-09-16",
+        "n": 92
       },
       "Tyler Alexander": {
         "first": "2026-06-17",
-        "last": "2026-09-02",
-        "n": 78
+        "last": "2026-09-16",
+        "n": 92
       },
       "Kevin Alcantara": {
         "first": "2026-06-26",
         "last": "2026-08-27",
         "n": 61
       },
-      "Pablo Abreu": {
-        "first": "2026-06-27",
-        "last": "2026-08-15",
-        "n": 50
-      },
-      "Daison Acosta": {
-        "first": "2026-08-07",
-        "last": "2026-08-15",
-        "n": 9
-      },
       "Adael Amador": {
         "first": "2026-08-16",
-        "last": "2026-09-02",
-        "n": 7
+        "last": "2026-09-13",
+        "n": 18
       },
       "Logan Allen": {
         "first": "2026-08-16",
-        "last": "2026-09-02",
-        "n": 18
+        "last": "2026-09-04",
+        "n": 20
       },
       "Zach Agnos": {
         "first": "2026-08-16",
-        "last": "2026-09-02",
-        "n": 14
+        "last": "2026-09-16",
+        "n": 28
       },
       "Andrew Alvarez": {
         "first": "2026-08-28",
-        "last": "2026-09-01",
-        "n": 5
+        "last": "2026-09-16",
+        "n": 11
+      },
+      "Philip Abner": {
+        "first": "2026-09-08",
+        "last": "2026-09-16",
+        "n": 9
       }
     },
     "streaming_sp": {},
     "drop_candidates": {
-      "Max Muncy": {
-        "first": "2026-08-16",
-        "last": "2026-08-19",
-        "n": 4,
-        "sev": "cut"
-      },
-      "Daniel Duarte": {
-        "first": "2026-08-17",
-        "last": "2026-08-17",
-        "n": 1,
+      "Kodai Senga": {
+        "first": "2026-09-04",
+        "last": "2026-09-16",
+        "n": 13,
         "sev": "monitor"
       }
     },
-    "recently_dropped": {
-      "Max Muncy": {
-        "flagged": "2026-08-19"
-      }
-    }
+    "recently_dropped": {}
   },
   "sfflf": {
     "waiver_adds": {},
