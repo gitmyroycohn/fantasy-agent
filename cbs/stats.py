@@ -197,6 +197,93 @@ def _find_team(teams: list, team_id: str) -> dict | None:
     return None
 
 
+# ---------------------------------------------------------------------------
+# Football matchup results
+# ---------------------------------------------------------------------------
+#
+# Added for the football lineup-data enhancement order (filed 2026-09-16),
+# acceptance criterion 1. Football on CBS is always straight H2H points
+# (never roto), so this only ever handles that one shape -- unlike
+# fetch_matchup_stats() above, which branches on system for baseball.
+# Confirmed live for football 2026-09-17 (football_scoring_live_probe.py):
+# same league/scoring/live endpoint as baseball, just called with
+# sport="football" (cbs/auth.py::CBSAuth.api_get() is fully sport-generic).
+#
+# KNOWN LIMITATION (not yet solved): this endpoint only ever returns the
+# CURRENT scoring period -- no confirmed parameter for a past week's final
+# result. See agent/football_matchups.py, which is the caller that turns
+# that gap into an honest "not available for that week" response instead
+# of guessing.
+
+class CBSFootballMatchupError(CBSAPIError):
+    """league/scoring/live for a football league failed outright, or
+    returned a shape this parser didn't recognize (e.g. "my team" missing
+    from the teams list)."""
+
+
+def fetch_football_matchup(auth: CBSAuth, league_id: str) -> dict | None:
+    """Fetch the CURRENT period's matchup result for one football league.
+
+    Returns None when there's no current matchup (bye week) -- not an
+    error, just nothing to report. Otherwise:
+
+        {"period": str, "my_team_name": str, "my_points": float,
+         "opponent": str, "opponent_id": str, "opp_points": float,
+         "record": {"w": int, "l": int, "t": int}, "home_away": str}
+
+    Raises CBSFootballMatchupError if the fetch itself fails or "my team"
+    can't be found in the response (same failure shape as
+    fetch_matchup_stats()'s CBSAPIError above)."""
+    try:
+        data = auth.api_get("league/scoring/live", league_id, sport="football")
+    except CBSAPIError as e:
+        raise CBSFootballMatchupError(f"league/scoring/live failed for league {league_id}: {e}") from e
+
+    live = (data.get("body") or {}).get("live_scoring") or {}
+    period = str(live.get("period", ""))
+    my_team_id = str(live.get("my_team_id", ""))
+    teams = live.get("teams", [])
+
+    my_team = _find_team(teams, my_team_id)
+    if my_team is None:
+        raise CBSFootballMatchupError(
+            f"My team (id={my_team_id}) not found in football live_scoring for league {league_id}")
+
+    matchups = my_team.get("matchups") or []
+    if not matchups:
+        return None
+
+    m = matchups[0]
+    return {
+        "period": period,
+        "my_team_name": my_team.get("name", ""),
+        "my_points": _safe_float(m.get("pts")),
+        "opponent": m.get("opponent_team", ""),
+        "opponent_id": str(m.get("opponent_team_id", "")),
+        "opp_points": _safe_float(m.get("opponent_pts")),
+        "record": {
+            "w": _safe_int(my_team.get("w")),
+            "l": _safe_int(my_team.get("l")),
+            "t": _safe_int(my_team.get("t")),
+        },
+        "home_away": m.get("home_away", ""),
+    }
+
+
+def _safe_float(v) -> float:
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _safe_int(v) -> int:
+    try:
+        return int(v)
+    except (TypeError, ValueError):
+        return 0
+
+
 def _parse_stats_string(s: str) -> dict[str, float]:
     """Parse a CBS stats string like '12 HR, 3.375 ERA, 0.285 AVG ...'
     into {label: float_value}.  Skips labels in _SKIP_LABELS."""

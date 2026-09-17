@@ -174,6 +174,41 @@ class FantasyProsClient:
         data = self._get("/nfl/news", params)
         return data.get("items", [])
 
+    def nfl_player_points(self, week: int = None,
+                          season: int = _CURRENT_SEASON,
+                          scoring: str = "PPR") -> list[dict]:
+        """Confirmed live 2026-09-17 (fp_nfl_stats_probe.py). IMPORTANT:
+        this is POINTS-ONLY -- {player_id, player_name, position_id,
+        team_id, games, points, average, weeks: {"<week>": pts}} -- not
+        raw per-category stats, and the points are scored under
+        FantasyPros' own generic scoring config (the `scoring` param),
+        which does not exactly match any of Christopher's 3 leagues'
+        real rules (f_league's tiered non-PPR formula, hard_chargers'
+        exact FG tiers, east_coast's stricter penalties). NOT used for
+        re-scoring real weekly performance -- see
+        sports/football/actuals.py, which uses Sleeper's raw stats + the
+        exact score_player() engine for all 3 leagues instead, and its
+        module docstring for why."""
+        params = {"position": "ALL", "scoring": scoring}
+        if week is not None:
+            params["week"] = week
+        data = self._get(f"/nfl/{season}/player-points", params)
+        return data.get("players", [])
+
+    def nfl_injuries(self, week: int, season: int = _CURRENT_SEASON) -> list[dict]:
+        """Confirmed live 2026-09-17. IMPORTANT: the working path is
+        /nfl/injuries with week/season as QUERY params -- /nfl/{season}/
+        injuries (season in the path, matching the shape of the other
+        nfl_* methods above) returns HTTP 403 "Missing Authentication
+        Token", confirmed NOT to work. Do not "fix" this to look
+        consistent with nfl_projections()/nfl_consensus_rankings() above;
+        that would break it. Confirmed response fields per injury: name,
+        status, status_short, injury_type, comment,
+        probability_of_playing, practice_1/practice_2/practice_3,
+        team_practice_N_submitted, injury_update_date."""
+        data = self._get("/nfl/injuries", {"week": week, "season": season})
+        return data.get("injuries", [])
+
 
 # ---- Enrichment helper -----------------------------------------------
 

@@ -15,6 +15,9 @@ Tools:
   waiver_recommendations    -- top waiver wire adds [baseball only]
   football_waiver_recommendations -- top waiver wire adds, scoring-format-aware [football only]
   roster_value_signals      -- buy-low / sell-high signals [baseball only]
+  get_matchup_results       -- live score/result for your current matchup [football only]
+  get_injury_report         -- injury/practice status for your rostered players [football only]
+  football_start_sit        -- ranked start/sit recommendation per contested slot [football only]
 
 Football support (added 2026-08-01) is intentionally partial -- see
 agent/football_decisions.py and sports/football/. Tools marked
@@ -79,6 +82,10 @@ from sports.football.roster_rules import open_slots
 from sports.football.waivers import rank_waiver_recommendations, UPGRADE_MIN_POINT_EDGE
 from data.models import Team
 from mlb.clock import now_et, today_et
+from agent.football_matchups import get_matchup_result as _get_matchup_result
+from agent.football_injuries import get_injury_report as _get_injury_report
+from agent.football_start_sit import football_start_sit as _football_start_sit
+from sleeper.client import get_state as _sleeper_state, SleeperUnavailable as _SleeperUnavailable
 
 logging.basicConfig(level=logging.WARNING,
                     format="%(levelname)s %(name)s: %(message)s")
@@ -128,6 +135,22 @@ def _get_fp():
 
 def _get_sav():
     return SavantClient()
+
+def _current_nfl_week() -> tuple[int, int]:
+    """(season, week) via Sleeper's /state/nfl -- the same connector
+    sports/football/actuals.py uses for real stats, so "what week is it"
+    and "what week's stats did we score" always agree. Falls back to a
+    hardcoded (2026, 2) with a logged warning if Sleeper itself is
+    unreachable (this fallback only affects which week is guessed when
+    the caller didn't ask for a specific one; a real Sleeper outage still
+    surfaces honestly wherever actual stats/injuries are fetched)."""
+    try:
+        state = _sleeper_state()
+        return int(state["season"]), int(state["week"])
+    except Exception as e:
+        logger.warning("Could not resolve current NFL week via Sleeper (%s) -- "
+                       "falling back to a hardcoded season/week", e)
+        return 2026, 2
 
 
 # Most tools here (waiver_recommendations, roster_value_signals,
@@ -1544,10 +1567,12 @@ def daily_decisions(league_id: str = "all") -> str:
     treat f_league keeper output here as a ranked recommendation, not what
     will actually be kept); hard_chargers isn't a keeper league at all).
     This tool only covers YOUR OWN roster -- use get_league_keepers for
-    keeper guidance across every manager in the league. There is no
-    performance-based scoring for football yet otherwise (no live NFL stat
-    feed to calibrate against) -- don't expect start/sit advice or ranked
-    waiver adds the way baseball gets them.
+    keeper guidance across every manager in the league. For ranked
+    start/sit advice, live matchup results, and an injury report -- all
+    added 2026-09-17 once a live NFL stat feed (Sleeper) and injury feed
+    (FantasyPros) were sourced -- use football_start_sit,
+    get_matchup_results, and get_injury_report instead; this tool doesn't
+    fold those in.
 
     Args:
         league_id: League id from config, or "all" for all leagues (baseball
@@ -1591,6 +1616,260 @@ def daily_decisions(league_id: str = "all") -> str:
     except Exception as e:
         logger.exception("daily_decisions failed")
         return f"Error running daily decisions: {e}"
+
+
+# ---------------------------------------------------------------------------
+# Tool: get_matchup_results
+# ---------------------------------------------------------------------------
+
+@mcp.tool()
+def get_matchup_results(league_id: str = "all", week: int | None = None) -> str:
+    """
+    Live score/result for your current matchup in a football league --
+    the football lineup-data enhancement order's (filed 2026-09-16)
+    acceptance criterion 1: "'how did my team do' returns an actual
+    score/result, not just a roster-legality report."
+
+    Data source: CBS's own league/scoring/live endpoint (the same one
+    baseball already uses), confirmed live for football 2026-09-17. See
+    agent/football_matchups.py for the full data-source discussion.
+
+    KNOWN LIMITATION: CBS's endpoint only ever exposes the CURRENT
+    scoring period -- there's no confirmed way to pull a PAST week's
+    final result through this tool yet. Passing `week` compares it
+    against CBS's own reported current period; a mismatch returns an
+    explicit "not available for that week" message rather than a wrong
+    or guessed score.
+
+    Args:
+        league_id: "f_league", "hard_chargers", "east_coast", or "all".
+        week: Optional -- if given and it doesn't match CBS's current
+              period, this tool says so explicitly instead of guessing.
+    """
+    try:
+        auth    = _get_auth()
+        leagues = _resolve_leagues(league_id, sports={"football"})
+        if not leagues:
+            return f"No football league found matching '{league_id}'."
+
+        out = []
+        for league_cfg, sport in leagues:
+            lid  = league_cfg["cbs_league_id"]
+            name = league_cfg.get("name", lid)
+            out.append(f"\n=== {name} -- Matchup Result ===")
+
+            result = _get_matchup_result(auth, lid, week=week)
+            if not result.get("available"):
+                out.append(f"  Unavailable: {result.get('note')}")
+                continue
+
+            outcome = ("WIN" if result["my_points"] > result["opp_points"]
+                      else "LOSS" if result["my_points"] < result["opp_points"]
+                      else "TIE")
+            ha = f" ({result['home_away']})" if result.get("home_away") else ""
+            out.append(
+                f"  Period {result['period']} -- {outcome}: "
+                f"{result['my_points']:.1f} - {result['opp_points']:.1f} "
+                f"vs {result['opponent']}{ha}")
+            rec = result.get("record") or {}
+            if rec:
+                out.append(f"  Season record: {rec.get('w', 0)}-{rec.get('l', 0)}-{rec.get('t', 0)}")
+
+        return _respond("\n".join(out))
+
+    except CBSAuthError as e:
+        return f"CBS auth error: {e}"
+    except Exception as e:
+        logger.exception("get_matchup_results failed")
+        return f"Error fetching matchup results: {e}"
+
+
+# ---------------------------------------------------------------------------
+# Tool: get_injury_report
+# ---------------------------------------------------------------------------
+
+@mcp.tool()
+def get_injury_report(league_id: str = "all") -> str:
+    """
+    Injury/practice status for your rostered players in a football league,
+    from trusted in-tool feeds (FantasyPros + Sleeper) -- the football
+    lineup-data enhancement order's (filed 2026-09-16) acceptance
+    criterion 3: "'is anyone hurt' comes from a real source, not a manual
+    web search," flagged clearly when sources disagree.
+
+    Cross-checks two independent sources: FantasyPros' /nfl/injuries
+    (named injury type, 3-day practice history, probability of playing)
+    and Sleeper's own injury_status field. A player is only shown when at
+    least one source reports a non-empty status -- this never invents a
+    "healthy" or "clean" status for anyone. When both sources report but
+    disagree, that's flagged explicitly (⚠️ SOURCES DISAGREE) rather than
+    silently picking one.
+
+    Degrades honestly: if one feed is down/unconfigured, the report still
+    runs on the other and says so in a note. Only if BOTH feeds are
+    unavailable does this report "unavailable" outright instead of a
+    partial (or fabricated) report. See agent/football_injuries.py.
+
+    Args:
+        league_id: "f_league", "hard_chargers", "east_coast", or "all".
+    """
+    try:
+        auth    = _get_auth()
+        leagues = _resolve_leagues(league_id, sports={"football"})
+        if not leagues:
+            return f"No football league found matching '{league_id}'."
+
+        season, week = _current_nfl_week()
+
+        out = []
+        for league_cfg, sport in leagues:
+            lid  = league_cfg["cbs_league_id"]
+            tid  = str(league_cfg["cbs_team_id"])
+            name = league_cfg.get("name", lid)
+            out.append(f"\n=== {name} -- Injury Report (season {season}, week {week}) ===")
+
+            try:
+                roster = cbs_get_roster(auth, lid, tid, sport)
+            except Exception as e:
+                out.append(f"  Roster unavailable: {e}")
+                continue
+
+            report = _get_injury_report(roster, _fp_client, season, week)
+            if not report.get("available"):
+                out.append(f"  Unavailable: {report.get('note')}")
+                continue
+            if report.get("note"):
+                out.append(f"  ⚠️  {report['note']}")
+
+            if not report["players"]:
+                out.append("  No flagged injuries on your roster.")
+                continue
+
+            for p in report["players"]:
+                fp_part = ""
+                if p["fp_status"]:
+                    practice = "/".join(x for x in (p["fp_practice"] or []) if x) or "n/a"
+                    fp_part = f"FantasyPros={p['fp_status']}"
+                    if p["fp_injury_type"]:
+                        fp_part += f" ({p['fp_injury_type']}, practice={practice})"
+                    if p["fp_probability_of_playing"]:
+                        fp_part += f"  prob={p['fp_probability_of_playing']}"
+                sleeper_part = f"Sleeper={p['sleeper_status']}" if p["sleeper_status"] else ""
+                pieces = [x for x in (fp_part, sleeper_part) if x]
+                flag = "  ⚠️ SOURCES DISAGREE" if p["disagreement"] else ""
+                out.append(f"  {p['name']} ({p['position']}): {'  |  '.join(pieces)}{flag}")
+
+        return _respond("\n".join(out))
+
+    except CBSAuthError as e:
+        return f"CBS auth error: {e}"
+    except Exception as e:
+        logger.exception("get_injury_report failed")
+        return f"Error fetching injury report: {e}"
+
+
+# ---------------------------------------------------------------------------
+# Tool: football_start_sit
+# ---------------------------------------------------------------------------
+
+@mcp.tool()
+def football_start_sit(league_id: str = "all", position: str | None = None) -> str:
+    """
+    Ranked start/sit recommendation for every OPEN/CONTESTED roster slot
+    in a football league -- the football lineup-data enhancement order's
+    (filed 2026-09-16) acceptance criterion 2: a ranked recommendation,
+    not just a legality check.
+
+    Ranks candidates by REAL actual fantasy points from the last
+    COMPLETED week, scored exactly under that league's own rules (Sleeper
+    raw stats + sports/football/scoring.py's real per-league formulas --
+    not FantasyPros' generic pre-scored total, which doesn't match
+    hard_chargers'/east_coast's exact rules -- see sports/football/
+    actuals.py's module docstring), alongside recent snap share and
+    current injury status. A slot only appears when it's actually
+    contested (more eligible players than the slot needs) -- nothing to
+    rank otherwise.
+
+    NOT YET DONE (real, open gaps -- see agent/football_start_sit.py's
+    module docstring): opponent-matchup quality is not factored in (no
+    source for it has been probed yet); this ranks by last week's
+    real result, not a projection for the upcoming week; this is not a
+    full lineup optimizer.
+
+    Args:
+        league_id: "f_league", "hard_chargers", "east_coast", or "all".
+        position:  Optional filter, e.g. "RB" -- only shows slots whose
+                   eligible positions include it.
+    """
+    try:
+        auth    = _get_auth()
+        leagues = _resolve_leagues(league_id, sports={"football"})
+        if not leagues:
+            return f"No football league found matching '{league_id}'."
+
+        season, week = _current_nfl_week()
+        completed_week = max(week - 1, 1)
+
+        out = []
+        for league_cfg, sport in leagues:
+            lid            = league_cfg["cbs_league_id"]
+            tid            = str(league_cfg["cbs_team_id"])
+            name           = league_cfg.get("name", lid)
+            internal_id    = league_cfg.get("id", lid)
+            scoring_profile = league_cfg.get("scoring_profile", "standard_ppr")
+
+            header = [name, f"week {completed_week} actuals"]
+            if position:
+                header.append(f"position={position.upper()}")
+            out.append(f"\n=== {' | '.join(header)} -- Start/Sit ===")
+
+            try:
+                roster = cbs_get_roster(auth, lid, tid, sport)
+            except Exception as e:
+                out.append(f"  Roster unavailable: {e}")
+                continue
+
+            injury_by_name = {}
+            try:
+                inj = _get_injury_report(roster, _fp_client, season, week)
+                if inj.get("available"):
+                    injury_by_name = {
+                        p["name"].strip().lower(): (p["fp_status"] or p["sleeper_status"])
+                        for p in inj["players"]
+                    }
+            except Exception as e:
+                logger.warning("football_start_sit: injury lookup failed for %s: %s", lid, e)
+
+            result = _football_start_sit(
+                roster, internal_id, scoring_profile, season, completed_week,
+                injury_by_name=injury_by_name, position=position)
+
+            if not result.get("available"):
+                out.append(f"  Unavailable: {result.get('note')}")
+                continue
+
+            if not result["by_slot"]:
+                out.append("  No contested slots right now (every eligible position has exactly "
+                           "enough players to fill it, or your `position` filter matched no slot).")
+                continue
+
+            for slot_label, entries in result["by_slot"].items():
+                out.append(f"  {slot_label}:")
+                for e in entries:
+                    pts = f"{e['points']:.1f} pts" if e["points"] is not None else "no data this week"
+                    snap = f"  snap%={e['snap_share']*100:.0f}" if e["snap_share"] is not None else ""
+                    inj = f"  ⚠️ {e['injury_status']}" if e["injury_status"] else ""
+                    starter_tag = "  [current starter]" if e["is_current_starter"] else ""
+                    match_tag = "" if e["sleeper_matched"] else "  (no Sleeper match)"
+                    out.append(f"    {e['name']}: {pts}{snap}{inj}{starter_tag}{match_tag}")
+
+        return _respond("\n".join(out))
+
+    except CBSAuthError as e:
+        return f"CBS auth error: {e}"
+    except Exception as e:
+        logger.exception("football_start_sit failed")
+        return f"Error generating start/sit recommendations: {e}"
 
 
 # ---------------------------------------------------------------------------
