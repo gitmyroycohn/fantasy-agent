@@ -35,10 +35,12 @@ class _FakeAuth:
 @pytest.fixture(autouse=True)
 def _clear_cache_and_sleep(monkeypatch):
     players_cache._cache.clear()
+    players_cache._failures.clear()
     # Don't actually sleep through the retry backoff in tests.
     monkeypatch.setattr(players_cache.time, "sleep", lambda _s: None)
     yield
     players_cache._cache.clear()
+    players_cache._failures.clear()
 
 
 def _resp(players):
@@ -116,3 +118,68 @@ def test_explicit_cbs_error_is_not_retried():
     with pytest.raises(CBSAPIError):
         get_players_list(auth, "sfflf", "football")
     assert len(auth.calls) == 1  # a real API error isn't a connectivity problem
+
+
+def _err503():
+    return CBSAPIError("players/list: HTTP 503, non-JSON response: ", http_status=503)
+
+
+def test_503_is_retried_then_raised_as_connector_unavailable():
+    # A gateway 503 is CBS being unhealthy, not CBS rejecting the request --
+    # it must surface as CBSConnectorUnavailable so waivers.py skips the
+    # unvalidated HTML scrape and football_free_agents.py uses its FP fallback.
+    auth = _FakeAuth([requests.exceptions.ReadTimeout("t"),
+                      requests.exceptions.ReadTimeout("t"), _err503()])
+    with pytest.raises(CBSConnectorUnavailable):
+        get_players_list(auth, "sfflf", "football")
+    assert len(auth.calls) == 3
+
+
+def test_4xx_json_error_still_not_retried():
+    auth = _FakeAuth([CBSAPIError("API status 403", http_status=403)])
+    with pytest.raises(CBSAPIError) as ei:
+        get_players_list(auth, "sfflf", "football")
+    assert not isinstance(ei.value, CBSConnectorUnavailable)
+    assert len(auth.calls) == 1
+
+
+def test_negative_cache_fails_fast_after_total_failure():
+    auth = _FakeAuth([_err503()] * 3)
+    with pytest.raises(CBSConnectorUnavailable):
+        get_players_list(auth, "sfflf", "football")
+    with pytest.raises(CBSConnectorUnavailable):
+        get_players_list(auth, "sfflf", "football")
+    assert len(auth.calls) == 3  # second call made no CBS requests
+
+
+def test_negative_cache_expires_and_force_refresh_bypasses_it():
+    auth = _FakeAuth([_err503()] * 3 + [_resp([{"id": "1"}])])
+    with pytest.raises(CBSConnectorUnavailable):
+        get_players_list(auth, "sfflf", "football")
+    key = ("sfflf", "football")
+    failed_at, msg = players_cache._failures[key]
+    players_cache._failures[key] = (failed_at - 10_000, msg)
+    assert get_players_list(auth, "sfflf", "football") == [{"id": "1"}]
+    assert key not in players_cache._failures  # cleared by the success
+
+
+def test_allow_stale_serves_expired_cache_only_when_opted_in():
+    auth = _FakeAuth([_resp([{"id": "1"}])] + [_err503()] * 6)
+    get_players_list(auth, "sfflf", "football", ttl_seconds=100)
+    key = ("sfflf", "football")
+    cached_at, raw = players_cache._cache[key]
+    players_cache._cache[key] = (cached_at - 1000, raw)  # expired, not ancient
+    with pytest.raises(CBSConnectorUnavailable):  # waivers-style caller
+        get_players_list(auth, "sfflf", "football", ttl_seconds=100)
+    assert get_players_list(auth, "sfflf", "football", ttl_seconds=100,
+                            allow_stale=True) == [{"id": "1"}]  # eligibility-style
+
+
+def test_stale_beyond_max_age_is_not_served():
+    auth = _FakeAuth([_resp([{"id": "1"}])] + [_err503()] * 3)
+    get_players_list(auth, "sfflf", "football", ttl_seconds=100)
+    key = ("sfflf", "football")
+    cached_at, raw = players_cache._cache[key]
+    players_cache._cache[key] = (cached_at - players_cache.STALE_MAX_SECONDS - 60, raw)
+    with pytest.raises(CBSConnectorUnavailable):
+        get_players_list(auth, "sfflf", "football", ttl_seconds=100, allow_stale=True)

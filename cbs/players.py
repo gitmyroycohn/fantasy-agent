@@ -63,7 +63,7 @@ def fetch_position_eligibility_index(auth: CBSAuth, league_id: str,
         return _cache[key]
 
     try:
-        raw = get_players_list(auth, league_id, sport)
+        raw = get_players_list(auth, league_id, sport, allow_stale=True)
     except CBSAPIError as e:
         logger.warning(
             "fetch_position_eligibility_index: players/list failed for %s (%s) -- "

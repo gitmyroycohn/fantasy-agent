@@ -50,6 +50,16 @@ DEFAULT_TTL_SECONDS = 20 * 60
 _RETRY_TIMEOUTS_SECONDS = (15, 25, 35)
 _RETRY_BACKOFF_SECONDS  = (0, 2, 5)
 
+# After a total failure, fail fast for this long instead of re-running the
+# whole ~65s retry ladder for every caller (eligibility index, waivers,
+# repeated tool calls). Short enough to notice CBS recovering.
+NEGATIVE_TTL_SECONDS = 5 * 60
+
+# Opt-in ceiling for serving an expired cache entry when CBS is down
+# (allow_stale=True). Player eligibility barely changes in-season; ownership
+# does, so waiver lookups must NOT opt in.
+STALE_MAX_SECONDS = 6 * 60 * 60
+
 
 class CBSConnectorUnavailable(CBSAPIError):
     """players/list did not answer after every retry -- CBS's endpoint may
@@ -63,10 +73,24 @@ class CBSConnectorUnavailable(CBSAPIError):
 # (league_id, sport) -> (fetched_at_monotonic, raw player records)
 _cache: dict[tuple[str, str], tuple[float, list[dict]]] = {}
 
+# (league_id, sport) -> (failed_at_monotonic, error message) for the last
+# total failure. Cleared on the next success.
+_failures: dict[tuple[str, str], tuple[float, str]] = {}
+
+
+def _is_upstream_failure(e: CBSAPIError) -> bool:
+    """CBS (or its gateway) is unhealthy: 5xx, or a non-JSON body with no
+    parseable status. Retryable, and must surface as CBSConnectorUnavailable
+    so callers fall back honestly (FantasyPros pool) instead of scraping the
+    unvalidated HTML page."""
+    status = getattr(e, "http_status", None)
+    return status is not None and status >= 500
+
 
 def get_players_list(auth: CBSAuth, league_id: str, sport: str = "baseball",
                      ttl_seconds: float = DEFAULT_TTL_SECONDS,
-                     force_refresh: bool = False) -> list[dict]:
+                     force_refresh: bool = False,
+                     allow_stale: bool = False) -> list[dict]:
     """Return the raw player records from players/list for (league_id, sport).
 
     Fetches with retry/backoff and an escalating timeout ceiling, and caches
@@ -89,6 +113,18 @@ def get_players_list(auth: CBSAuth, league_id: str, sport: str = "baseball",
                         league_id, sport, age, len(raw))
             return raw
 
+    if not force_refresh and key in _failures:
+        failed_at, msg = _failures[key]
+        if now - failed_at < NEGATIVE_TTL_SECONDS:
+            logger.info("players/list negative-cache hit for %s/%s (failed %.0fs ago)",
+                        league_id, sport, now - failed_at)
+            stale = _stale_or_none(key, allow_stale, now)
+            if stale is not None:
+                return stale
+            raise CBSConnectorUnavailable(
+                f"players/list for {league_id}/{sport}: recent failure "
+                f"({now - failed_at:.0f}s ago), not retrying yet. {msg}")
+
     last_err: Exception | None = None
     attempts = len(_RETRY_TIMEOUTS_SECONDS)
     for attempt, (timeout, wait) in enumerate(
@@ -106,16 +142,42 @@ def get_players_list(auth: CBSAuth, league_id: str, sport: str = "baseball",
                 attempt, attempts, league_id, sport, elapsed, timeout, e)
             last_err = e
             continue
+        except CBSAPIError as e:
+            if not _is_upstream_failure(e):
+                raise  # real API-level error: retrying can't fix it
+            logger.warning("players/list attempt %d/%d for %s/%s: upstream %s: %s",
+                           attempt, attempts, league_id, sport,
+                           getattr(e, "http_status", "?"), e)
+            last_err = e
+            continue
 
         elapsed = time.monotonic() - t0
         raw = (data.get("body", {}) or {}).get("players", []) or []
         logger.info(
             "players/list fetched for %s/%s: %d players in %.1fs (attempt %d/%d)",
             league_id, sport, len(raw), elapsed, attempt, attempts)
-        _cache[key] = (now, raw)
+        _cache[key] = (time.monotonic(), raw)
+        _failures.pop(key, None)
         return raw
 
+    _failures[key] = (time.monotonic(), str(last_err))
+    stale = _stale_or_none(key, allow_stale, time.monotonic())
+    if stale is not None:
+        return stale
     raise CBSConnectorUnavailable(
         f"players/list for {league_id}/{sport}: CBS did not respond after "
         f"{attempts} attempts (timeouts up to {_RETRY_TIMEOUTS_SECONDS[-1]}s). "
         f"Connector may be down. Last error: {last_err}")
+
+
+def _stale_or_none(key, allow_stale: bool, now: float) -> list[dict] | None:
+    """Expired-but-usable cache entry, only when the caller opted in."""
+    if not allow_stale or key not in _cache:
+        return None
+    cached_at, raw = _cache[key]
+    age = now - cached_at
+    if age > STALE_MAX_SECONDS:
+        return None
+    logger.warning("players/list serving STALE data for %s/%s (age=%.0f min) "
+                   "because CBS is failing", key[0], key[1], age / 60)
+    return raw

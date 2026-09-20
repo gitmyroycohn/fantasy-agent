@@ -61,7 +61,13 @@ class CBSCookieExpiredError(CBSAuthError):
 
 
 class CBSAPIError(CBSAuthError):
-    pass
+    """CBS answered (or its gateway did) with an error. http_status carries the
+    HTTP status when known so callers can tell an upstream 5xx (CBS unhealthy)
+    from a real API-level rejection (bad token, bad params)."""
+
+    def __init__(self, *args, http_status: int | None = None):
+        super().__init__(*args)
+        self.http_status = http_status
 
 
 def league_base(league_id: str, sport: str = "baseball") -> str:
@@ -183,7 +189,8 @@ class CBSAuth:
             data = r.json()
         except Exception:
             raise CBSAPIError(
-                f"{endpoint}: HTTP {r.status_code}, non-JSON response: {r.text[:200]}")
+                f"{endpoint}: HTTP {r.status_code}, non-JSON response: {r.text[:200]}",
+                http_status=r.status_code)
         status = int(data.get("statusCode", r.status_code))
         if status >= 400:
             raise CBSAPIError(
