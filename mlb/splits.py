@@ -18,10 +18,12 @@ enrich_with_splits(players, season)
 """
 
 import logging
+from datetime import date, timedelta
 from functools import lru_cache
 
 import requests
 
+from mlb.clock import today_et
 from mlb.teams import norm_name
 
 logger = logging.getLogger(__name__)
@@ -60,7 +62,9 @@ def fetch_recent_form(days: int = 14, season: int = 2026) -> dict[str, dict]:
 
     Returns {norm_name: {avg, ops, hr, sb, r, rbi, games}}
     """
-    return _fetch_last_x_days(days, season)
+    # today's date is part of the cache key so a long-lived process (the
+    # Render MCP server) doesn't keep serving yesterday's window.
+    return _fetch_last_x_days(days, season, today_et().isoformat())
 
 
 def enrich_with_splits(players: list, season: int = 2026) -> int:
@@ -139,7 +143,8 @@ def _fetch_sit_stats(sit_code: str, season: int) -> dict[str, dict]:
         r.raise_for_status()
         data = r.json()
     except Exception as e:
-        logger.error("MLB splits API error (sitCode=%s, %d): %s", sit_code, season, e)
+        logger.error("MLB splits API error (sitCode=%s, %d): %s | body: %s",
+                     sit_code, season, e, _body(locals().get("r")))
         return {}
 
     result: dict[str, dict] = {}
@@ -167,15 +172,22 @@ def _fetch_sit_stats(sit_code: str, season: int) -> dict[str, dict]:
 
 
 @lru_cache(maxsize=4)
-def _fetch_last_x_days(days: int, season: int) -> dict[str, dict]:
+def _fetch_last_x_days(days: int, season: int, today_iso: str) -> dict[str, dict]:
     """
-    Fetch hitting stats for the last N days.
+    Fetch hitting stats for the last N completed days (ending yesterday, ET).
     Returns {norm_name: {avg, ops, hr, sb, r, rbi, games}}
+
+    Uses stats=byDateRange: the MLB Stats API rejects stats=lastXDays with
+    "Invalid Request with value: lastXDays" (confirmed 2026-09-20).
+    today_iso is only here to key the cache per calendar day.
     """
+    end   = date.fromisoformat(today_iso) - timedelta(days=1)
+    start = end - timedelta(days=days - 1)
     url = f"{MLB_API}/stats"
     params = {
-        "stats":      "lastXDays",
-        "numDays":    days,
+        "stats":      "byDateRange",
+        "startDate":  start.isoformat(),
+        "endDate":    end.isoformat(),
         "group":      "hitting",
         "season":     season,
         "playerPool": "ALL",
@@ -186,7 +198,8 @@ def _fetch_last_x_days(days: int, season: int) -> dict[str, dict]:
         r.raise_for_status()
         data = r.json()
     except Exception as e:
-        logger.error("MLB lastXDays API error (%d days, %d): %s", days, season, e)
+        logger.error("MLB byDateRange API error (%d days, %d): %s | body: %s",
+                     days, season, e, _body(locals().get("r")))
         return {}
 
     result: dict[str, dict] = {}
@@ -210,6 +223,15 @@ def _fetch_last_x_days(days: int, season: int) -> dict[str, dict]:
 
     logger.info("MLB last %d days %d: %d batters", days, season, len(result))
     return result
+
+
+def _body(resp) -> str:
+    """First 200 chars of an error response body (MLB puts the reason there;
+    raise_for_status() alone only says '400 Bad Request')."""
+    try:
+        return (resp.text or "")[:200] if resp is not None else "<no response>"
+    except Exception:
+        return "<unreadable>"
 
 
 def _f(val) -> float:
