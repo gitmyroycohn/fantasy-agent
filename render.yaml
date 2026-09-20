@@ -16,6 +16,13 @@ services:
     plan: free
     buildCommand: pip install -r requirements.txt -r requirements-mcp.txt
     startCommand: python mcp_server.py
+    # The daily GitHub Actions cron pushes logs/latest_output.md and
+    # logs/history.json to main every morning. Without this filter each of
+    # those pushes redeployed the service, restarting it (wiping in-memory
+    # caches and dropping in-flight MCP calls) for no code change.
+    buildFilter:
+      ignoredPaths:
+        - logs/**
     envVars:
       - key: MCP_TRANSPORT
         value: http

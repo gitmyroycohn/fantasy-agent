@@ -46,8 +46,15 @@ def format_tldr(results: list[dict]) -> str:
         fmt         = res.get("format", "")
         actions     = res.get("actions", [])
 
+        # Football leagues (agent/football_decisions.py) report format
+        # "H2H Points". Before this check they matched the "H2H" test below and
+        # were mislabeled as Pins & Pills with no lines under the header.
+        is_football = fmt.startswith("H2H Points")
+
         lines.append("")
-        if "H2H" in fmt:
+        if is_football:
+            lines.append(f"[ {league_name.upper()}  |  {fmt} ]")
+        elif "H2H" in fmt:
             lines.append(f"[ PINS & PILLS  |  H2H Categories ]")
         else:
             lines.append(f"[ CASEY STENGEL  |  NL-Only Roto ]")
@@ -122,6 +129,34 @@ def format_tldr(results: list[dict]) -> str:
                 warnings = action.get("warnings", [])
                 if warnings:
                     lines.append(f"  !! NL WARNING: {warnings[0]['warning']}")
+
+            # --- Football (agent/football_decisions.py action types) ---
+            elif atype == "roster_legality":
+                issues = action.get("issues", [])
+                if action.get("legal", True) and not issues:
+                    lines.append("  Roster   : legal")
+                else:
+                    more = f" (+{len(issues)-1} more)" if len(issues) > 1 else ""
+                    first = issues[0] if issues else "roster is not legal"
+                    lines.append(f"  !! Roster ILLEGAL: {first}{more}")
+
+            elif atype == "waiver_targets":
+                by_slot = action.get("by_slot", {})
+                fallback = action.get("fa_source") == "fantasypros_fallback"
+                top = next((e for entries in by_slot.values() for e in entries), None)
+                if top:
+                    pos = "/".join(top.get("positions", []))
+                    lines.append(f"  Top Add  : {top['player']} ({top['team']}) [{pos}]")
+                if fallback:
+                    lines.append("  (free agents from FantasyPros -- CBS feed was down)")
+
+            elif atype == "waiver_targets_unavailable":
+                lines.append("  Waivers  : unavailable (CBS feed down, no fallback)")
+
+            elif atype == "keeper_guidance":
+                keeps = action.get("recommended_keeps", [])
+                if action.get("is_keeper_league") and keeps:
+                    lines.append(f"  Keepers  : {', '.join(keeps)}")
 
     lines.append("")
     lines.append("=" * 48)
