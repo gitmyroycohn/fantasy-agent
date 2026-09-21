@@ -53,6 +53,12 @@ _RETRY_BACKOFF_SECONDS  = (0, 2, 5)
 # After a total failure, fail fast for this long instead of re-running the
 # whole ~65s retry ladder for every caller (eligibility index, waivers,
 # repeated tool calls). Short enough to notice CBS recovering.
+#
+# Once this window lapses the next caller does NOT re-run the full ladder: it
+# sends a single probe (first, shortest timeout only, ~15s). Success clears the
+# failure and refills the cache; failure restarts this window. So a long CBS
+# outage costs one ~15s wait per league per window rather than ~65s.
+# force_refresh=True still gets the full ladder.
 NEGATIVE_TTL_SECONDS = 5 * 60
 
 # Opt-in ceiling for serving an expired cache entry when CBS is down
@@ -126,9 +132,16 @@ def get_players_list(auth: CBSAuth, league_id: str, sport: str = "baseball",
                 f"({now - failed_at:.0f}s ago), not retrying yet. {msg}")
 
     last_err: Exception | None = None
-    attempts = len(_RETRY_TIMEOUTS_SECONDS)
-    for attempt, (timeout, wait) in enumerate(
-            zip(_RETRY_TIMEOUTS_SECONDS, _RETRY_BACKOFF_SECONDS), start=1):
+    schedule = list(zip(_RETRY_TIMEOUTS_SECONDS, _RETRY_BACKOFF_SECONDS))
+    if key in _failures and not force_refresh:
+        # Half-open probe: the negative-cache window has lapsed but CBS was
+        # failing last time -- one short attempt, not the full ladder.
+        schedule = schedule[:1]
+        logger.info("players/list probing %s/%s with a single attempt "
+                    "(CBS failed %.0fs ago)", league_id, sport,
+                    now - _failures[key][0])
+    attempts = len(schedule)
+    for attempt, (timeout, wait) in enumerate(schedule, start=1):
         if wait:
             time.sleep(wait)
         t0 = time.monotonic()
@@ -166,7 +179,8 @@ def get_players_list(auth: CBSAuth, league_id: str, sport: str = "baseball",
         return stale
     raise CBSConnectorUnavailable(
         f"players/list for {league_id}/{sport}: CBS did not respond after "
-        f"{attempts} attempts (timeouts up to {_RETRY_TIMEOUTS_SECONDS[-1]}s). "
+        f"{attempts} attempt{'s' if attempts != 1 else ''} "
+        f"(timeouts up to {schedule[-1][0]}s). "
         f"Connector may be down. Last error: {last_err}")
 
 

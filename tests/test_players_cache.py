@@ -183,3 +183,48 @@ def test_stale_beyond_max_age_is_not_served():
     players_cache._cache[key] = (cached_at - players_cache.STALE_MAX_SECONDS - 60, raw)
     with pytest.raises(CBSConnectorUnavailable):
         get_players_list(auth, "sfflf", "football", ttl_seconds=100, allow_stale=True)
+
+
+def _age_failure(key, seconds=10_000):
+    failed_at, msg = players_cache._failures[key]
+    players_cache._failures[key] = (failed_at - seconds, msg)
+
+
+def test_expired_failure_sends_one_short_probe_not_the_full_ladder():
+    auth = _FakeAuth([_err503()] * 3 + [_err503()])
+    key = ("sfflf", "football")
+    with pytest.raises(CBSConnectorUnavailable):
+        get_players_list(auth, "sfflf", "football")
+    assert len(auth.calls) == 3
+    _age_failure(key)
+    with pytest.raises(CBSConnectorUnavailable):
+        get_players_list(auth, "sfflf", "football")
+    assert len(auth.calls) == 4                       # exactly one probe
+    assert auth.calls[-1]["timeout"] == players_cache._RETRY_TIMEOUTS_SECONDS[0]
+    # the failed probe restarts the fail-fast window
+    with pytest.raises(CBSConnectorUnavailable):
+        get_players_list(auth, "sfflf", "football")
+    assert len(auth.calls) == 4
+
+
+def test_successful_probe_recovers_and_fills_cache():
+    auth = _FakeAuth([_err503()] * 3 + [_resp([{"id": "1"}])])
+    key = ("sfflf", "football")
+    with pytest.raises(CBSConnectorUnavailable):
+        get_players_list(auth, "sfflf", "football")
+    _age_failure(key)
+    assert get_players_list(auth, "sfflf", "football") == [{"id": "1"}]
+    assert key not in players_cache._failures
+    assert get_players_list(auth, "sfflf", "football") == [{"id": "1"}]
+    assert len(auth.calls) == 4                       # second read was a cache hit
+
+
+def test_force_refresh_after_expiry_still_runs_the_full_ladder():
+    auth = _FakeAuth([_err503()] * 6)
+    key = ("sfflf", "football")
+    with pytest.raises(CBSConnectorUnavailable):
+        get_players_list(auth, "sfflf", "football")
+    _age_failure(key)
+    with pytest.raises(CBSConnectorUnavailable):
+        get_players_list(auth, "sfflf", "football", force_refresh=True)
+    assert len(auth.calls) == 6                       # 3 + full ladder of 3
