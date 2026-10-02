@@ -1,5 +1,5 @@
 ================================================
-  FANTASY AGENT  --  Thu Oct 1, 2026  2:06 PM ET
+  FANTASY AGENT  --  Fri Oct 2, 2026  1:33 PM ET
 ================================================
 
 ![Parque Deportivo José Martí, La Havana, Cuba](https://www.loc.gov/resource/ppbd.03731/full/pct:25/0/default.jpg)
@@ -27,6 +27,7 @@
 
 [ HARD CHARGERS FANTASY LEAGUE  |  H2H Points ]
   Roster   : legal
+  Top Add  : Jake Bates (DET) [K]
 
 [ EAST COAST FANTASY FOOTBALL LEAGUE  |  H2H Points ]
   !! Roster ILLEGAL: You have 11 reserve players. You must have at most 9. (+1 more)
@@ -52,11 +53,11 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
 
   FP projections (SP wire): 67/100 matched
   Schedule (3 periods): P22(7d):28x2+
-  FP projections (all wire): 15/26 matched
+  FP projections (all wire): 15/27 matched
   Savant pitcher xStats: 866 players
   Savant batter xStats: 660 players
   Savant EV/Barrel: 493 players
-  Savant xStats (all wire): 24/26 matched
+  Savant xStats (all wire): 25/27 matched
   Format: H2H Categories
 
   ⚠ CHURN GUARD: 5 moves recommended -- showing top 3 per section. Prioritize ruthlessly; avoid making all moves at once.
@@ -64,15 +65,15 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   All categories (12): H L (120.0-140.0) | HR L (13.0-26.0) | OPS L (0.6559-0.9191) | R L (64.0-90.0) | RBI L (53.0-75.0) | SB L (13.0-14.0) | ERA L (4.07-3.685) | INNdGS L (50.83-70.78) | K L (122.0-131.0) | S W (7.0-4.0) | W L (11.0-12.0) | WHIP W (1.0854-1.2212)
   Priority categories (losing, easiest first): OPS, ERA, SB, W, K, HR, INNdGS, H, RBI, R
   Streaming SP (Submit adds before Monday scoring period lock.):
-   + Jackson Jobe (DET) [2-START] [day 17] score=14.67 *** 2-START PERIOD *** | ERA 3.91, K/9 9.98, WHIP 1.17 | helps: ERA, K, W
-   + Didier Fuentes (ATL) [day 41] score=8.89 ERA 2.45, K/9 11.29, WHIP 1.1 | helps: ERA, K, W
-   + Luis Medina (ATH) [day 28] score=8.81 ERA 3.08, K/9 11.47, WHIP 1.4 | helps: ERA, K, W
-   + Tyler Glasnow (LAD) [day 3] score=7.94 ERA 3.53, K/9 11.92, WHIP 0.95 | helps: ERA, K, W
-   + Alex McFarlane (PHI) [day 3] score=7.68 ERA 2.84, K/9 9.47, WHIP 1.16 | helps: ERA, K, W
+   + Jackson Jobe (DET) [2-START] [day 18] score=14.67 *** 2-START PERIOD *** | ERA 3.91, K/9 9.98, WHIP 1.17 | helps: ERA, K, W
+   + Didier Fuentes (ATL) [day 42] score=8.89 ERA 2.45, K/9 11.29, WHIP 1.1 | helps: ERA, K, W
+   + Luis Medina (ATH) [day 29] score=8.81 ERA 3.08, K/9 11.47, WHIP 1.4 | helps: ERA, K, W
+   + Tyler Glasnow (LAD) [day 4] score=7.94 ERA 3.53, K/9 11.92, WHIP 0.95 | helps: ERA, K, W
+   + Alex McFarlane (PHI) [day 4] score=7.68 ERA 2.84, K/9 9.47, WHIP 1.16 | helps: ERA, K, W
   Waiver adds (5 suggestions) (top 3 shown -- 2 more suppressed):
-   + Kevin Alcantara (CHC) [CF] [NEW] helps: SB, HR, RBI, R [xwOBA=0.275]
-   + Willy Adames (SF) [SS] [day 3] helps: SB, R [Brl%=8.9 | xwOBA=0.296]
-   + Garrett Acton (MIN) [RP] [day 3] helps: K [xERA=4.27]
+   + Kevin Alcantara (CHC) [CF] [day 2] helps: SB, HR, RBI, R [xwOBA=0.275]
+   + Willy Adames (SF) [SS] [day 4] helps: SB, R [Brl%=8.9 | xwOBA=0.296]
+   + Garrett Acton (MIN) [RP] [day 4] helps: K [xERA=4.27]
 
   --- Closer Monkey News ---
   [LEDGER] Closer Monkey’s Leverage Ledger | 9.28.2026
@@ -82,16 +83,16 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
 
   --- Injury Report (last 7 days) ---
   ★ YOUR ROSTER PLAYERS:
+    ✅ Braxton Ashcraft (Pittsburgh Pirates) — Activated from 15-Day IL [9/28]
     ✅ Logan Webb (San Francisco Giants) — Activated from 15-Day IL [9/28]
     ✅ Joshua Báez (St. Louis Cardinals) — Activated from 10-Day IL [9/28]
-    ✅ Braxton Ashcraft (Pittsburgh Pirates) — Activated from 15-Day IL [9/28]
     ✅ Joe Musgrove (San Diego Padres) — Activated from 60-Day IL [9/29]
-  🚑 Placed (20): Clarke Schmidt (New York Yankees), Martín Pérez (Atlanta Braves), Daulton Varsho (Houston Astros), Hurston Waldrep (Atlanta Braves), Ben Joyce (Los Angeles Angels), Brock Rodden (Seattle Mariners), Luis Castillo (Chicago White Sox), Andrés Muñoz (Seattle Mariners)
-  ✅ Activated (95): Manuel Rodríguez (Tampa Bay Rays), Gavin Hollowell (Chicago Cubs), Bryse Wilson (Milwaukee Brewers), Dalton Rushing (Los Angeles Dodgers), Gavin Sheets (San Diego Padres), Kaelen Culpepper (Minnesota Twins), Connelly Early (Washington Nationals), Jack Flaherty (Detroit Tigers)
+  🚑 Placed (13): Andrew Vaughn (Milwaukee Brewers), Tyler Zuber (Miami Marlins), Andrés Muñoz (Seattle Mariners), Corbin Burnes (Arizona Diamondbacks), Casey Mize (San Diego Padres), Jeff Hoffman (Minnesota Twins), Josh Jung (Texas Rangers), Mickey Gasper (Boston Red Sox)
+  ✅ Activated (95): Dalton Rushing (Los Angeles Dodgers), Bryse Wilson (Milwaukee Brewers), Manuel Rodríguez (Tampa Bay Rays), Gavin Hollowell (Chicago Cubs), Kaelen Culpepper (Minnesota Twins), Gavin Sheets (San Diego Padres), Connelly Early (Washington Nationals), James McArthur (Kansas City Royals)
 
   Trade deadline (2026-08-03) has passed for this league -- trade signals and trade board are suppressed for the rest of the season.
 
-  --- Daily Lineup (Thu Oct 1, 0 MLB teams playing) ---
+  --- Daily Lineup (Fri Oct 2, 0 MLB teams playing) ---
   SPs starting today: none confirmed yet
   On injured list - do not activate (2):
     🚑 Cal Quantrill (TEX) Currently on the MLB injured list -- ignore any start/activate recommendation
@@ -112,20 +113,20 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   Lineup: 24/27 starting
   Free agents visible: 8235
 
-  FP projections (roto wire): 18/28 matched
-  Savant xStats (roto wire): 26/28 matched
+  FP projections (roto wire): 18/29 matched
+  Savant xStats (roto wire): 27/29 matched
   CM depth chart: 30 teams loaded
   Format: NL-Only Rotisserie
 
   ⚠ CHURN GUARD: 6 moves recommended -- showing top 3 per section. Prioritize ruthlessly; avoid making all moves at once.
   Waiver adds (5 suggestions) (top 3 shown -- 2 more suppressed):
-   + Kevin Alcantara (CHC) [CF] [NEW] helps: SB, HR, RBI [xwOBA=0.275]
-   + Adael Amador (COL) [2B] [day 29] helps: SB [Brl%=6.9 | xwOBA=0.274]
-   + Philip Abner (NYM) [RP] [day 16] helps: K, S [xERA=7.72]
+   + Kevin Alcantara (CHC) [CF] [day 2] helps: SB, HR, RBI [xwOBA=0.275]
+   + Adael Amador (COL) [2B] [day 30] helps: SB [Brl%=6.9 | xwOBA=0.274]
+   + Philip Abner (NYM) [RP] [day 17] helps: K, S [xERA=7.72]
 
   --- Drop Candidates ---
   MONITOR (1) -- borderline:
-   WATCH Kodai Senga (NYM) [SP] [day 27]
+   WATCH Kodai Senga (NYM) [SP] [day 28]
          Borderline: ERA 7.34, WHIP 1.65 => consider Andrew Alvarez
   Standings: Period 27: 36 roto pts - winning 3 cats, losing 7
   All categories (10): BA rank=4 | HR rank=7 | R rank=5 | RBI rank=5 | SB rank=6 | ERA rank=8 | K rank=4 | S rank=8 | W rank=1 | WHIP rank=5
@@ -140,14 +141,14 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   --- Injury Report (last 7 days) ---
   ★ YOUR ROSTER PLAYERS:
     🚑 Casey Mize (San Diego Padres) — Placed on 15-Day IL [9/26]
-    ✅ Logan Webb (San Francisco Giants) — Activated from 15-Day IL [9/28]
     ✅ Max Muncy (Athletics) — Activated from 10-Day IL [9/28]
-  🚑 Placed (19): Clarke Schmidt (New York Yankees), Martín Pérez (Atlanta Braves), Daulton Varsho (Houston Astros), Hurston Waldrep (Atlanta Braves), Ben Joyce (Los Angeles Angels), Brock Rodden (Seattle Mariners), Luis Castillo (Chicago White Sox), Andrés Muñoz (Seattle Mariners)
-  ✅ Activated (97): Manuel Rodríguez (Tampa Bay Rays), Gavin Hollowell (Chicago Cubs), Bryse Wilson (Milwaukee Brewers), Dalton Rushing (Los Angeles Dodgers), Gavin Sheets (San Diego Padres), Kaelen Culpepper (Minnesota Twins), Connelly Early (Washington Nationals), Jack Flaherty (Detroit Tigers)
+    ✅ Logan Webb (San Francisco Giants) — Activated from 15-Day IL [9/28]
+  🚑 Placed (12): Andrew Vaughn (Milwaukee Brewers), Tyler Zuber (Miami Marlins), Andrés Muñoz (Seattle Mariners), Corbin Burnes (Arizona Diamondbacks), Jeff Hoffman (Minnesota Twins), Josh Jung (Texas Rangers), Mickey Gasper (Boston Red Sox), Jonathan Pintaro (New York Mets)
+  ✅ Activated (97): Dalton Rushing (Los Angeles Dodgers), Bryse Wilson (Milwaukee Brewers), Manuel Rodríguez (Tampa Bay Rays), Gavin Hollowell (Chicago Cubs), Kaelen Culpepper (Minnesota Twins), Gavin Sheets (San Diego Padres), Connelly Early (Washington Nationals), James McArthur (Kansas City Royals)
 
   Trade deadline (2026-07-31) has passed for this league -- trade signals and trade board are suppressed for the rest of the season.
 
-  --- Daily Lineup (Thu Oct 1, 0 MLB teams playing) ---
+  --- Daily Lineup (Fri Oct 2, 0 MLB teams playing) ---
   SPs pitching today: none confirmed yet
   On injured list - do not activate (2):
     🚑 Casey Mize (SD) Currently on the MLB injured list -- ignore any start/activate recommendation
@@ -165,7 +166,7 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   RB-WR Bhayshul Tuten (JAC)
   ... and 13 more
   Lineup: 9/18 starting
-  Free agents visible: 4724
+  Free agents visible: 4723
 
   Format: H2H Points
   Roster: ILLEGAL (9/9 starters filled)
@@ -192,6 +193,10 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
 
   Format: H2H Points
   Roster: legal (9/9 starters filled)
+
+  --- Waiver Targets (ranked by fantasypros_projected_ppr) ---
+  Kicker:
+    + Jake Bates (DET) [K] -- upgrade over Cameron Dicker (+1.1 pts), owned 0.0%, proj 7.8 pts
 
   --- Keepers ---
   Not a keeper league -- straight redraft every year.
