@@ -36,11 +36,6 @@
         "last": "2026-09-28",
         "n": 43
       },
-      "Adael Amador": {
-        "first": "2026-09-09",
-        "last": "2026-09-13",
-        "n": 5
-      },
       "Mason Adams": {
         "first": "2026-09-15",
         "last": "2026-09-17",
@@ -48,23 +43,23 @@
       },
       "Travis Adams": {
         "first": "2026-09-27",
-        "last": "2026-10-04",
-        "n": 8
+        "last": "2026-10-06",
+        "n": 9
       },
       "Robby Ahlstrom": {
         "first": "2026-09-27",
-        "last": "2026-10-04",
-        "n": 4
+        "last": "2026-10-06",
+        "n": 5
       },
       "Willy Adames": {
         "first": "2026-09-29",
-        "last": "2026-10-04",
-        "n": 6
+        "last": "2026-10-06",
+        "n": 7
       },
       "Garrett Acton": {
         "first": "2026-09-29",
-        "last": "2026-10-04",
-        "n": 6
+        "last": "2026-10-06",
+        "n": 7
       },
       "Franco Aleman": {
         "first": "2026-09-29",
@@ -73,8 +68,8 @@
       },
       "Kevin Alcantara": {
         "first": "2026-10-01",
-        "last": "2026-10-04",
-        "n": 4
+        "last": "2026-10-06",
+        "n": 5
       }
     },
     "streaming_sp": {
@@ -85,13 +80,13 @@
       },
       "Didier Fuentes": {
         "first": "2026-08-17",
-        "last": "2026-10-04",
-        "n": 44
+        "last": "2026-10-06",
+        "n": 45
       },
       "Luis Medina": {
         "first": "2026-08-18",
-        "last": "2026-10-04",
-        "n": 31
+        "last": "2026-10-06",
+        "n": 32
       },
       "Hagen Smith": {
         "first": "2026-08-29",
@@ -110,48 +105,29 @@
       },
       "Jackson Jobe": {
         "first": "2026-09-14",
-        "last": "2026-10-04",
-        "n": 20
+        "last": "2026-10-06",
+        "n": 21
       },
       "Tyler Glasnow": {
         "first": "2026-09-29",
-        "last": "2026-10-04",
-        "n": 6
+        "last": "2026-10-06",
+        "n": 7
       },
       "Alex McFarlane": {
         "first": "2026-09-29",
-        "last": "2026-10-04",
-        "n": 6
+        "last": "2026-10-06",
+        "n": 7
       }
     },
-    "drop_candidates": {
-      "Thomas Saggese": {
-        "first": "2026-09-06",
-        "last": "2026-09-14",
-        "n": 4,
-        "sev": "cut"
-      },
-      "Joshua Baez": {
-        "first": "2026-09-06",
-        "last": "2026-09-14",
-        "n": 7,
-        "sev": "monitor"
-      },
-      "Max Clark": {
-        "first": "2026-09-14",
-        "last": "2026-09-14",
-        "n": 1,
-        "sev": "monitor"
-      }
-    },
+    "drop_candidates": {},
     "recently_dropped": {}
   },
   "baberuthdivingclubformen": {
     "waiver_adds": {
       "Jose Alvarado": {
         "first": "2026-06-17",
-        "last": "2026-10-04",
-        "n": 109
+        "last": "2026-10-06",
+        "n": 110
       },
       "Tyler Alexander": {
         "first": "2026-06-17",
@@ -160,8 +136,8 @@
       },
       "Adael Amador": {
         "first": "2026-08-16",
-        "last": "2026-10-04",
-        "n": 32
+        "last": "2026-10-06",
+        "n": 33
       },
       "Zach Agnos": {
         "first": "2026-08-16",
@@ -175,8 +151,8 @@
       },
       "Philip Abner": {
         "first": "2026-09-08",
-        "last": "2026-10-04",
-        "n": 19
+        "last": "2026-10-06",
+        "n": 20
       },
       "Julian Aguiar": {
         "first": "2026-09-19",
@@ -185,8 +161,8 @@
       },
       "Maximo Acosta": {
         "first": "2026-09-29",
-        "last": "2026-10-04",
-        "n": 6
+        "last": "2026-10-06",
+        "n": 7
       },
       "Blake Adams": {
         "first": "2026-09-29",
@@ -195,16 +171,16 @@
       },
       "Kevin Alcantara": {
         "first": "2026-10-01",
-        "last": "2026-10-04",
-        "n": 4
+        "last": "2026-10-06",
+        "n": 5
       }
     },
     "streaming_sp": {},
     "drop_candidates": {
       "Kodai Senga": {
         "first": "2026-09-04",
-        "last": "2026-10-04",
-        "n": 30,
+        "last": "2026-10-06",
+        "n": 31,
         "sev": "monitor"
       }
     },
