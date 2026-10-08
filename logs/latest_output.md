@@ -1,5 +1,5 @@
 ================================================
-  FANTASY AGENT  --  Wed Oct 7, 2026  2:30 PM ET
+  FANTASY AGENT  --  Thu Oct 8, 2026  2:29 PM ET
 ================================================
 
 
@@ -20,14 +20,14 @@
 
 [ F-LEAGUE  |  H2H Points ]
   !! Roster ILLEGAL: You have 9 reserve players. You must have at most 8.
-  Keepers  : Saquon Barkley, Parker Washington
+  Keepers  : Parker Washington, Trey McBride
 
 [ HARD CHARGERS FANTASY LEAGUE  |  H2H Points ]
   Roster   : legal
 
 [ EAST COAST FANTASY FOOTBALL LEAGUE  |  H2H Points ]
   !! Roster ILLEGAL: You have 13 reserve players. You must have at most 9. (+1 more)
-  Keepers  : Justin Jefferson, Saquon Barkley, Brock Bowers
+  Keepers  : Justin Jefferson, Brock Bowers, Jaylen Waddle
 
 ================================================
   Full details below
@@ -61,15 +61,15 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   All categories (12): H L (120.0-140.0) | HR L (13.0-26.0) | OPS L (0.6559-0.9191) | R L (64.0-90.0) | RBI L (53.0-75.0) | SB L (13.0-14.0) | ERA L (4.07-3.685) | INNdGS L (50.83-70.78) | K L (122.0-131.0) | S W (7.0-4.0) | W L (11.0-12.0) | WHIP W (1.0854-1.2212)
   Priority categories (losing, easiest first): OPS, ERA, SB, W, K, HR, INNdGS, H, RBI, R
   Streaming SP (Submit adds before Monday scoring period lock.):
-   + Jackson Jobe (DET) [2-START] [day 22] score=14.67 *** 2-START PERIOD *** | ERA 3.91, K/9 9.98, WHIP 1.17 | helps: ERA, K, W
-   + Didier Fuentes (ATL) [day 46] score=8.89 ERA 2.45, K/9 11.29, WHIP 1.1 | helps: ERA, K, W
-   + Luis Medina (ATH) [day 33] score=8.81 ERA 3.08, K/9 11.47, WHIP 1.4 | helps: ERA, K, W
-   + Tyler Glasnow (LAD) [day 8] score=7.94 ERA 3.53, K/9 11.92, WHIP 0.95 | helps: ERA, K, W
-   + Alex McFarlane (PHI) [day 8] score=7.68 ERA 2.84, K/9 9.47, WHIP 1.16 | helps: ERA, K, W
+   + Jackson Jobe (DET) [2-START] [day 23] score=14.67 *** 2-START PERIOD *** | ERA 3.91, K/9 9.98, WHIP 1.17 | helps: ERA, K, W
+   + Didier Fuentes (ATL) [day 47] score=8.89 ERA 2.45, K/9 11.29, WHIP 1.1 | helps: ERA, K, W
+   + Luis Medina (ATH) [day 34] score=8.81 ERA 3.08, K/9 11.47, WHIP 1.4 | helps: ERA, K, W
+   + Tyler Glasnow (LAD) [day 9] score=7.94 ERA 3.53, K/9 11.92, WHIP 0.95 | helps: ERA, K, W
+   + Alex McFarlane (PHI) [day 9] score=7.68 ERA 2.84, K/9 9.47, WHIP 1.16 | helps: ERA, K, W
   Waiver adds (5 suggestions) (top 3 shown -- 2 more suppressed):
-   + Kevin Alcantara (CHC) [CF] [day 6] helps: SB, HR, RBI, R [xwOBA=0.275]
-   + Willy Adames (SF) [SS] [day 8] helps: SB, R [Brl%=8.9 | xwOBA=0.296]
-   + Garrett Acton (MIN) [RP] [day 8] helps: K [xERA=4.27]
+   + Kevin Alcantara (CHC) [CF] [day 7] helps: SB, HR, RBI, R [xwOBA=0.275]
+   + Willy Adames (SF) [SS] [day 9] helps: SB, R [Brl%=8.9 | xwOBA=0.296]
+   + Garrett Acton (MIN) [RP] [day 9] helps: K [xERA=4.27]
 
   --- Closer Monkey News ---
   [LEDGER] Closer Monkey’s Leverage Ledger | 9.28.2026
@@ -82,7 +82,7 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
 
   Trade deadline (2026-08-03) has passed for this league -- trade signals and trade board are suppressed for the rest of the season.
 
-  --- Daily Lineup (Wed Oct 7, 0 MLB teams playing) ---
+  --- Daily Lineup (Thu Oct 8, 0 MLB teams playing) ---
   SPs starting today: none confirmed yet
   On injured list - do not activate (2):
     🚑 Cal Quantrill (TEX) Currently on the MLB injured list -- ignore any start/activate recommendation
@@ -110,13 +110,13 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
 
   ⚠ CHURN GUARD: 6 moves recommended -- showing top 3 per section. Prioritize ruthlessly; avoid making all moves at once.
   Waiver adds (5 suggestions) (top 3 shown -- 2 more suppressed):
-   + Kevin Alcantara (CHC) [CF] [day 6] helps: SB, HR, RBI [xwOBA=0.275]
-   + Adael Amador (COL) [2B] [day 34] helps: SB [Brl%=6.9 | xwOBA=0.274]
-   + Philip Abner (NYM) [RP] [day 21] helps: K, S [xERA=7.72]
+   + Kevin Alcantara (CHC) [CF] [day 7] helps: SB, HR, RBI [xwOBA=0.275]
+   + Adael Amador (COL) [2B] [day 35] helps: SB [Brl%=6.9 | xwOBA=0.274]
+   + Philip Abner (NYM) [RP] [day 22] helps: K, S [xERA=7.72]
 
   --- Drop Candidates ---
   MONITOR (1) -- borderline:
-   WATCH Kodai Senga (NYM) [SP] [day 32]
+   WATCH Kodai Senga (NYM) [SP] [day 33]
          Borderline: ERA 7.34, WHIP 1.65 => consider Andrew Alvarez
   Standings: Period 27: 36 roto pts - winning 3 cats, losing 7
   All categories (10): BA rank=4 | HR rank=7 | R rank=5 | RBI rank=5 | SB rank=6 | ERA rank=8 | K rank=4 | S rank=8 | W rank=1 | WHIP rank=5
@@ -133,7 +133,7 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
 
   Trade deadline (2026-07-31) has passed for this league -- trade signals and trade board are suppressed for the rest of the season.
 
-  --- Daily Lineup (Wed Oct 7, 0 MLB teams playing) ---
+  --- Daily Lineup (Thu Oct 8, 0 MLB teams playing) ---
   SPs pitching today: none confirmed yet
   On injured list - do not activate (2):
     🚑 Casey Mize (SD) Currently on the MLB injured list -- ignore any start/activate recommendation
@@ -151,7 +151,7 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   RB-WR Bhayshul Tuten (JAC)
   ... and 13 more
   Lineup: 9/18 starting
-  Free agents visible: 4719
+  Free agents visible: 4718
 
   Format: H2H Points
   Roster: ILLEGAL (9/9 starters filled)
@@ -160,8 +160,8 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   --- Keepers ---
   Keeper league -- max 2, selected by: commissioner, deadline: ?
   Max 2 keepers, any position, no cost mechanic -- confirmed by Christopher directly (CBS's public rules page doesn't publish this; he isn't f_league's commissioner). Selection deadline isn't visible to him -- ask the commissioner if that date matters for planning.
-  Recommended keeps (via fantasypros_ecr): Saquon Barkley, Parker Washington
-  Other eligible: Trey McBride, Jeremiyah Love, Davante Adams, Bhayshul Tuten, Jalen Coker, Rome Odunze, TreVeyon Henderson, Drake Maye, Jordan Addison, Jacory Croskey-Merritt, Dallas Goedert, Jacoby Brissett, Tyler Loop, Jaylen Wright, Steelers, Deebo Samuel
+  Recommended keeps (via fantasypros_ecr): Parker Washington, Trey McBride
+  Other eligible: Jeremiyah Love, Saquon Barkley, Davante Adams, Bhayshul Tuten, Jalen Coker, Rome Odunze, TreVeyon Henderson, Drake Maye, Jordan Addison, Dallas Goedert, Jacory Croskey-Merritt, Jacoby Brissett, Tyler Loop, Jaylen Wright, Steelers, Deebo Samuel
 
   DRY_RUN=True -- no submissions made.
 
@@ -203,8 +203,8 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   --- Keepers ---
   Keeper league -- max 3, selected by: individual_manager, deadline: 2025-08-31
   Confirmed live via commissioner settings 2026-08-01. Deadline is still last season's date -- flag to the commissioner (Christopher) to update it before keepers can be processed correctly this season. Cost mechanic: every player carries a 3-fantasy-season contract starting on acquisition; it survives fantasy-league and real-life trades alike (follows the player, not the roster spot); after season 3 the contract expires and that player cannot be kept -- he re-enters next season's draft pool (house rule confirmed by Christopher 2026-08-13). Contract check applied for season 2026: no expired contracts found.
-  Recommended keeps (via fantasypros_ecr): Justin Jefferson, Saquon Barkley, Brock Bowers
-  Other eligible: Jaylen Waddle, Bhayshul Tuten, Michael Wilson, Romeo Doubs, Tyler Shough, Marvin Harrison Jr., Justin Herbert, Jadarian Price, Mark Andrews, Rashid Shaheed, Alvin Kamara, Brian Robinson Jr., Jonathon Brooks, Emanuel Wilson, Cameron Dicker, Dominic Zvada, Bears, Michael Pittman, Patriots, Jayden Reed
+  Recommended keeps (via fantasypros_ecr): Justin Jefferson, Brock Bowers, Jaylen Waddle
+  Other eligible: Saquon Barkley, Bhayshul Tuten, Michael Wilson, Romeo Doubs, Tyler Shough, Marvin Harrison Jr., Justin Herbert, Mark Andrews, Jadarian Price, Rashid Shaheed, Alvin Kamara, Emanuel Wilson, Brian Robinson Jr., Jonathon Brooks, Cameron Dicker, Dominic Zvada, Bears, Michael Pittman, Patriots, Jayden Reed
 
   DRY_RUN=True -- no submissions made.
 
