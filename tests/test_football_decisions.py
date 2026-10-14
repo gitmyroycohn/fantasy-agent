@@ -197,7 +197,11 @@ def test_east_coast_keeper_guidance_uses_fp_rankings_when_available():
         "stefon diggs": 25.0, "jake ferguson": 90.0,
     }
 
+    # _fp_client is None whenever FANTASYPROS_API_KEY isn't set (CI, cloud
+    # sessions), which short-circuits ranking lookup before the patched
+    # adapter is ever called -- so stand in a truthy client explicitly.
     with patch.object(fd, "fetch_waiver_wire", return_value=[]), \
+         patch.object(fd, "_fp_client", object()), \
          patch.object(fd, "_fp_nfl_rankings_by_name", return_value=fake_rankings):
         result = fd.run_football_decisions(auth=None, league_id="ecfc",
                                             league_config=_EAST_COAST_CONFIG, team=team)
@@ -243,6 +247,7 @@ def test_east_coast_contract_expiration_excludes_player_via_live_wiring():
     fake_contract_years = {"jonathan taylor ": 0, " Saquon Barkley": 1, "DRAKE MAYE": 2}
 
     with patch.object(fd, "fetch_waiver_wire", return_value=[]), \
+         patch.object(fd, "_fp_client", object()), \
          patch.object(fd, "_fp_nfl_rankings_by_name", return_value=fake_rankings), \
          patch.object(fd, "fetch_contract_years", return_value=fake_contract_years):
         result = fd.run_football_decisions(auth=object(), league_id="ecfc",

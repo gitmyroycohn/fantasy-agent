@@ -186,17 +186,29 @@ def test_score_player_rejects_unknown_profile():
 # ---------------------------------------------------------------------------
 
 def test_estimate_sfflf_points_qb_yardage_tier_and_td_count():
-    # 280 combined pass+rush yards -> tier(260-309 -> 6); 2 pass TDs * 6 base
-    # -- no long-TD bonus, unlike score_sfflf(), since season projections
-    # only give a TD count, not per-TD yardage.
-    stats = {"pass_yds": 280, "rush_yds": 0, "pass_tds": 2}
-    assert estimate_sfflf_points(stats, "QB") == 18.0
+    # Inputs are SEASON totals (per the 2026-08-24 per-game-tier fix).
+    # 4760 season yds / 17 games = 280/game -> tier(260-309 -> 6 pts/game)
+    # * 17 games = 102; plus 2 pass TDs * 6 base = 12 -> 114. No long-TD
+    # bonus, unlike score_sfflf(), since season projections only give a TD
+    # count, not per-TD yardage.
+    stats = {"pass_yds": 4760, "rush_yds": 0, "pass_tds": 2}
+    assert estimate_sfflf_points(stats, "QB") == 114.0
 
 
 def test_estimate_sfflf_points_rb_combines_rush_and_rec_yards():
-    # 200 rush + 50 rec = 250 combined -> tier(240-279 -> 15); 1 rush TD * 6
-    stats = {"rush_yds": 200, "rec_yds": 50, "rush_tds": 1}
-    assert estimate_sfflf_points(stats, "RB") == 21.0
+    # 3400 rush + 850 rec = 4250 season yds / 17 = 250/game -> tier(240-279
+    # -> 15 pts/game) * 17 = 255; plus 1 rush TD * 6 = 261.
+    stats = {"rush_yds": 3400, "rec_yds": 850, "rush_tds": 1}
+    assert estimate_sfflf_points(stats, "RB") == 261.0
+
+
+def test_estimate_sfflf_points_season_totals_do_not_zero_out_yardage():
+    # Regression guard for the pre-2026-08-24 bug: running a full-season
+    # yardage total straight through single-game tiers returned 0 for every
+    # realistic season, leaving only TD value. A 4000-yd season QB must
+    # score well above his TD-only value.
+    stats = {"pass_yds": 4000, "rush_yds": 0, "pass_tds": 25}
+    assert estimate_sfflf_points(stats, "QB") > 25 * 6.0
 
 
 def test_estimate_sfflf_points_ignores_reception_count():

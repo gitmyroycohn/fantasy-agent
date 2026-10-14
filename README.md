@@ -37,6 +37,44 @@ probable starters, L/R splits, recent form — no auth needed),
 
 ---
 
+## Football
+
+The same daily run (`python -m agent.main --run daily --dry-run`, or
+`--sport football`) also covers the three CBS football leagues in
+`config/leagues.yaml`. Still read-only; nothing is ever submitted to CBS.
+
+| League | CBS id | Scoring profile | Trade deadline (ET) |
+|---|---|---|---|
+| F-League | `sfflf` | `sfflf_tiered` (not PPR; yardage via bonus tiers) | Nov 22, 2026 |
+| Hard Chargers Fantasy League | `hcfl05` | `standard_ppr` | Nov 19, 2026 |
+| East Coast Fantasy Football League | `ecfc` | `standard_ppr_strict` (keeper/contract league) | Nov 14, 2026 |
+
+| Capability | Module |
+|---|---|
+| Roster legality + starting-slot checks | `sports/football/roster_rules.py` |
+| Start/sit ranking per contested slot | `agent/football_start_sit.py` |
+| Waiver targets by slot (CBS live, FantasyPros fallback) | `agent/football_free_agents.py`, `agent/football_decisions.py` |
+| Keeper guidance incl. East Coast contract expirations | `sports/football/keepers.py` |
+| Injury report (Sleeper-backed) | `agent/football_injuries.py` |
+| League-specific scoring | `sports/football/scoring.py` |
+
+MCP tools: `football_start_sit`, `football_waiver_recommendations`, plus the
+league-agnostic `get_roster`, `get_injury_report`, `get_league_keepers`, and
+`get_roster_limits`.
+
+**Known football gaps (as of Oct 2026):**
+- **Start/sit ranks by last week's real points, not a projection.** It tags
+  snap share and injury status, but there is no upcoming-week projection and
+  no opponent-matchup factor (defense vs. position). See the scope note in
+  `agent/football_start_sit.py`.
+- **FantasyPros `WW` rankings returned 0 players in preseason.** That was
+  assumed to be a no-data-yet issue; it is worth re-checking now that the
+  season is underway (`fantasypros/client.py`, `rank_type="WW"`).
+- **K/DST waiver ranking in F-League falls back to ownership %**, because
+  FantasyPros' season projection lacks the stat categories its K/DST scoring needs.
+
+---
+
 ## Setup (any machine with Python 3.11+)
 
 ### 1. Get the code
@@ -106,10 +144,14 @@ Secrets required in the repo: `CBS_COOKIE` (or `CBS_USERNAME`+`CBS_PASSWORD`), `
 
 ## MCP server (on-demand, from Claude Desktop)
 
-`mcp_server.py` exposes the agent as 8 tools via FastMCP:
+`mcp_server.py` exposes the agent as 20 tools via FastMCP. Core ones:
 `evaluate_trade_tool`, `get_roster`, `get_team_roster`, `list_league_teams`,
 `waiver_recommendations`, `roster_value_signals`, `daily_decisions`,
-`hitting_matchups`.
+`hitting_matchups`. Also: `get_draft_board`, `get_fantasypros_draft_board`,
+`get_league_keepers`, `get_roster_limits`, `set_manual_keepers`,
+`clear_manual_keepers_tool`, `get_matchup_results`, `get_injury_report`,
+`get_baseball_image`, `probe_schedule`, and the football tools
+`football_start_sit` and `football_waiver_recommendations`.
 
 `get_team_roster(league_id, team_name)` looks up **any** team in the league
 by name (not just your own) — useful for trade research, e.g. "what does
