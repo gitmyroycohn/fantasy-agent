@@ -1,5 +1,5 @@
 ================================================
-  FANTASY AGENT  --  Thu Oct 15, 2026  12:24 PM ET
+  FANTASY AGENT  --  Fri Oct 16, 2026  12:10 PM ET
 ================================================
 
 
@@ -61,15 +61,15 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   All categories (12): H L (120.0-140.0) | HR L (13.0-26.0) | OPS L (0.6559-0.9191) | R L (64.0-90.0) | RBI L (53.0-75.0) | SB L (13.0-14.0) | ERA L (4.07-3.685) | INNdGS L (50.83-70.78) | K L (122.0-131.0) | S W (7.0-4.0) | W L (11.0-12.0) | WHIP W (1.0854-1.2212)
   Priority categories (losing, easiest first): OPS, ERA, SB, W, K, HR, INNdGS, H, RBI, R
   Streaming SP (Submit adds before Monday scoring period lock.):
-   + Jackson Jobe (DET) [2-START] [day 30] score=14.67 *** 2-START PERIOD *** | ERA 3.91, K/9 9.98, WHIP 1.17 | helps: ERA, K, W
-   + Didier Fuentes (ATL) [day 54] score=8.89 ERA 2.45, K/9 11.29, WHIP 1.1 | helps: ERA, K, W
-   + Luis Medina (ATH) [day 41] score=8.81 ERA 3.08, K/9 11.47, WHIP 1.4 | helps: ERA, K, W
-   + Tyler Glasnow (LAD) [day 16] score=7.94 ERA 3.53, K/9 11.92, WHIP 0.95 | helps: ERA, K, W
-   + Alex McFarlane (PHI) [day 16] score=7.68 ERA 2.84, K/9 9.47, WHIP 1.16 | helps: ERA, K, W
+   + Jackson Jobe (DET) [2-START] [day 31] score=14.67 *** 2-START PERIOD *** | ERA 3.91, K/9 9.98, WHIP 1.17 | helps: ERA, K, W
+   + Didier Fuentes (ATL) [day 55] score=8.89 ERA 2.45, K/9 11.29, WHIP 1.1 | helps: ERA, K, W
+   + Luis Medina (ATH) [day 42] score=8.81 ERA 3.08, K/9 11.47, WHIP 1.4 | helps: ERA, K, W
+   + Tyler Glasnow (LAD) [day 17] score=7.94 ERA 3.53, K/9 11.92, WHIP 0.95 | helps: ERA, K, W
+   + Alex McFarlane (PHI) [day 17] score=7.68 ERA 2.84, K/9 9.47, WHIP 1.16 | helps: ERA, K, W
   Waiver adds (5 suggestions) (top 3 shown -- 2 more suppressed):
-   + Kevin Alcantara (CHC) [CF] [day 14] helps: SB, HR, RBI, R [xwOBA=0.275]
-   + Willy Adames (SF) [SS] [day 16] helps: SB, R [Brl%=8.9 | xwOBA=0.296]
-   + Garrett Acton (MIN) [RP] [day 16] helps: K [xERA=4.27]
+   + Kevin Alcantara (CHC) [CF] [day 15] helps: SB, HR, RBI, R [xwOBA=0.275]
+   + Willy Adames (SF) [SS] [day 17] helps: SB, R [Brl%=8.9 | xwOBA=0.296]
+   + Garrett Acton (MIN) [RP] [day 17] helps: K [xERA=4.27]
 
   --- Closer Monkey News ---
   [LEDGER] Closer Monkey’s Leverage Ledger | 10.11.2026
@@ -77,12 +77,9 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
     Shifting to the National League, MLB.com’s beat writers focused on the bullpens and how they will be addressed this season. Today's post will share their observations and thoughts.&#160; Arizona Diamondbacks &#8211; From Steve Gilbert’s D-backs Beat, change will be occurring in a bullpen anchored by thre
     https://closermonkey.com/2026/10/11/closer-monkeys-leverage-ledger-10-11-2026/
 
-  --- Injury Report (last 7 days) ---
-  ✅ Activated (1): Casey Mize (San Diego Padres)
-
   Trade deadline (2026-08-03) has passed for this league -- trade signals and trade board are suppressed for the rest of the season.
 
-  --- Daily Lineup (Thu Oct 15, 0 MLB teams playing) ---
+  --- Daily Lineup (Fri Oct 16, 0 MLB teams playing) ---
   SPs starting today: none confirmed yet
   On injured list - do not activate (2):
     🚑 Cal Quantrill (TEX) Currently on the MLB injured list -- ignore any start/activate recommendation
@@ -110,13 +107,13 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
 
   ⚠ CHURN GUARD: 6 moves recommended -- showing top 3 per section. Prioritize ruthlessly; avoid making all moves at once.
   Waiver adds (5 suggestions) (top 3 shown -- 2 more suppressed):
-   + Kevin Alcantara (CHC) [CF] [day 14] helps: SB, HR, RBI [xwOBA=0.275]
-   + Adael Amador (COL) [2B] [day 42] helps: SB [Brl%=6.9 | xwOBA=0.274]
-   + Philip Abner (NYM) [RP] [day 29] helps: K, S [xERA=7.72]
+   + Kevin Alcantara (CHC) [CF] [day 15] helps: SB, HR, RBI [xwOBA=0.275]
+   + Adael Amador (COL) [2B] [day 43] helps: SB [Brl%=6.9 | xwOBA=0.274]
+   + Philip Abner (NYM) [RP] [day 30] helps: K, S [xERA=7.72]
 
   --- Drop Candidates ---
   MONITOR (1) -- borderline:
-   WATCH Kodai Senga (NYM) [SP] [day 40]
+   WATCH Kodai Senga (NYM) [SP] [day 41]
          Borderline: ERA 7.34, WHIP 1.65 => consider Andrew Alvarez
   Standings: Period 27: 36 roto pts - winning 3 cats, losing 7
   All categories (10): BA rank=4 | HR rank=7 | R rank=5 | RBI rank=5 | SB rank=6 | ERA rank=8 | K rank=4 | S rank=8 | W rank=1 | WHIP rank=5
@@ -128,13 +125,9 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
     Shifting to the National League, MLB.com’s beat writers focused on the bullpens and how they will be addressed this season. Today's post will share their observations and thoughts.&#160; Arizona Diamondbacks &#8211; From Steve Gilbert’s D-backs Beat, change will be occurring in a bullpen anchored by thre
     https://closermonkey.com/2026/10/11/closer-monkeys-leverage-ledger-10-11-2026/
 
-  --- Injury Report (last 7 days) ---
-  ★ YOUR ROSTER PLAYERS:
-    ✅ Casey Mize (San Diego Padres) — Activated from 15-Day IL [10/8]
-
   Trade deadline (2026-07-31) has passed for this league -- trade signals and trade board are suppressed for the rest of the season.
 
-  --- Daily Lineup (Thu Oct 15, 0 MLB teams playing) ---
+  --- Daily Lineup (Fri Oct 16, 0 MLB teams playing) ---
   SPs pitching today: none confirmed yet
   On injured list - do not activate (1):
     🚑 Casey Schmitt (SF) Currently on the MLB injured list -- ignore any start/activate recommendation
@@ -151,7 +144,7 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   RB-WR Jacory Croskey-Merritt (WAS)
   ... and 14 more
   Lineup: 9/19 starting
-  Free agents visible: 4715
+  Free agents visible: 4714
 
   Format: H2H Points
   Roster: ILLEGAL (9/9 starters filled)
@@ -161,17 +154,17 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   Keeper league -- max 2, selected by: commissioner, deadline: ?
   Max 2 keepers, any position, no cost mechanic -- confirmed by Christopher directly (CBS's public rules page doesn't publish this; he isn't f_league's commissioner). Selection deadline isn't visible to him -- ask the commissioner if that date matters for planning.
   Recommended keeps (via fantasypros_ecr): Parker Washington, Trey McBride
-  Other eligible: Davante Adams, Jeremiyah Love, Bhayshul Tuten, Drake Maye, Saquon Barkley, Jalen Coker, Rome Odunze, Jordan Addison, TreVeyon Henderson, Jacory Croskey-Merritt, Dallas Goedert, Jacoby Brissett, Tyler Loop, Jaylen Wright, Demario Douglas, Steelers, Deebo Samuel
+  Other eligible: Davante Adams, Bhayshul Tuten, Jeremiyah Love, Drake Maye, Saquon Barkley, Jalen Coker, Rome Odunze, Jordan Addison, Germie Bernard, Jacory Croskey-Merritt, TreVeyon Henderson, Dallas Goedert, Jacoby Brissett, Tyler Loop, Demario Douglas, Steelers, Deebo Samuel
 
   DRY_RUN=True -- no submissions made.
 
 === Hard Chargers Fantasy League (football) ===
   Roster: 15 players
     QB Dak Prescott (DAL)
-    RB Braelon Allen (NYJ)
-    WR Jakobi Meyers (JAC)
+    RB Bucky Irving (TB)
+    WR Tetairoa McMillan (CAR)
     TE Trey McBride (ARI)
-  RB-WR-TE RJ Harvey (DEN)
+  RB-WR-TE Jakobi Meyers (JAC)
   ... and 10 more
   Lineup: 9/15 starting
   Free agents visible: 4702
@@ -204,7 +197,7 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   Keeper league -- max 3, selected by: individual_manager, deadline: 2025-08-31
   Confirmed live via commissioner settings 2026-08-01. Deadline is still last season's date -- flag to the commissioner (Christopher) to update it before keepers can be processed correctly this season. Cost mechanic: every player carries a 3-fantasy-season contract starting on acquisition; it survives fantasy-league and real-life trades alike (follows the player, not the roster spot); after season 3 the contract expires and that player cannot be kept -- he re-enters next season's draft pool (house rule confirmed by Christopher 2026-08-13). Contract check applied for season 2026: no expired contracts found.
   Recommended keeps (via fantasypros_ecr): Justin Jefferson, Brock Bowers, Bhayshul Tuten
-  Other eligible: Michael Wilson, Jaylen Waddle, Saquon Barkley, Romeo Doubs, Tyler Shough, Malik Washington, Marvin Harrison Jr., Alvin Kamara, Mark Andrews, Emanuel Wilson, Rashid Shaheed, Jacoby Brissett, Mike Washington Jr., Brian Robinson Jr., Jadarian Price, Cameron Dicker, Jonathon Brooks, Dominic Zvada, Patriots, Browns, Michael Pittman, Jayden Reed
+  Other eligible: Michael Wilson, Saquon Barkley, Jaylen Waddle, Romeo Doubs, Tyler Shough, Malik Washington, Marvin Harrison Jr., Mark Andrews, Alvin Kamara, Jacoby Brissett, Emanuel Wilson, Rashid Shaheed, Brian Robinson Jr., Mike Washington Jr., Jadarian Price, Cameron Dicker, Jonathon Brooks, Dominic Zvada, Patriots, Browns, Michael Pittman, Jayden Reed
 
   DRY_RUN=True -- no submissions made.
 
