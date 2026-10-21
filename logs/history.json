@@ -8,23 +8,23 @@
       },
       "Travis Adams": {
         "first": "2026-09-27",
-        "last": "2026-10-20",
-        "n": 23
+        "last": "2026-10-21",
+        "n": 24
       },
       "Robby Ahlstrom": {
         "first": "2026-09-27",
-        "last": "2026-10-20",
-        "n": 19
+        "last": "2026-10-21",
+        "n": 20
       },
       "Willy Adames": {
         "first": "2026-09-29",
-        "last": "2026-10-20",
-        "n": 21
+        "last": "2026-10-21",
+        "n": 22
       },
       "Garrett Acton": {
         "first": "2026-09-29",
-        "last": "2026-10-20",
-        "n": 21
+        "last": "2026-10-21",
+        "n": 22
       },
       "Franco Aleman": {
         "first": "2026-09-29",
@@ -33,35 +33,35 @@
       },
       "Kevin Alcantara": {
         "first": "2026-10-01",
-        "last": "2026-10-20",
-        "n": 19
+        "last": "2026-10-21",
+        "n": 20
       }
     },
     "streaming_sp": {
       "Didier Fuentes": {
         "first": "2026-08-17",
-        "last": "2026-10-20",
-        "n": 59
+        "last": "2026-10-21",
+        "n": 60
       },
       "Luis Medina": {
         "first": "2026-08-18",
-        "last": "2026-10-20",
-        "n": 46
+        "last": "2026-10-21",
+        "n": 47
       },
       "Jackson Jobe": {
         "first": "2026-09-14",
-        "last": "2026-10-20",
-        "n": 35
+        "last": "2026-10-21",
+        "n": 36
       },
       "Tyler Glasnow": {
         "first": "2026-09-29",
-        "last": "2026-10-20",
-        "n": 21
+        "last": "2026-10-21",
+        "n": 22
       },
       "Alex McFarlane": {
         "first": "2026-09-29",
-        "last": "2026-10-20",
-        "n": 21
+        "last": "2026-10-21",
+        "n": 22
       }
     },
     "drop_candidates": {},
@@ -71,23 +71,23 @@
     "waiver_adds": {
       "Jose Alvarado": {
         "first": "2026-06-17",
-        "last": "2026-10-20",
-        "n": 124
+        "last": "2026-10-21",
+        "n": 125
       },
       "Adael Amador": {
         "first": "2026-08-16",
-        "last": "2026-10-20",
-        "n": 47
+        "last": "2026-10-21",
+        "n": 48
       },
       "Philip Abner": {
         "first": "2026-09-08",
-        "last": "2026-10-20",
-        "n": 34
+        "last": "2026-10-21",
+        "n": 35
       },
       "Maximo Acosta": {
         "first": "2026-09-29",
-        "last": "2026-10-20",
-        "n": 21
+        "last": "2026-10-21",
+        "n": 22
       },
       "Blake Adams": {
         "first": "2026-09-29",
@@ -96,16 +96,16 @@
       },
       "Kevin Alcantara": {
         "first": "2026-10-01",
-        "last": "2026-10-20",
-        "n": 19
+        "last": "2026-10-21",
+        "n": 20
       }
     },
     "streaming_sp": {},
     "drop_candidates": {
       "Kodai Senga": {
         "first": "2026-09-04",
-        "last": "2026-10-20",
-        "n": 45,
+        "last": "2026-10-21",
+        "n": 46,
         "sev": "monitor"
       }
     },
