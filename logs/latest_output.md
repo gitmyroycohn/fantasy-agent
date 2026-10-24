@@ -1,6 +1,9 @@
 ================================================
-  FANTASY AGENT  --  Fri Oct 23, 2026  12:33 PM ET
+  FANTASY AGENT  --  Sat Oct 24, 2026  11:27 AM ET
 ================================================
+
+![[Reel 16] Written records in the Farm Security Administration / Office of War Information Collection](https://tile.loc.gov/image-services/iiif/public:pnp:fsahsr-016:00002/full/pct:12.5/0/default.jpg)
+*[Reel 16] Written records in the Farm Security Administration / Office of War Information Collection (1935) — Library of Congress*
 
 
 [ PINS & PILLS  |  H2H Categories ]
@@ -28,7 +31,6 @@
 
 [ EAST COAST FANTASY FOOTBALL LEAGUE  |  H2H Points ]
   !! Roster ILLEGAL: You have 15 reserve players. You must have at most 9. (+1 more)
-  Top Add  : Tyler Allgeier (ARI) [RB]
   Keepers  : Justin Jefferson, Brock Bowers, Bhayshul Tuten
 
 ================================================
@@ -63,15 +65,15 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   All categories (12): H L (120.0-140.0) | HR L (13.0-26.0) | OPS L (0.6559-0.9191) | R L (64.0-90.0) | RBI L (53.0-75.0) | SB L (13.0-14.0) | ERA L (4.07-3.685) | INNdGS L (50.83-70.78) | K L (122.0-131.0) | S W (7.0-4.0) | W L (11.0-12.0) | WHIP W (1.0854-1.2212)
   Priority categories (losing, easiest first): OPS, ERA, SB, W, K, HR, INNdGS, H, RBI, R
   Streaming SP (Submit adds before Monday scoring period lock.):
-   + Jackson Jobe (DET) [2-START] [day 38] score=14.67 *** 2-START PERIOD *** | ERA 3.91, K/9 9.98, WHIP 1.17 | helps: ERA, K, W
-   + Didier Fuentes (ATL) [day 62] score=8.89 ERA 2.45, K/9 11.29, WHIP 1.1 | helps: ERA, K, W
-   + Luis Medina (ATH) [day 49] score=8.81 ERA 3.08, K/9 11.47, WHIP 1.4 | helps: ERA, K, W
-   + Tyler Glasnow (LAD) [day 24] score=7.94 ERA 3.53, K/9 11.92, WHIP 0.95 | helps: ERA, K, W
-   + Alex McFarlane (PHI) [day 24] score=7.68 ERA 2.84, K/9 9.47, WHIP 1.16 | helps: ERA, K, W
+   + Jackson Jobe (DET) [2-START] [day 39] score=14.67 *** 2-START PERIOD *** | ERA 3.91, K/9 9.98, WHIP 1.17 | helps: ERA, K, W
+   + Didier Fuentes (ATL) [day 63] score=8.89 ERA 2.45, K/9 11.29, WHIP 1.1 | helps: ERA, K, W
+   + Luis Medina (ATH) [day 50] score=8.81 ERA 3.08, K/9 11.47, WHIP 1.4 | helps: ERA, K, W
+   + Tyler Glasnow (LAD) [day 25] score=7.94 ERA 3.53, K/9 11.92, WHIP 0.95 | helps: ERA, K, W
+   + Alex McFarlane (PHI) [day 25] score=7.68 ERA 2.84, K/9 9.47, WHIP 1.16 | helps: ERA, K, W
   Waiver adds (5 suggestions) (top 3 shown -- 2 more suppressed):
-   + Kevin Alcantara (CHC) [CF] [day 22] helps: SB, HR, RBI, R [xwOBA=0.275]
-   + Willy Adames (SF) [SS] [day 24] helps: SB, R [Brl%=8.9 | xwOBA=0.296]
-   + Garrett Acton (MIN) [RP] [day 24] helps: K [xERA=4.27]
+   + Kevin Alcantara (CHC) [CF] [day 23] helps: SB, HR, RBI, R [xwOBA=0.275]
+   + Willy Adames (SF) [SS] [day 25] helps: SB, R [Brl%=8.9 | xwOBA=0.296]
+   + Garrett Acton (MIN) [RP] [day 25] helps: K [xERA=4.27]
 
   --- Closer Monkey News ---
   [LEDGER] Closer Monkey’s Leverage Ledger | 10.11.2026
@@ -79,9 +81,12 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
     Shifting to the National League, MLB.com’s beat writers focused on the bullpens and how they will be addressed this season. Today's post will share their observations and thoughts.&#160; Arizona Diamondbacks &#8211; From Steve Gilbert’s D-backs Beat, change will be occurring in a bullpen anchored by thre
     https://closermonkey.com/2026/10/11/closer-monkeys-leverage-ledger-10-11-2026/
 
+  --- Injury Report (last 7 days) ---
+  ✅ Activated (1): Brandon Woodruff (Milwaukee Brewers)
+
   Trade deadline (2026-08-03) has passed for this league -- trade signals and trade board are suppressed for the rest of the season.
 
-  --- Daily Lineup (Fri Oct 23, 0 MLB teams playing) ---
+  --- Daily Lineup (Sat Oct 24, 0 MLB teams playing) ---
   SPs starting today: none confirmed yet
   On injured list - do not activate (2):
     🚑 Cal Quantrill (TEX) Currently on the MLB injured list -- ignore any start/activate recommendation
@@ -109,13 +114,13 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
 
   ⚠ CHURN GUARD: 6 moves recommended -- showing top 3 per section. Prioritize ruthlessly; avoid making all moves at once.
   Waiver adds (5 suggestions) (top 3 shown -- 2 more suppressed):
-   + Kevin Alcantara (CHC) [CF] [day 22] helps: SB, HR, RBI [xwOBA=0.275]
-   + Adael Amador (COL) [2B] [day 50] helps: SB [Brl%=6.9 | xwOBA=0.274]
-   + Philip Abner (NYM) [RP] [day 37] helps: K, S [xERA=7.72]
+   + Kevin Alcantara (CHC) [CF] [day 23] helps: SB, HR, RBI [xwOBA=0.275]
+   + Adael Amador (COL) [2B] [day 51] helps: SB [Brl%=6.9 | xwOBA=0.274]
+   + Philip Abner (NYM) [RP] [day 38] helps: K, S [xERA=7.72]
 
   --- Drop Candidates ---
   MONITOR (1) -- borderline:
-   WATCH Kodai Senga (NYM) [SP] [day 48]
+   WATCH Kodai Senga (NYM) [SP] [day 49]
          Borderline: ERA 7.34, WHIP 1.65 => consider Andrew Alvarez
   Standings: Period 27: 36 roto pts - winning 3 cats, losing 7
   All categories (10): BA rank=4 | HR rank=7 | R rank=5 | RBI rank=5 | SB rank=6 | ERA rank=8 | K rank=4 | S rank=8 | W rank=1 | WHIP rank=5
@@ -127,9 +132,12 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
     Shifting to the National League, MLB.com’s beat writers focused on the bullpens and how they will be addressed this season. Today's post will share their observations and thoughts.&#160; Arizona Diamondbacks &#8211; From Steve Gilbert’s D-backs Beat, change will be occurring in a bullpen anchored by thre
     https://closermonkey.com/2026/10/11/closer-monkeys-leverage-ledger-10-11-2026/
 
+  --- Injury Report (last 7 days) ---
+  ✅ Activated (1): Brandon Woodruff (Milwaukee Brewers)
+
   Trade deadline (2026-07-31) has passed for this league -- trade signals and trade board are suppressed for the rest of the season.
 
-  --- Daily Lineup (Fri Oct 23, 0 MLB teams playing) ---
+  --- Daily Lineup (Sat Oct 24, 0 MLB teams playing) ---
   SPs pitching today: none confirmed yet
   On injured list - do not activate (1):
     🚑 Casey Schmitt (SF) Currently on the MLB injured list -- ignore any start/activate recommendation
@@ -146,7 +154,7 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   RB-WR Tyrone Tracy Jr. (NYG)
   ... and 17 more
   Lineup: 9/22 starting
-  Free agents visible: 4715
+  Free agents visible: 4714
 
   Format: H2H Points
   Roster: ILLEGAL (9/9 starters filled)
@@ -155,11 +163,11 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
 
   --- Waiver Targets (ranked by fantasypros_estimated_sfflf_points) ---
   Flex RB/WR:
-    + Elic Ayomanor (TEN) [WR] -- open slot, owned 0.0%, proj 1.1 pts
+    + Elic Ayomanor (TEN) [WR] -- open slot, owned 0.0%, proj 1.3 pts
     + Andrew Armstrong (KC) [WR] -- open slot, owned 0.0%, proj 1.0 pts
-    + Tutu Atwell (LAR) [WR] -- open slot, owned 0.0%, proj 0.7 pts
-    + Cyrus Allen (KC) [WR] -- open slot, owned 0.0%, proj 0.6 pts
-    + Chris Bell (MIA) [WR] -- open slot, owned 0.0%, proj 0.6 pts
+    + Tutu Atwell (LAR) [WR] -- open slot, owned 0.0%, proj 0.9 pts
+    + Cyrus Allen (KC) [WR] -- open slot, owned 0.0%, proj 0.7 pts
+    + Alex Bachman (LAR) [WR] -- open slot, owned 0.0%, proj 0.7 pts
 
   --- Keepers ---
   Keeper league -- max 2, selected by: commissioner, deadline: ?
@@ -203,10 +211,6 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   Roster: ILLEGAL (10/10 starters filled)
     !! You have 15 reserve players. You must have at most 9.
     !! You have 25 total players. Between 0 and 19 are allowed.
-
-  --- Waiver Targets (ranked by fantasypros_projected_ppr) ---
-  Running Back:
-    + Tyler Allgeier (ARI) [RB] -- upgrade over Emanuel Wilson (+2.2 pts), owned 0.0%, proj 9.4 pts
 
   --- Keepers ---
   Keeper league -- max 3, selected by: individual_manager, deadline: 2025-08-31
