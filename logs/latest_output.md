@@ -1,9 +1,6 @@
 ================================================
-  FANTASY AGENT  --  Mon Oct 26, 2026  2:23 PM ET
+  FANTASY AGENT  --  Tue Oct 27, 2026  1:33 PM ET
 ================================================
-
-![[Reel 13] Written records in the Farm Security Administration / Office of War Information Collection](https://tile.loc.gov/image-services/iiif/public:pnp:fsahsr-013:00002/full/pct:12.5/0/default.jpg)
-*[Reel 13] Written records in the Farm Security Administration / Office of War Information Collection (1935) — Library of Congress*
 
 
 [ PINS & PILLS  |  H2H Categories ]
@@ -23,20 +20,14 @@
 
 [ F-LEAGUE  |  H2H Points ]
   !! Roster ILLEGAL: You have 13 reserve players. You must have at most 8.
-  Top Add  : Emanuel Wilson (SEA) [RB]
-  (free agents from FantasyPros -- CBS feed was down)
   Keepers  : Parker Washington, Drake Maye
 
 [ HARD CHARGERS FANTASY LEAGUE  |  H2H Points ]
   Roster   : legal
-  Top Add  : Aaron Jones Sr. (MIN) [RB]
-  (free agents from FantasyPros -- CBS feed was down)
 
 [ EAST COAST FANTASY FOOTBALL LEAGUE  |  H2H Points ]
-  !! Roster ILLEGAL: You have 15 reserve players. You must have at most 9. (+1 more)
-  Top Add  : Kyler Murray (MIN) [QB]
-  (free agents from FantasyPros -- CBS feed was down)
-  Keepers  : Justin Jefferson, Brock Bowers, Bhayshul Tuten
+  !! Roster ILLEGAL: You have 14 reserve players. You must have at most 9. (+1 more)
+  Keepers  : Brock Bowers, Justin Jefferson, Bhayshul Tuten
 
 ================================================
   Full details below
@@ -70,15 +61,15 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   All categories (12): H L (120.0-140.0) | HR L (13.0-26.0) | OPS L (0.6559-0.9191) | R L (64.0-90.0) | RBI L (53.0-75.0) | SB L (13.0-14.0) | ERA L (4.07-3.685) | INNdGS L (50.83-70.78) | K L (122.0-131.0) | S W (7.0-4.0) | W L (11.0-12.0) | WHIP W (1.0854-1.2212)
   Priority categories (losing, easiest first): OPS, ERA, SB, W, K, HR, INNdGS, H, RBI, R
   Streaming SP (Submit adds before Monday scoring period lock.):
-   + Jackson Jobe (DET) [2-START] [day 41] score=14.67 *** 2-START PERIOD *** | ERA 3.91, K/9 9.98, WHIP 1.17 | helps: ERA, K, W
-   + Didier Fuentes (ATL) [day 65] score=8.89 ERA 2.45, K/9 11.29, WHIP 1.1 | helps: ERA, K, W
-   + Luis Medina (ATH) [day 52] score=8.81 ERA 3.08, K/9 11.47, WHIP 1.4 | helps: ERA, K, W
-   + Tyler Glasnow (LAD) [day 27] score=7.94 ERA 3.53, K/9 11.92, WHIP 0.95 | helps: ERA, K, W
-   + Alex McFarlane (PHI) [day 27] score=7.68 ERA 2.84, K/9 9.47, WHIP 1.16 | helps: ERA, K, W
+   + Jackson Jobe (DET) [2-START] [day 42] score=14.67 *** 2-START PERIOD *** | ERA 3.91, K/9 9.98, WHIP 1.17 | helps: ERA, K, W
+   + Didier Fuentes (ATL) [day 66] score=8.89 ERA 2.45, K/9 11.29, WHIP 1.1 | helps: ERA, K, W
+   + Luis Medina (ATH) [day 53] score=8.81 ERA 3.08, K/9 11.47, WHIP 1.4 | helps: ERA, K, W
+   + Tyler Glasnow (LAD) [day 28] score=7.94 ERA 3.53, K/9 11.92, WHIP 0.95 | helps: ERA, K, W
+   + Alex McFarlane (PHI) [day 28] score=7.68 ERA 2.84, K/9 9.47, WHIP 1.16 | helps: ERA, K, W
   Waiver adds (5 suggestions) (top 3 shown -- 2 more suppressed):
-   + Kevin Alcantara (CHC) [CF] [day 25] helps: SB, HR, RBI, R [xwOBA=0.275]
-   + Willy Adames (SF) [SS] [day 27] helps: SB, R [Brl%=8.9 | xwOBA=0.296]
-   + Garrett Acton (MIN) [RP] [day 27] helps: K [xERA=4.27]
+   + Kevin Alcantara (CHC) [CF] [day 26] helps: SB, HR, RBI, R [xwOBA=0.275]
+   + Willy Adames (SF) [SS] [day 28] helps: SB, R [Brl%=8.9 | xwOBA=0.296]
+   + Garrett Acton (MIN) [RP] [day 28] helps: K [xERA=4.27]
 
   --- Closer Monkey News ---
   [LEDGER] Closer Monkey’s Leverage Ledger | 10.11.2026
@@ -91,7 +82,7 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
 
   Trade deadline (2026-08-03) has passed for this league -- trade signals and trade board are suppressed for the rest of the season.
 
-  --- Daily Lineup (Mon Oct 26, 0 MLB teams playing) ---
+  --- Daily Lineup (Tue Oct 27, 0 MLB teams playing) ---
   SPs starting today: none confirmed yet
   On injured list - do not activate (2):
     🚑 Cal Quantrill (TEX) Currently on the MLB injured list -- ignore any start/activate recommendation
@@ -119,13 +110,13 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
 
   ⚠ CHURN GUARD: 6 moves recommended -- showing top 3 per section. Prioritize ruthlessly; avoid making all moves at once.
   Waiver adds (5 suggestions) (top 3 shown -- 2 more suppressed):
-   + Kevin Alcantara (CHC) [CF] [day 25] helps: SB, HR, RBI [xwOBA=0.275]
-   + Adael Amador (COL) [2B] [day 53] helps: SB [Brl%=6.9 | xwOBA=0.274]
-   + Philip Abner (NYM) [RP] [day 40] helps: K, S [xERA=7.72]
+   + Kevin Alcantara (CHC) [CF] [day 26] helps: SB, HR, RBI [xwOBA=0.275]
+   + Adael Amador (COL) [2B] [day 54] helps: SB [Brl%=6.9 | xwOBA=0.274]
+   + Philip Abner (NYM) [RP] [day 41] helps: K, S [xERA=7.72]
 
   --- Drop Candidates ---
   MONITOR (1) -- borderline:
-   WATCH Kodai Senga (NYM) [SP] [day 51]
+   WATCH Kodai Senga (NYM) [SP] [day 52]
          Borderline: ERA 7.34, WHIP 1.65 => consider Andrew Alvarez
   Standings: Period 27: 36 roto pts - winning 3 cats, losing 7
   All categories (10): BA rank=4 | HR rank=7 | R rank=5 | RBI rank=5 | SB rank=6 | ERA rank=8 | K rank=4 | S rank=8 | W rank=1 | WHIP rank=5
@@ -142,7 +133,7 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
 
   Trade deadline (2026-07-31) has passed for this league -- trade signals and trade board are suppressed for the rest of the season.
 
-  --- Daily Lineup (Mon Oct 26, 0 MLB teams playing) ---
+  --- Daily Lineup (Tue Oct 27, 0 MLB teams playing) ---
   SPs pitching today: none confirmed yet
   On injured list - do not activate (1):
     🚑 Casey Schmitt (SF) Currently on the MLB injured list -- ignore any start/activate recommendation
@@ -153,55 +144,39 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
 === F-League (football) ===
   Roster: 22 players
     QB Drake Maye (NE)
-    RB Alvin Kamara (NO)
+    RB Bhayshul Tuten (JAC)
     WR Germie Bernard (PIT)
     TE Trey McBride (ARI)
-  RB-WR Tyrone Tracy Jr. (NYG)
+  RB-WR Jalen Coker (CAR)
   ... and 17 more
   Lineup: 9/22 starting
-  Free agents: unavailable (players/list for sfflf/football: recent failure (1s ago), not retrying yet. players/list: HTTP 503, non-JSON response: 
-)
+  Free agents visible: 4715
 
   Format: H2H Points
   Roster: ILLEGAL (9/9 starters filled)
     !! You have 13 reserve players. You must have at most 8.
 
-  --- Waiver Targets (ranked by fantasypros_estimated_sfflf_points) ---
-  ⚠️  CBS's live free-agent connector was down -- this pool is FantasyPros-derived (no real ownership% available).
-  Running Back:
-    + Emanuel Wilson (SEA) [RB] -- upgrade over Tyrone Tracy Jr. (+1.9 pts), owned 0.0%, proj 3.2 pts
-  Flex RB/WR:
-    + Emanuel Wilson (SEA) [RB] -- upgrade over Tyrone Tracy Jr. (+1.9 pts), owned 0.0%, proj 3.2 pts
-    + Aaron Jones Sr. (MIN) [RB] -- upgrade over Tyrone Tracy Jr. (+1.6 pts), owned 0.0%, proj 3.0 pts
-    + Roschon Johnson (CHI) [RB] -- upgrade over Tyrone Tracy Jr. (+1.1 pts), owned 0.0%, proj 2.4 pts
-
   --- Keepers ---
   Keeper league -- max 2, selected by: commissioner, deadline: ?
   Max 2 keepers, any position, no cost mechanic -- confirmed by Christopher directly (CBS's public rules page doesn't publish this; he isn't f_league's commissioner). Selection deadline isn't visible to him -- ask the commissioner if that date matters for planning.
   Recommended keeps (via fantasypros_ecr): Parker Washington, Drake Maye
-  Other eligible: Trey McBride, Bhayshul Tuten, Jalen Coker, Jeremiyah Love, Saquon Barkley, Carnell Tate, Rome Odunze, Germie Bernard, Khalil Shakir, Jordan Addison, Dallas Goedert, TreVeyon Henderson, Davante Adams, Alvin Kamara, Demario Douglas, Jacory Croskey-Merritt, Tyler Loop, Tyrone Tracy Jr., Steelers, Deebo Samuel
+  Other eligible: Trey McBride, Jalen Coker, Bhayshul Tuten, Carnell Tate, Saquon Barkley, Jeremiyah Love, Rome Odunze, Germie Bernard, Khalil Shakir, Jordan Addison, Dallas Goedert, TreVeyon Henderson, Demario Douglas, Alvin Kamara, Jacory Croskey-Merritt, Davante Adams, Tyler Loop, Tyrone Tracy Jr., Steelers, Deebo Samuel
 
   DRY_RUN=True -- no submissions made.
 
 === Hard Chargers Fantasy League (football) ===
   Roster: 15 players
-    QB C.J. Stroud (HOU)
+    QB Dak Prescott (DAL)
     RB Bucky Irving (TB)
     WR Tetairoa McMillan (CAR)
     TE Trey McBride (ARI)
   RB-WR-TE Kyle Pitts (ATL)
   ... and 10 more
   Lineup: 9/15 starting
-  Free agents: unavailable (players/list for hcfl05/football: recent failure (3s ago), not retrying yet. players/list: HTTP 503, non-JSON response: 
-)
+  Free agents visible: 4702
 
   Format: H2H Points
   Roster: legal (9/9 starters filled)
-
-  --- Waiver Targets (ranked by fantasypros_projected_ppr) ---
-  ⚠️  CBS's live free-agent connector was down -- this pool is FantasyPros-derived (no real ownership% available).
-  Flex RB/WR/TE:
-    + Aaron Jones Sr. (MIN) [RB] -- upgrade over RJ Harvey (+1.6 pts), owned 0.0%, proj 11.9 pts
 
   --- Keepers ---
   Not a keeper league -- straight redraft every year.
@@ -209,40 +184,26 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   DRY_RUN=True -- no submissions made.
 
 === East Coast Fantasy Football League (football) ===
-  Roster: 25 players
-    QB Tyler Shough (NO)
-    RB Alvin Kamara (NO)
-    RB Emanuel Wilson (SEA)
+  Roster: 24 players
+    QB Bo Nix (DEN)
+    RB Saquon Barkley (PHI)
+    RB Bhayshul Tuten (JAC)
     WR Justin Jefferson (MIN)
     WR Jaylen Waddle (DEN)
-  ... and 20 more
-  Lineup: 10/25 starting
-  Free agents: unavailable (players/list for ecfc/football: recent failure (2s ago), not retrying yet. players/list: HTTP 503, non-JSON response: 
-)
+  ... and 19 more
+  Lineup: 10/24 starting
+  Free agents visible: 4699
 
   Format: H2H Points
   Roster: ILLEGAL (10/10 starters filled)
-    !! You have 15 reserve players. You must have at most 9.
-    !! You have 25 total players. Between 0 and 19 are allowed.
-
-  --- Waiver Targets (ranked by fantasypros_projected_ppr) ---
-  ⚠️  CBS's live free-agent connector was down -- this pool is FantasyPros-derived (no real ownership% available).
-  Quarterback:
-    + Kyler Murray (MIN) [QB] -- upgrade over Tyler Shough (+1.2 pts), owned 0.0%, proj 17.6 pts
-  Running Back:
-    + Aaron Jones Sr. (MIN) [RB] -- upgrade over Tyler Higbee (+3.1 pts), owned 0.0%, proj 11.9 pts
-  Flex RB/WR/TE:
-    + Aaron Jones Sr. (MIN) [RB] -- upgrade over Tyler Higbee (+3.1 pts), owned 0.0%, proj 11.9 pts
-    + Chris Godwin Jr. (TB) [WR] -- upgrade over Tyler Higbee (+2.3 pts), owned 0.0%, proj 11.1 pts
-    + Devaughn Vele (NO) [WR] -- upgrade over Tyler Higbee (+1.0 pts), owned 0.0%, proj 9.8 pts
-  Wide Receiver:
-    + Chris Godwin Jr. (TB) [WR] -- upgrade over Tyler Higbee (+2.3 pts), owned 0.0%, proj 11.1 pts
+    !! You have 14 reserve players. You must have at most 9.
+    !! You have 24 total players. Between 0 and 19 are allowed.
 
   --- Keepers ---
   Keeper league -- max 3, selected by: individual_manager, deadline: 2025-08-31
   Confirmed live via commissioner settings 2026-08-01. Deadline is still last season's date -- flag to the commissioner (Christopher) to update it before keepers can be processed correctly this season. Cost mechanic: every player carries a 3-fantasy-season contract starting on acquisition; it survives fantasy-league and real-life trades alike (follows the player, not the roster spot); after season 3 the contract expires and that player cannot be kept -- he re-enters next season's draft pool (house rule confirmed by Christopher 2026-08-13). Contract check applied for season 2026: no expired contracts found.
-  Recommended keeps (via fantasypros_ecr): Justin Jefferson, Brock Bowers, Bhayshul Tuten
-  Other eligible: Jaylen Waddle, Saquon Barkley, Michael Wilson, Marvin Harrison Jr., Tyler Shough, Malik Washington, Bo Nix, Romeo Doubs, Rashid Shaheed, Alvin Kamara, Jadarian Price, Emanuel Wilson, Brian Robinson Jr., Tyler Higbee, Cameron Dicker, Dylan Sampson, Jonathon Brooks, Ryan Fitzgerald, Patriots, Browns, Michael Pittman, Jayden Reed
+  Recommended keeps (via fantasypros_ecr): Brock Bowers, Justin Jefferson, Bhayshul Tuten
+  Other eligible: Saquon Barkley, Michael Wilson, Jaylen Waddle, Malik Washington, Marvin Harrison Jr., Tyler Shough, Romeo Doubs, Bo Nix, Rashid Shaheed, Alvin Kamara, Brian Robinson Jr., Jadarian Price, Emanuel Wilson, Dylan Sampson, Cameron Dicker, Jonathon Brooks, Ryan Fitzgerald, Patriots, Browns, Michael Pittman, Jayden Reed
 
   DRY_RUN=True -- no submissions made.
 
