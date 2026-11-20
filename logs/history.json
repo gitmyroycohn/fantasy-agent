@@ -40,13 +40,13 @@
       },
       "Jackson Jobe": {
         "first": "2026-09-14",
-        "last": "2026-11-19",
-        "n": 65
+        "last": "2026-11-20",
+        "n": 66
       },
       "Tyler Glasnow": {
         "first": "2026-09-29",
-        "last": "2026-11-19",
-        "n": 51
+        "last": "2026-11-20",
+        "n": 52
       },
       "Alex McFarlane": {
         "first": "2026-09-29",
@@ -65,18 +65,18 @@
       },
       "Anthony Molina": {
         "first": "2026-11-17",
-        "last": "2026-11-19",
-        "n": 3
+        "last": "2026-11-20",
+        "n": 4
       },
       "Peter Lambert": {
         "first": "2026-11-17",
-        "last": "2026-11-19",
-        "n": 3
+        "last": "2026-11-20",
+        "n": 4
       },
       "Brandon Pfaadt": {
         "first": "2026-11-18",
-        "last": "2026-11-19",
-        "n": 2
+        "last": "2026-11-20",
+        "n": 3
       }
     },
     "drop_candidates": {},
@@ -84,30 +84,25 @@
   },
   "baberuthdivingclubformen": {
     "waiver_adds": {
-      "Jose Alvarado": {
-        "first": "2026-06-17",
-        "last": "2026-10-29",
-        "n": 133
-      },
       "Adael Amador": {
         "first": "2026-08-16",
-        "last": "2026-11-19",
-        "n": 77
+        "last": "2026-11-20",
+        "n": 78
       },
       "Philip Abner": {
         "first": "2026-09-08",
-        "last": "2026-11-19",
-        "n": 64
+        "last": "2026-11-20",
+        "n": 65
       },
       "Maximo Acosta": {
         "first": "2026-09-29",
-        "last": "2026-11-19",
-        "n": 51
+        "last": "2026-11-20",
+        "n": 52
       },
       "Kevin Alcantara": {
         "first": "2026-10-01",
-        "last": "2026-11-19",
-        "n": 49
+        "last": "2026-11-20",
+        "n": 50
       },
       "Blake Adams": {
         "first": "2026-10-30",
@@ -126,16 +121,16 @@
       },
       "Luke Adams": {
         "first": "2026-11-18",
-        "last": "2026-11-19",
-        "n": 2
+        "last": "2026-11-20",
+        "n": 3
       }
     },
     "streaming_sp": {},
     "drop_candidates": {
       "Kodai Senga": {
         "first": "2026-09-04",
-        "last": "2026-11-19",
-        "n": 75,
+        "last": "2026-11-20",
+        "n": 76,
         "sev": "monitor"
       }
     },
