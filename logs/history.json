@@ -40,13 +40,13 @@
       },
       "Jackson Jobe": {
         "first": "2026-09-14",
-        "last": "2026-11-21",
-        "n": 67
+        "last": "2026-11-22",
+        "n": 68
       },
       "Tyler Glasnow": {
         "first": "2026-09-29",
-        "last": "2026-11-21",
-        "n": 53
+        "last": "2026-11-22",
+        "n": 54
       },
       "Alex McFarlane": {
         "first": "2026-09-29",
@@ -65,18 +65,18 @@
       },
       "Anthony Molina": {
         "first": "2026-11-17",
-        "last": "2026-11-21",
-        "n": 5
+        "last": "2026-11-22",
+        "n": 6
       },
       "Peter Lambert": {
         "first": "2026-11-17",
-        "last": "2026-11-21",
-        "n": 5
+        "last": "2026-11-22",
+        "n": 6
       },
       "Brandon Pfaadt": {
         "first": "2026-11-18",
-        "last": "2026-11-21",
-        "n": 4
+        "last": "2026-11-22",
+        "n": 5
       }
     },
     "drop_candidates": {},
@@ -86,23 +86,23 @@
     "waiver_adds": {
       "Adael Amador": {
         "first": "2026-08-16",
-        "last": "2026-11-21",
-        "n": 79
+        "last": "2026-11-22",
+        "n": 80
       },
       "Philip Abner": {
         "first": "2026-09-08",
-        "last": "2026-11-21",
-        "n": 66
+        "last": "2026-11-22",
+        "n": 67
       },
       "Maximo Acosta": {
         "first": "2026-09-29",
-        "last": "2026-11-21",
-        "n": 53
+        "last": "2026-11-22",
+        "n": 54
       },
       "Kevin Alcantara": {
         "first": "2026-10-01",
-        "last": "2026-11-21",
-        "n": 51
+        "last": "2026-11-22",
+        "n": 52
       },
       "Blake Adams": {
         "first": "2026-10-30",
@@ -121,16 +121,16 @@
       },
       "Luke Adams": {
         "first": "2026-11-18",
-        "last": "2026-11-21",
-        "n": 4
+        "last": "2026-11-22",
+        "n": 5
       }
     },
     "streaming_sp": {},
     "drop_candidates": {
       "Kodai Senga": {
         "first": "2026-09-04",
-        "last": "2026-11-21",
-        "n": 77,
+        "last": "2026-11-22",
+        "n": 78,
         "sev": "monitor"
       }
     },

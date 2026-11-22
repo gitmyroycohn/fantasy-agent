@@ -1,5 +1,5 @@
 ================================================
-  FANTASY AGENT  --  Sat Nov 21, 2026  1:46 PM ET
+  FANTASY AGENT  --  Sun Nov 22, 2026  2:11 PM ET
 ================================================
 
 
@@ -17,14 +17,20 @@
   Weakest  : BA, ERA, K
 
 [ F-LEAGUE  |  H2H Points ]
-  !! Roster ILLEGAL: You have 15 reserve players. You must have at most 8.
+  !! Roster ILLEGAL: You have 14 reserve players. You must have at most 8.
+  Top Add  : Patrick Mahomes II (KC) [QB]
+  (free agents from FantasyPros -- CBS feed was down)
   Keepers  : Bhayshul Tuten, Parker Washington
 
 [ HARD CHARGERS FANTASY LEAGUE  |  H2H Points ]
   Roster   : legal
+  Top Add  : Travis Etienne Jr. (NO) [RB]
+  (free agents from FantasyPros -- CBS feed was down)
 
 [ EAST COAST FANTASY FOOTBALL LEAGUE  |  H2H Points ]
   !! Roster ILLEGAL: You have 14 reserve players. You must have at most 9. (+1 more)
+  Top Add  : Patrick Mahomes II (KC) [QB]
+  (free agents from FantasyPros -- CBS feed was down)
   Keepers  : Justin Jefferson, Bhayshul Tuten, Saquon Barkley
 
 ================================================
@@ -57,11 +63,11 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   All categories (12): H L (2.0-6.0) | HR W (1.0-0.0) | OPS L (0.2059-0.7418) | R W (2.0-0.0) | RBI T (2.0-2.0) | SB T (0.0-0.0) | ERA T (0.0-0.0) | INNdGS T (0.0-0.0) | K W (1.0-0.0) | S W (1.0-0.0) | W T (0.0-0.0) | WHIP T (0.0-0.0)
   Priority categories (losing, easiest first): OPS, H
   Streaming SP (Submit adds before Monday scoring period lock.):
-   + Jackson Jobe (DET) [2-START] [day 67] score=10.67 *** 2-START PERIOD *** | ERA 3.91, K/9 9.98, WHIP 1.17 | helps: ERA, W, WHIP
-   + Peter Lambert (HOU) [2-START] [day 5] score=10.48 *** 2-START PERIOD *** | ERA 3.82, K/9 8.9, WHIP 1.25 | helps: ERA, W, WHIP
-   + Tyler Glasnow (LAD) [day 53] score=4.17 ERA 3.53, K/9 11.92, WHIP 0.95 | helps: ERA, W, WHIP
-   + Anthony Molina (SF) [2-START] [day 5] score=4.0 *** 2-START PERIOD *** | helps: ERA, W, WHIP
-   + Brandon Pfaadt (ARI) [2-START] [day 4] score=4.0 *** 2-START PERIOD *** | helps: ERA, W, WHIP
+   + Jackson Jobe (DET) [2-START] [day 68] score=10.67 *** 2-START PERIOD *** | ERA 3.91, K/9 9.98, WHIP 1.17 | helps: ERA, W, WHIP
+   + Peter Lambert (HOU) [2-START] [day 6] score=10.48 *** 2-START PERIOD *** | ERA 3.82, K/9 8.9, WHIP 1.25 | helps: ERA, W, WHIP
+   + Tyler Glasnow (LAD) [day 54] score=4.17 ERA 3.53, K/9 11.92, WHIP 0.95 | helps: ERA, W, WHIP
+   + Anthony Molina (SF) [2-START] [day 6] score=4.0 *** 2-START PERIOD *** | helps: ERA, W, WHIP
+   + Brandon Pfaadt (ARI) [2-START] [day 5] score=4.0 *** 2-START PERIOD *** | helps: ERA, W, WHIP
 
   --- Closer Monkey News ---
   [RAPID REACTION] Rapid Reaction | Emilio Pagán to Detroit
@@ -71,7 +77,7 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
 
   Trade deadline (2026-08-03) has passed for this league -- trade signals and trade board are suppressed for the rest of the season.
 
-  --- Daily Lineup (Sat Nov 21, 0 MLB teams playing) ---
+  --- Daily Lineup (Sun Nov 22, 0 MLB teams playing) ---
   SPs starting today: none confirmed yet
   Batters with games today: 22 (0 confirmed in posted lineup, 22 expected -- lineup not posted yet)
 
@@ -96,13 +102,13 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
 
   ⚠ CHURN GUARD: 6 moves recommended -- showing top 3 per section. Prioritize ruthlessly; avoid making all moves at once.
   Waiver adds (5 suggestions) (top 3 shown -- 2 more suppressed):
-   + Kevin Alcantara (CHC) [LF] [day 51] helps: SB, HR, RBI [xwOBA=0.275]
-   + Adael Amador (COL) [2B] [day 79] helps: SB [Brl%=6.9 | xwOBA=0.274]
-   + Philip Abner (NYM) [RP] [day 66] helps: K, S [xERA=7.72]
+   + Kevin Alcantara (CHC) [LF] [day 52] helps: SB, HR, RBI [xwOBA=0.275]
+   + Adael Amador (COL) [2B] [day 80] helps: SB [Brl%=6.9 | xwOBA=0.274]
+   + Philip Abner (NYM) [RP] [day 67] helps: K, S [xERA=7.72]
 
   --- Drop Candidates ---
   MONITOR (1) -- borderline:
-   WATCH Kodai Senga (NYM) [RP] [day 77]
+   WATCH Kodai Senga (NYM) [RP] [day 78]
          Borderline: ERA 7.34, WHIP 1.65
   Standings: Period 1: 36 roto pts - winning 7 cats, losing 3
   All categories (10): BA rank=5 | HR rank=1 | R rank=4 | RBI rank=4 | SB rank=4 | ERA rank=6 | K rank=7 | S rank=4 | W rank=3 | WHIP rank=4
@@ -116,48 +122,63 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
 
   Trade deadline (2026-07-31) has passed for this league -- trade signals and trade board are suppressed for the rest of the season.
 
-  --- Daily Lineup (Sat Nov 21, 0 MLB teams playing) ---
+  --- Daily Lineup (Sun Nov 22, 0 MLB teams playing) ---
   SPs pitching today: none confirmed yet
   Batters with games today: 16 (0 confirmed in posted lineup)
 
   DRY_RUN=True -- no submissions made.
 
 === F-League (football) ===
-  Roster: 24 players
+  Roster: 23 players
     QB Jacoby Brissett (BAL)
     RB Bhayshul Tuten (JAC)
     WR Parker Washington (JAC)
     TE Trey McBride (ARI)
   RB-WR Deebo Samuel (SF)
-  ... and 19 more
-  Lineup: 9/24 starting
-  Free agents visible: 4712
+  ... and 18 more
+  Lineup: 9/23 starting
+  Free agents: unavailable (players/list for sfflf/football: recent failure (2s ago), not retrying yet. players/list: HTTP 503, non-JSON response: 
+)
 
   Format: H2H Points
   Roster: ILLEGAL (9/9 starters filled)
-    !! You have 15 reserve players. You must have at most 8.
+    !! You have 14 reserve players. You must have at most 8.
+
+  --- Waiver Targets (ranked by fantasypros_estimated_sfflf_points) ---
+  ⚠️  CBS's live free-agent connector was down -- this pool is FantasyPros-derived (no real ownership% available).
+  Quarterback:
+    + Patrick Mahomes II (KC) [QB] -- upgrade over Jacoby Brissett (+7.3 pts), owned 0.0%, proj 15.7 pts
 
   --- Keepers ---
   Keeper league -- max 2, selected by: commissioner, deadline: ?
   Max 2 keepers, any position, no cost mechanic -- confirmed by Christopher directly (CBS's public rules page doesn't publish this; he isn't f_league's commissioner). Selection deadline isn't visible to him -- ask the commissioner if that date matters for planning.
   Recommended keeps (via fantasypros_ecr): Bhayshul Tuten, Parker Washington
-  Other eligible: Trey McBride, Carnell Tate, Saquon Barkley, Jalen Coker, Rome Odunze, Davante Adams, Jordan Addison, Khalil Shakir, Dallas Goedert, Jacoby Brissett, Rachaad White, Jeremiyah Love, Alvin Kamara, Jacory Croskey-Merritt, Chris Boswell, Audric Estime, Tyrone Tracy Jr., Drake Maye, Tyler Loop, Deebo Samuel, Steelers, Jaguars
+  Other eligible: Trey McBride, Carnell Tate, Saquon Barkley, Jalen Coker, Rome Odunze, Davante Adams, Jordan Addison, Khalil Shakir, Dallas Goedert, Jacoby Brissett, Rachaad White, Jeremiyah Love, Alvin Kamara, Jacory Croskey-Merritt, Chris Boswell, Tyrone Tracy Jr., Drake Maye, Tyler Loop, Deebo Samuel, Steelers, Jaguars
 
   DRY_RUN=True -- no submissions made.
 
 === Hard Chargers Fantasy League (football) ===
   Roster: 15 players
     QB Dak Prescott (DAL)
-    RB Braelon Allen (NYJ)
+    RB Bucky Irving (TB)
     WR Tetairoa McMillan (CAR)
     TE Trey McBride (ARI)
   RB-WR-TE Quentin Johnston (LAC)
   ... and 10 more
   Lineup: 9/15 starting
-  Free agents visible: 4702
+  Free agents: unavailable (players/list for hcfl05/football: recent failure (2s ago), not retrying yet. players/list: HTTP 503, non-JSON response: 
+)
 
   Format: H2H Points
   Roster: legal (9/9 starters filled)
+
+  --- Waiver Targets (ranked by fantasypros_projected_ppr) ---
+  ⚠️  CBS's live free-agent connector was down -- this pool is FantasyPros-derived (no real ownership% available).
+  Flex RB/WR/TE:
+    + Travis Etienne Jr. (NO) [RB] -- upgrade over Quentin Johnston (+3.1 pts), owned 0.0%, proj 10.6 pts
+    + Chig Okonkwo (WAS) [TE] -- upgrade over Quentin Johnston (+2.2 pts), owned 0.0%, proj 9.7 pts
+    + Deebo Samuel Sr. (SF) [WR] -- upgrade over Quentin Johnston (+1.5 pts), owned 0.0%, proj 9.0 pts
+    + Aaron Jones Sr. (MIN) [RB] -- upgrade over Quentin Johnston (+1.1 pts), owned 0.0%, proj 8.7 pts
 
   --- Keepers ---
   Not a keeper league -- straight redraft every year.
@@ -170,15 +191,25 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
     RB Saquon Barkley (PHI)
     RB Bhayshul Tuten (JAC)
     WR Justin Jefferson (MIN)
-    WR Tank Dell (HOU)
+    WR Jaylen Waddle (DEN)
   ... and 19 more
   Lineup: 10/24 starting
-  Free agents visible: 4696
+  Free agents: unavailable (players/list for ecfc/football: recent failure (2s ago), not retrying yet. players/list: HTTP 503, non-JSON response: 
+)
 
   Format: H2H Points
   Roster: ILLEGAL (10/10 starters filled)
     !! You have 14 reserve players. You must have at most 9.
     !! You have 24 total players. Between 0 and 19 are allowed.
+
+  --- Waiver Targets (ranked by fantasypros_projected_ppr) ---
+  ⚠️  CBS's live free-agent connector was down -- this pool is FantasyPros-derived (no real ownership% available).
+  Quarterback:
+    + Patrick Mahomes II (KC) [QB] -- upgrade over Tyler Shough (+5.3 pts), owned 0.0%, proj 22.1 pts
+  Flex RB/WR/TE:
+    + Travis Etienne Jr. (NO) [RB] -- upgrade over Malik Washington (+2.6 pts), owned 0.0%, proj 10.6 pts
+    + Chig Okonkwo (WAS) [TE] -- upgrade over Malik Washington (+1.6 pts), owned 0.0%, proj 9.7 pts
+    + Deebo Samuel Sr. (SF) [WR] -- upgrade over Malik Washington (+1.0 pts), owned 0.0%, proj 9.0 pts
 
   --- Keepers ---
   Keeper league -- max 3, selected by: individual_manager, deadline: 2025-08-31
