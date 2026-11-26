@@ -1,5 +1,5 @@
 ================================================
-  FANTASY AGENT  --  Wed Nov 25, 2026  4:08 PM ET
+  FANTASY AGENT  --  Thu Nov 26, 2026  4:04 PM ET
 ================================================
 
 
@@ -22,9 +22,13 @@
 
 [ HARD CHARGERS FANTASY LEAGUE  |  H2H Points ]
   Roster   : legal
+  Top Add  : Travis Etienne Jr. (NO) [RB]
+  (free agents from FantasyPros -- CBS feed was down)
 
 [ EAST COAST FANTASY FOOTBALL LEAGUE  |  H2H Points ]
   !! Roster ILLEGAL: You have 14 reserve players. You must have at most 9. (+1 more)
+  Top Add  : Deshaun Watson (CLE) [QB]
+  (free agents from FantasyPros -- CBS feed was down)
   Keepers  : Justin Jefferson, Bhayshul Tuten, Jaylen Waddle
 
 ================================================
@@ -43,7 +47,7 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   ... and 31 more
   Stats enriched: 31/36 roster players
   Lineup: 16/36 starting
-  Free agents visible: 7806
+  Free agents visible: 7808
 
   FP projections (SP wire): 41/100 matched
   Schedule (3 periods): P22(7d):28x2+
@@ -57,21 +61,25 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   All categories (12): H L (2.0-6.0) | HR W (1.0-0.0) | OPS L (0.2059-0.7418) | R W (2.0-0.0) | RBI T (2.0-2.0) | SB T (0.0-0.0) | ERA T (0.0-0.0) | INNdGS T (0.0-0.0) | K W (1.0-0.0) | S W (1.0-0.0) | W T (0.0-0.0) | WHIP T (0.0-0.0)
   Priority categories (losing, easiest first): OPS, H
   Streaming SP (Submit adds before Monday scoring period lock.):
-   + Jackson Jobe (DET) [2-START] [day 71] score=10.67 *** 2-START PERIOD *** | ERA 3.91, K/9 9.98, WHIP 1.17 | helps: ERA, W, WHIP
-   + Peter Lambert (HOU) [2-START] [day 9] score=10.48 *** 2-START PERIOD *** | ERA 3.82, K/9 8.9, WHIP 1.25 | helps: ERA, W, WHIP
-   + Tyler Glasnow (LAD) [day 57] score=4.17 ERA 3.53, K/9 11.92, WHIP 0.95 | helps: ERA, W, WHIP
-   + Anthony Molina (SF) [2-START] [day 9] score=4.0 *** 2-START PERIOD *** | helps: ERA, W, WHIP
-   + Brandon Pfaadt (ARI) [2-START] [day 8] score=4.0 *** 2-START PERIOD *** | helps: ERA, W, WHIP
+   + Jackson Jobe (DET) [2-START] [day 72] score=10.67 *** 2-START PERIOD *** | ERA 3.91, K/9 9.98, WHIP 1.17 | helps: ERA, W, WHIP
+   + Peter Lambert (HOU) [2-START] [day 10] score=10.48 *** 2-START PERIOD *** | ERA 3.82, K/9 8.9, WHIP 1.25 | helps: ERA, W, WHIP
+   + Tyler Glasnow (LAD) [day 58] score=4.17 ERA 3.53, K/9 11.92, WHIP 0.95 | helps: ERA, W, WHIP
+   + Anthony Molina (SF) [2-START] [day 10] score=4.0 *** 2-START PERIOD *** | helps: ERA, W, WHIP
+   + Brandon Pfaadt (ARI) [2-START] [day 9] score=4.0 *** 2-START PERIOD *** | helps: ERA, W, WHIP
 
   --- Closer Monkey News ---
   [RAPID REACTION] Rapid Reaction | Emilio Pagán to Detroit
     Closer Monkey - Instant emails for every closer change. Closer depth charts to keep you ahead.
     Pending a physical, Emilio Pagán has agreed to a reported $11 million, one-year deal with Detroit. This makes him the preferred save option for a team desperately seeking relief arms with swing-and-miss stuff.&#160; Despite missing time with a hamstring injury this season, Pagán is tied for the eighth-mo
     https://closermonkey.com/2026/11/11/rapid-reaction-emilio-pagan-to-detroit/
+  [LEDGER] Closer Monkey’s Leverage Ledger | 11.26.2026
+    Closer Monkey - Instant emails for every closer change. Closer depth charts to keep you ahead.
+    If you are taking time to read this today, Happy Thanksgiving. Enjoy time with your family and friends.&#160; Washington Nationals Although it was not the left-handed reliever at the top of the free-agent class, Washington made a move to improve its bullpen:&#160; The incentives have not been shared as o
+    https://closermonkey.com/2026/11/26/closer-monkeys-leverage-ledger-11-26-2026/
 
   Trade deadline (2026-08-03) has passed for this league -- trade signals and trade board are suppressed for the rest of the season.
 
-  --- Daily Lineup (Wed Nov 25, 0 MLB teams playing) ---
+  --- Daily Lineup (Thu Nov 26, 0 MLB teams playing) ---
   SPs starting today: none confirmed yet
   Batters with games today: 22 (0 confirmed in posted lineup, 22 expected -- lineup not posted yet)
 
@@ -87,7 +95,7 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   ... and 22 more
   Stats enriched: 26/27 roster players
   Lineup: 24/27 starting
-  Free agents visible: 7859
+  Free agents visible: 7861
 
   FP projections (roto wire): 16/28 matched
   Savant xStats (roto wire): 24/28 matched
@@ -96,13 +104,13 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
 
   ⚠ CHURN GUARD: 6 moves recommended -- showing top 3 per section. Prioritize ruthlessly; avoid making all moves at once.
   Waiver adds (5 suggestions) (top 3 shown -- 2 more suppressed):
-   + Kevin Alcantara (CHC) [LF] [day 55] helps: SB, HR, RBI [xwOBA=0.275]
-   + Adael Amador (COL) [2B] [day 83] helps: SB [Brl%=6.9 | xwOBA=0.274]
-   + Philip Abner (WAS) [RP] [day 70] helps: K, S [xERA=7.72]
+   + Kevin Alcantara (CHC) [LF] [day 56] helps: SB, HR, RBI [xwOBA=0.275]
+   + Adael Amador (COL) [2B] [day 84] helps: SB [Brl%=6.9 | xwOBA=0.274]
+   + Philip Abner (WAS) [RP] [day 71] helps: K, S [xERA=7.72]
 
   --- Drop Candidates ---
   MONITOR (1) -- borderline:
-   WATCH Kodai Senga (NYM) [RP] [day 81]
+   WATCH Kodai Senga (NYM) [RP] [day 82]
          Borderline: ERA 7.34, WHIP 1.65
   Standings: Period 1: 36 roto pts - winning 7 cats, losing 3
   All categories (10): BA rank=5 | HR rank=1 | R rank=4 | RBI rank=4 | SB rank=4 | ERA rank=6 | K rank=7 | S rank=4 | W rank=3 | WHIP rank=4
@@ -113,10 +121,14 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
     Closer Monkey - Instant emails for every closer change. Closer depth charts to keep you ahead.
     Pending a physical, Emilio Pagán has agreed to a reported $11 million, one-year deal with Detroit. This makes him the preferred save option for a team desperately seeking relief arms with swing-and-miss stuff.&#160; Despite missing time with a hamstring injury this season, Pagán is tied for the eighth-mo
     https://closermonkey.com/2026/11/11/rapid-reaction-emilio-pagan-to-detroit/
+  [LEDGER] Closer Monkey’s Leverage Ledger | 11.26.2026
+    Closer Monkey - Instant emails for every closer change. Closer depth charts to keep you ahead.
+    If you are taking time to read this today, Happy Thanksgiving. Enjoy time with your family and friends.&#160; Washington Nationals Although it was not the left-handed reliever at the top of the free-agent class, Washington made a move to improve its bullpen:&#160; The incentives have not been shared as o
+    https://closermonkey.com/2026/11/26/closer-monkeys-leverage-ledger-11-26-2026/
 
   Trade deadline (2026-07-31) has passed for this league -- trade signals and trade board are suppressed for the rest of the season.
 
-  --- Daily Lineup (Wed Nov 25, 0 MLB teams playing) ---
+  --- Daily Lineup (Thu Nov 26, 0 MLB teams playing) ---
   SPs pitching today: none confirmed yet
   Batters with games today: 16 (0 confirmed in posted lineup)
 
@@ -124,14 +136,15 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
 
 === F-League (football) ===
   Roster: 23 players
-    QB Jacoby Brissett (BAL)
-    RB Bhayshul Tuten (JAC)
+    QB Anthony Richardson (IND)
+    RB Saquon Barkley (PHI)
     WR Parker Washington (JAC)
     TE Trey McBride (ARI)
-  RB-WR Deebo Samuel (SF)
+  RB-WR Jacory Croskey-Merritt (WAS)
   ... and 18 more
   Lineup: 9/23 starting
-  Free agents visible: 4714
+  Free agents: unavailable (players/list for sfflf/football: recent failure (2s ago), not retrying yet. players/list: HTTP 503, non-JSON response: 
+)
 
   Format: H2H Points
   Roster: ILLEGAL (9/9 starters filled)
@@ -141,7 +154,7 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
   Keeper league -- max 2, selected by: commissioner, deadline: ?
   Max 2 keepers, any position, no cost mechanic -- confirmed by Christopher directly (CBS's public rules page doesn't publish this; he isn't f_league's commissioner). Selection deadline isn't visible to him -- ask the commissioner if that date matters for planning.
   Recommended keeps (via fantasypros_ecr): Parker Washington, Bhayshul Tuten
-  Other eligible: Trey McBride, Carnell Tate, Rome Odunze, Saquon Barkley, Jalen Coker, Davante Adams, Jordan Addison, Dallas Goedert, Jacoby Brissett, Jacory Croskey-Merritt, Rachaad White, Alvin Kamara, Jeremiyah Love, Chris Boswell, Tyrone Tracy Jr., Drake Maye, Tyler Loop, Deebo Samuel, Jaguars, Anthony Richardson, Steelers
+  Other eligible: Trey McBride, Carnell Tate, Rome Odunze, Saquon Barkley, Davante Adams, Jalen Coker, Jordan Addison, Dallas Goedert, Jacoby Brissett, Jacory Croskey-Merritt, Jeremiyah Love, Rachaad White, Alvin Kamara, Chris Boswell, Tyrone Tracy Jr., Drake Maye, Tyler Loop, Anthony Richardson, Deebo Samuel, Jaguars, Steelers
 
   DRY_RUN=True -- no submissions made.
 
@@ -151,13 +164,23 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
     RB Bucky Irving (TB)
     WR Tetairoa McMillan (CAR)
     TE Trey McBride (ARI)
-  RB-WR-TE Quentin Johnston (LAC)
+  RB-WR-TE Jacory Croskey-Merritt (WAS)
   ... and 10 more
   Lineup: 9/15 starting
-  Free agents visible: 4702
+  Free agents: unavailable (players/list for hcfl05/football: recent failure (2s ago), not retrying yet. players/list: HTTP 503, non-JSON response: 
+)
 
   Format: H2H Points
   Roster: legal (9/9 starters filled)
+
+  --- Waiver Targets (ranked by fantasypros_projected_ppr) ---
+  ⚠️  CBS's live free-agent connector was down -- this pool is FantasyPros-derived (no real ownership% available).
+  Flex RB/WR/TE:
+    + Travis Etienne Jr. (NO) [RB] -- upgrade over Quentin Johnston (+5.5 pts), owned 0.0%, proj 12.0 pts
+    + KC Concepcion Jr. (CLE) [WR] -- upgrade over Quentin Johnston (+4.8 pts), owned 0.0%, proj 11.3 pts
+    + Aaron Jones Sr. (MIN) [RB] -- upgrade over Quentin Johnston (+3.7 pts), owned 0.0%, proj 10.1 pts
+    + Chig Okonkwo (WAS) [TE] -- upgrade over Quentin Johnston (+3.4 pts), owned 0.0%, proj 9.8 pts
+    + Adonai Mitchell (NYJ) [WR] -- upgrade over Quentin Johnston (+3.3 pts), owned 0.0%, proj 9.7 pts
 
   --- Keepers ---
   Not a keeper league -- straight redraft every year.
@@ -173,18 +196,33 @@ CBS Fantasy Agent -- run=daily, league=all, sport=all, dry_run=True
     WR Jaylen Waddle (DEN)
   ... and 19 more
   Lineup: 10/24 starting
-  Free agents visible: 4698
+  Free agents: unavailable (players/list for ecfc/football: recent failure (3s ago), not retrying yet. players/list: HTTP 503, non-JSON response: 
+)
 
   Format: H2H Points
   Roster: ILLEGAL (10/10 starters filled)
     !! You have 14 reserve players. You must have at most 9.
     !! You have 24 total players. Between 0 and 19 are allowed.
 
+  --- Waiver Targets (ranked by fantasypros_projected_ppr) ---
+  ⚠️  CBS's live free-agent connector was down -- this pool is FantasyPros-derived (no real ownership% available).
+  Quarterback:
+    + Deshaun Watson (CLE) [QB] -- upgrade over Tyler Shough (+1.6 pts), owned 0.0%, proj 18.5 pts
+  Flex RB/WR/TE:
+    + Travis Etienne Jr. (NO) [RB] -- upgrade over Malik Washington (+3.2 pts), owned 0.0%, proj 12.0 pts
+    + KC Concepcion Jr. (CLE) [WR] -- upgrade over Malik Washington (+2.5 pts), owned 0.0%, proj 11.3 pts
+    + Aaron Jones Sr. (MIN) [RB] -- upgrade over Malik Washington (+1.4 pts), owned 0.0%, proj 10.1 pts
+    + Chig Okonkwo (WAS) [TE] -- upgrade over Malik Washington (+1.1 pts), owned 0.0%, proj 9.8 pts
+  Wide Receiver:
+    + KC Concepcion Jr. (CLE) [WR] -- upgrade over Malik Washington (+2.5 pts), owned 0.0%, proj 11.3 pts
+  Kicker:
+    + Dominic Zvada (NYG) [K] -- upgrade over Cameron Dicker (+1.0 pts), owned 0.0%, proj 8.1 pts
+
   --- Keepers ---
   Keeper league -- max 3, selected by: individual_manager, deadline: 2025-08-31
   Confirmed live via commissioner settings 2026-08-01. Deadline is still last season's date -- flag to the commissioner (Christopher) to update it before keepers can be processed correctly this season. Cost mechanic: every player carries a 3-fantasy-season contract starting on acquisition; it survives fantasy-league and real-life trades alike (follows the player, not the roster spot); after season 3 the contract expires and that player cannot be kept -- he re-enters next season's draft pool (house rule confirmed by Christopher 2026-08-13). Contract check applied for season 2026: no expired contracts found.
   Recommended keeps (via fantasypros_ecr): Justin Jefferson, Bhayshul Tuten, Jaylen Waddle
-  Other eligible: Saquon Barkley, Tyler Shough, Bo Nix, Malik Washington, Dallas Goedert, Tank Dell, Marvin Harrison Jr., Jadarian Price, Romeo Doubs, Alvin Kamara, Dylan Sampson, Darnell Washington, Brian Robinson Jr., Jonathon Brooks, Cameron Dicker, Colts, Chad Ryland, Jets, Michael Pittman, Michael Wilson, Jayden Reed
+  Other eligible: Saquon Barkley, Tyler Shough, Bo Nix, Tank Dell, Dallas Goedert, Malik Washington, Jadarian Price, Marvin Harrison Jr., Romeo Doubs, Dylan Sampson, Darnell Washington, Alvin Kamara, Brian Robinson Jr., Jonathon Brooks, Cameron Dicker, Jets, Chad Ryland, Colts, Michael Pittman, Michael Wilson, Jayden Reed
 
   DRY_RUN=True -- no submissions made.
 
